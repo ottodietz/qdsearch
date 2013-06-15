@@ -7,6 +7,11 @@ reload(SimSerial)
 from SimSerial import SimSerial
 
 class Cryo(SimSerial):
+    device="cryo"
+    # names of the device functions
+    functionnames=['identify','rm','calc','p','r','m','testingname']
+    # the end of line command for the functions
+    endofline=[' \r',' \r',' \r',' \r',' \r',' \r']
 
     def ident(self):
         self.write("identify \r")
@@ -18,7 +23,7 @@ class Cryo(SimSerial):
         temp=self.readline()
         return(temp)
 
-    # Relative Bewegung
+    # relative Bewegung
     def rbewegen(self,x,y):
         self.write("0 0 "+str(x)+" "+str(y)+" r \r")
 
@@ -40,5 +45,32 @@ class Cryo(SimSerial):
         self.write("0 0 "+str(x)+" "+str(y)+" setpos \r")
         self.x = 0.0
         self.y = 0.0
+
+
+    """for simulation"""
+
+    def _identify(self):
+        self.buffer="identify"
+
+    def _m(self,string):
+        a=string.find(" ")
+        b=string.find(" ",a+1)
+        c=string.find(" ",b+1)
+        d=string.find(" ",c+1)
+        self.posx=float(string[b:c])
+        self.posy=float(string[c+1:d])
+
+    def _p(self):
+        self.buffer=str(self.posx)+" "+str(self.posy)
+
+    def _r(self,string):
+        a=string.find(" ")
+        b=string.find(" ",a+1)
+        c=string.find(" ",b+1)
+        d=string.find(" ",c+1)
+        self.posx+=float(string[b:c])
+        self.posy+=float(string[c+1:d])
+
+
 
 

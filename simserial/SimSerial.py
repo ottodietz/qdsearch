@@ -12,6 +12,7 @@ class SimSerial(serial.Serial):
     posy=float(1.0)
     nm=float(0)
     nm_je_min=float(10.0)
+    device=""
 
     def __init__(self,*args,**kwargs):
         self.initkwargs=kwargs
@@ -38,6 +39,21 @@ class SimSerial(serial.Serial):
 
     def write(self,string):
         if self.simulation==True:
+         """temporily condition while simserial is under construction and the new version of SimSerial
+         is only running with cryo"""
+         if self.device=="cryo":
+            [name,args]=self.search_function_name(string)
+            try:
+                if args=='':
+                    getattr(self,name)()
+                else:
+                    getattr(self,name)(args)
+            except:
+                print('Funtkion ist registriert konnte aber nicht aufgerufen werden')
+
+         else:
+
+
             """gehoert zum Cryo"""
             if string=="identify \r":
                 self.buffer="identify"
@@ -63,7 +79,6 @@ class SimSerial(serial.Serial):
                  self.buffer=str(self.posx)+" "+str(self.posy)
 
             if string=="cal \r":
-                print "hello"
                 pass
 
 
@@ -170,3 +185,20 @@ class SimSerial(serial.Serial):
             aktuell=time.clock()
             time.sleep(0.1)
             self.nm=round(startposition+self.nm_je_min*(aktuell-start)/60*vorzeichen,3)
+
+    def search_function_name(self,command):
+        found=False
+        for i in range(len(self.functionnames)):
+
+            if command.find(self.functionnames[i])!=-1 :
+                found=True
+                break
+        if found:
+            args=command
+            args=args.replace(self.functionnames[i],'')
+            args=args.replace(self.endofline[i],'')
+            name='_'+self.functionnames[i]
+            return(name,args)
+
+        else:
+            return('','')
