@@ -128,10 +128,3 @@ class Spectro(SimSerial):
              print "fehler"
 
 
-
-
-
-    def test(self):
-        print "test"
-
-

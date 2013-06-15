@@ -45,21 +45,29 @@ class SimSerial(serial.Serial):
             if string.find(" m \r")!=-1:
                a=string.find(" ")
                b=string.find(" ",a+1)
-               self.posx=float(string[0:a])
-               self.posy=float(string[a+1:b])
+               c=string.find(" ",b+1)
+               d=string.find(" ",c+1)
+               self.posx=float(string[b:c])
+               self.posy=float(string[c+1:d])
 
 
             if string.find(" r \r")!=-1:
                a=string.find(" ")
                b=string.find(" ",a+1)
-               self.posx+=float(string[0:a])
-               self.posy+=float(string[a+1:b])
+               c=string.find(" ",b+1)
+               d=string.find(" ",c+1)
+               self.posx+=float(string[b:c])
+               self.posy+=float(string[c+1:d])
 
             if string=="p \r":
                  self.buffer=str(self.posx)+" "+str(self.posy)
 
+            if string=="cal \r":
+                print "hello"
+                pass
 
-            """Aber hier Spektrometer"""
+
+            """Ab hier Spektrometer"""
             if string.find("NM \r")!=-1 and string.find("?NM")==-1 and string.find(">NM")==-1:
                 self.buffer=string+" ok"
                 a=string.find(" ")

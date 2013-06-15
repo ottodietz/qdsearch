@@ -9,9 +9,9 @@ import time
 from enthought.chaco.tools.api import PanTool, ZoomTool
 from enthought.pyface.api import error,warning,information
 
-import ansteuerung_spectrometer
-reload(ansteuerung_spectrometer)
-from ansteuerung_spectrometer import Spectro
+import control_spectrometer
+reload(control_spectrometer)
+from control_spectrometer import Spectro
 import Voltage
 reload(Voltage)
 from Voltage import Voltage
