@@ -13,7 +13,8 @@ class Cryo(SimSerial):
     # the end of line command for the functions
     endofline=[' \r',' \r',' \r',' \r',' \r',' \r']
 
-    def ident(self):
+   # registersimfunc('identify',_identify)
+    def identify(self):
         self.write("identify \r")
         temp=self.readline()
         return(temp)

@@ -6,7 +6,7 @@ import control_cryo
 reload (control_cryo)
 from control_cryo import Cryo
 
-class Mainwindow(HasTraits):
+class CryoGUI(HasTraits):
     cryo=Cryo('COM3', 9600, timeout=1)
 
     ausgabe=Str()
@@ -55,7 +55,7 @@ class Mainwindow(HasTraits):
             resizable = True, width = 350, height = 300)
 
     def _identity_fired(self):
-            self.ausgabe=self.cryo.ident()
+            self.ausgabe=self.cryo.identify()
 
 
     def _position_fired(self):
@@ -106,9 +106,9 @@ class Mainwindow(HasTraits):
         self.cryo.toggle_simulation("Cryo")
 
 
-
-main=Mainwindow()
-main.configure_traits()
-if main.cryo.simulation==0:
-    print"schliessen"
-    main.cryo.close()
+if __name__=="__main__":
+    main=CryoGUI()
+    main.configure_traits()
+    if main.cryo.simulation==0:
+        print"schliessen"
+        main.cryo.close()

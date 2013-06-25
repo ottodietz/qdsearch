@@ -59,8 +59,8 @@ class SpectrometerGUI(HasTraits):
                                      Item('current_grating', editor=EnumEditor(name='grating_value'), label='Gratings'),
                                          HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),Spring()),
                                      Item("ausgabe",style="readonly"),
-                                     HGroup(Item("checkbox_spektrometer"), Item("checkbox_voltmeter")),
-                                     Item("testbutton",show_label=False)),
+                                     HGroup(Item("checkbox_spektrometer"), Item("checkbox_voltmeter"))
+                                     ),
                             Item("plot",editor=ComponentEditor(),show_label=False)),
                      width=750,height=350,buttons = [OKButton,], resizable = True,title="Spektrometer")
 
@@ -215,15 +215,12 @@ class SpectrometerGUI(HasTraits):
         self.current_exit_mirror=self.spectro.ausgabe_exit_mirror()
 
 
-    def _testbutton_fired(self):
-        print "testbutton"
-
-
-main=SpectrometerGUI()
-main.configure_traits()
-if main.spectro.simulation==0:
-    print"schliessen"
-    main.spectro.close()
-if main.ivolt.simulation==0:
-    print"schliessen Voltage"
-    main.ivolt.close()
+if __name__=="__main__":
+    main=SpectrometerGUI()
+    main.configure_traits()
+    if main.spectro.simulation==0:
+        print"schliessen"
+        main.spectro.close()
+    if main.ivolt.simulation==0:
+        print"schliessen Voltage"
+        main.ivolt.close()
