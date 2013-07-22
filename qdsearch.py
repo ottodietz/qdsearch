@@ -12,7 +12,7 @@ reload (window_spectrometer)
 from  window_spectrometer import SpectrometerGUI
 from  window_cryo import CryoGUI
 
-
+call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
 
 printen = Action(name='test Print',accelerator="Ctrl+p",
     action='test_function')
@@ -20,6 +20,8 @@ printen = Action(name='test Print',accelerator="Ctrl+p",
 menu = MenuBar(Menu(CloseAction, name='File'),
     Menu(UndoAction, RedoAction,printen,
     name='Edit'),
+    Menu(name='Spectrometer'),
+    Menu(call_menu_cryo,name='Cryo'),
     Menu(HelpAction, name='Help'))
 
 
@@ -32,10 +34,10 @@ class MainWindow(HasTraits):
         Item('cryo_instance', style = 'custom',show_label=False,label="cryo",),
         layout='tabbed')
 
-    view = View(
+    traits_view = View(
         inst_group,
      menubar=menu,
-    title   = 'InstanceEditor',
+    title   = 'qdsearch',
     buttons = [ 'OK' ],
     resizable = True
     )
@@ -44,6 +46,18 @@ class MainWindow(HasTraits):
     def test_function(self):
         print"test"
 
+    def call_cryo_menu(self):
+       self.cryo_instance.configure_traits(view='view_menu')
+
 main = MainWindow()
 if __name__ == '__main__':
     main.configure_traits()
+    if main.cryo_instance.cryo.simulation==0:
+        print"schliessen cryo"
+        main.cryo_instance.cryo.close()
+    if main. spectrometer_instance.spectro.simulation==0:
+        print"schliessen spectro"
+        main. spectrometer_instance.spectro.close()
+    if main. spectrometer_instance.ivolt.simulation==0:
+        print"schliessen Voltage"
+        main. spectrometer_instance.ivolt.close()

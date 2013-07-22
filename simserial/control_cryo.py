@@ -67,8 +67,10 @@ class Cryo(SimSerial):
     # set current position
     def setzero(self,x,y):
         self.write("0 0 "+str(x)+" "+str(y)+" setpos \r")
-        self.x = 0.0
-        self.y = 0.0
+
+    def _setpos(self,string):
+        self.posx = 0.0
+        self.posy = 0.0
 
 
 
