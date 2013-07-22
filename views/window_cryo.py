@@ -90,7 +90,7 @@ class CryoGUI(HasTraits):
     def _rmove_fired(self):
         self.x=self.rmovex
         self.y=self.rmovey
-        self._postion_fired()
+        self._position_fired()
 
 
     def _move_fired(self):

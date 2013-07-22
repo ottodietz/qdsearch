@@ -4,6 +4,10 @@ import time
 import thread
 
 class SimSerial(serial.Serial):
+    commando_position="first"
+    device=""
+    number_of_EOL=1
+
     simulation=True
     initargs=str()
     initkwargs=str()
@@ -12,7 +16,7 @@ class SimSerial(serial.Serial):
     posy=float(1.0)
     nm=float(0)
     nm_je_min=float(10.0)
-    device=""
+
 
     def __init__(self,*args,**kwargs):
         self.initkwargs=kwargs
@@ -42,14 +46,12 @@ class SimSerial(serial.Serial):
          """temporily condition while simserial is under construction and the new version of SimSerial
          is only running with cryo"""
          if self.device=="cryo":
-            [name,args]=self.search_function_name(string)
+            name=self.search_function_name(string)
+
             try:
-                if args=='':
-                    getattr(self,name)()
-                else:
-                    getattr(self,name)(args)
+                    getattr(self,name)(string)
             except:
-                print('Funtkion ist registriert konnte aber nicht aufgerufen werden')
+                print('No simulation function found.')
 
          else:
 
@@ -187,18 +189,16 @@ class SimSerial(serial.Serial):
             self.nm=round(startposition+self.nm_je_min*(aktuell-start)/60*vorzeichen,3)
 
     def search_function_name(self,command):
-        found=False
-        for i in range(len(self.functionnames)):
-
-            if command.find(self.functionnames[i])!=-1 :
-                found=True
-                break
-        if found:
-            args=command
-            args=args.replace(self.functionnames[i],'')
-            args=args.replace(self.endofline[i],'')
-            name='_'+self.functionnames[i]
-            return(name,args)
-
+        spaces = []
+        position = 0
+        for x in command:
+            if x == ' ':
+                spaces.append(position)
+            position += 1
+        if len(spaces)>2 and self.commando_position=="last":
+            name='_'+command[spaces[len(spaces)-self.number_of_EOL-1]+1:spaces[len(spaces)-self.number_of_EOL]]
+        elif   len(spaces)>2 and self.commando_position=="first":
+            name='_'+command[0:spaces[0]]
         else:
-            return('','')
+            name='_'+command[0:spaces[0]]
+        return(name)
