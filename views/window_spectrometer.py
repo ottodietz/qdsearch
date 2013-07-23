@@ -20,11 +20,12 @@ from Voltage import Voltage
 class SpectrometerGUI(HasTraits):
     ivolt=Voltage('COM7', 115200, timeout=1)
     spectro=Spectro('COM4', 9600, timeout=1)
-    messvorgang=False
+    measurement_process=False
     aktualisieren_deaktiv=True
 
     plot = Instance(Plot)
 
+    abort=Button()
     testbutton=Button()
     goto=Button()
     nm=Button()
@@ -53,20 +54,18 @@ class SpectrometerGUI(HasTraits):
 
     traits_view=View(HGroup(VGroup(HGroup(Item("eingabe_goto",show_label=False),Item("goto",show_label=False),
                                         Item("scan_bereich",show_label=False),Item("maximum_suchen",show_label=False)),
-                                     HGroup(Item("eingabe_nm",show_label=False),Item("nm",show_label=False),Item("nm_kontrolle",show_label=False)),
+                                     HGroup(Item("eingabe_nm",show_label=False),Item("nm",show_label=False),
+                                            Item("nm_kontrolle",show_label=False),Spring(),Item('abort',show_label=False)),
                                      HGroup(Item("eingabe_nmjemin",show_label=False),Item("nmjemin",show_label=False)),
                                      HGroup(Item("position",show_label=False),Spring(),Item("ausgabe_nmjemin",show_label=False)),
                                      Item('current_grating', editor=EnumEditor(name='grating_value'), label='Gratings'),
                                          HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),Spring()),
                                      Item("ausgabe",style="readonly"),
                                      HGroup(Item("checkbox_spektrometer"), Item("checkbox_voltmeter"))
-                                     ),
+                                    ),
                             Item("plot",editor=ComponentEditor(),show_label=False)),
                      width=750,height=350,buttons = [OKButton,], resizable = True,title="Spektrometer")
 
-
-    def do_print(self):
-        print ("hier ist ein test print")
 
     def __init__(self):
         self.aktualisieren_deaktiv=False
@@ -133,7 +132,7 @@ class SpectrometerGUI(HasTraits):
 
 
     def _maximum_suchen_fired(self):
-        if self.messvorgang==False:
+        if not self.measurement_process:
             startwert=self.eingabe_goto-self.scan_bereich/2.0
             endwert=self.eingabe_goto+self.scan_bereich/2.0
             if startwert <0:
@@ -147,13 +146,13 @@ class SpectrometerGUI(HasTraits):
         self.spectro.wavelength_goto(startwert)
         self.spectro.warten()
         self.spectro.wavelength_durchlauf_kontrolle(endwert)
-        self.messvorgang=True
+        self.measurement_process=True
         start=time.clock()
         self.messwerte=[]
         self.wellenlaenge=[]
-        fertig=False
+        self.measurement_process=True
 
-        while not fertig:
+        while self.measurement_process:
             self.messwerte.append(self.ivolt.messen())
             ende=time.clock()
             self.wellenlaenge.append(float(self.spectro.ausgabe_position()))
@@ -162,15 +161,15 @@ class SpectrometerGUI(HasTraits):
             """die beiden Abbruchbedingungen, wenn die Wellaenge fast gr??er als der Endwert ist oder aber die letzen beiden eingelessenen Wellenl?ngen identisch sind"""
 
             if max(self.wellenlaenge)>=endwert-0.01:
-                    fertig=True
+                    self.measurement_process=False
             if len(self.wellenlaenge)>2:
                 if self.wellenlaenge[len(self.wellenlaenge)-2]==self.wellenlaenge[len(self.wellenlaenge)-1]:
-                    fertig=True
+                    self.measurement_process=False
 
         maximum=max(self.messwerte) # sucht das groesste element der liste
         ort_maximum=self.messwerte.index(maximum) # sucht den ort in der Liste von der Zahl maximum
         self.spectro.mono_stop()
-        self.messvorgang=False
+        self.measurement_process=False
         print self.wellenlaenge[ort_maximum]
         self.spectro.wavelength_goto(self.wellenlaenge[ort_maximum]) # geht an ort des Maximums zurueck
 
@@ -213,6 +212,11 @@ class SpectrometerGUI(HasTraits):
 
     def exit_mirror_auslesen(self):
         self.current_exit_mirror=self.spectro.ausgabe_exit_mirror()
+
+    def _abort_fired(self):
+        self.spectro.mono_stop()
+        self.measurement_process=False
+
 
 
 if __name__=="__main__":

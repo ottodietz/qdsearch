@@ -65,12 +65,29 @@ class Cryo(SimSerial):
 
 
     # set current position
-    def setzero(self,x,y):
+    def setpos(self,x,y):
         self.write("0 0 "+str(x)+" "+str(y)+" setpos \r")
 
     def _setpos(self,string):
         self.posx = 0.0
         self.posy = 0.0
+
+    def status(self):
+        self.write('st \r')
+        tmp=self.readline()
+        return(tmp)
+
+    def _st(self,string):
+        self.buffer='status ok'
+
+    def stop(self):
+        self.write('Ctr+c \r')
+
+    def _Ctrplusc(self,string):
+        print 'abbruch'
+
+
+
 
 
 

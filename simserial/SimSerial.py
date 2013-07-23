@@ -207,4 +207,6 @@ class SimSerial(serial.Serial):
     def replace_special_characters(self,name):
         name=name.replace('?','questionmark')
         name=name.replace('!','exclamationmark')
+        name=name.replace('+','plus')
+        name=name.replace('-','minus')
         return(name)

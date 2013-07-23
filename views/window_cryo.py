@@ -45,6 +45,8 @@ class CryoGUI(HasTraits):
     cal=Button()
     rm=Button()
     setzero=Button()
+    stop=Button()
+    status=Button()
 
 
 
@@ -63,7 +65,8 @@ class CryoGUI(HasTraits):
                             HGroup(Item("leftleft",  resizable = True,show_label=False), Item("left",  resizable = True,show_label=False), Spring(resizable = True),Item("right", resizable = True, show_label=False),Item("rightright", resizable = True, show_label=False)),
                             HGroup(Item('southwest',show_label=False,resizable = True),Item("down", show_label=False, resizable = True),Item('southeast',show_label=False,resizable = True)),
                             HGroup(Item("downdown", show_label=False, resizable = True)),
-                            HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False))),
+                            HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
+                            HGroup(Item('stop',show_label=False,resizable=True),Item('status',show_label=False,resizable=True))),
             Item("ausgabe",style="readonly"),
             Item("checkbox"),
             buttons = [OKButton, CancelButton,],
@@ -78,34 +81,34 @@ class CryoGUI(HasTraits):
          )
 
     def _identity_fired(self):
-            self.ausgabe=self.cryo.identify()
+        self.ausgabe=self.cryo.identify()
 
 
     def _position_fired(self):
-            self.ausgabe=self.cryo.posi()
+        self.ausgabe=self.cryo.posi()
 
     def _cal_fired(self):
-            self.ausgabe=self.cryo.cal()
+        self.ausgabe=self.cryo.cal()
 
     def _rm_fired(self):
-            self.ausgabe=self.cryo.rm()
+        self.ausgabe=self.cryo.rm()
 
     def _up_fired(self):
-            self.cryo.rbewegen(0,self.y)
-            self._position_fired()
+        self.cryo.rbewegen(0,self.y)
+        self._position_fired()
 
     def _down_fired(self):
-            self.cryo.rbewegen(0,-self.y)
-            self._position_fired()
+        self.cryo.rbewegen(0,-self.y)
+        self._position_fired()
 
     def _left_fired(self):
-          self.cryo.rbewegen(-self.x,0)
-          self._position_fired()
+        self.cryo.rbewegen(-self.x,0)
+        self._position_fired()
 
 
     def _right_fired(self):
-            self.cryo.rbewegen(self.x,0)
-            self._position_fired()
+        self.cryo.rbewegen(self.x,0)
+        self._position_fired()
 
     def _northwest_fired(self):
         self.cryo.rbewegen(-self.x,self.y)
@@ -128,21 +131,20 @@ class CryoGUI(HasTraits):
 
 
     def _downdown_fired(self):
-            self.cryo.rbewegen(0,-self.y*self.factor1)
-            self._position_fired()
+        self.cryo.rbewegen(0,-self.y*self.factor1)
+        self._position_fired()
 
     def _leftleft_fired(self):
           self.cryo.rbewegen(-self.x*self.factor1,0)
           self._position_fired()
 
     def _rightright_fired(self):
-            self.cryo.rbewegen(self.x*self.factor1,0)
-            self._position_fired()
+        self.cryo.rbewegen(self.x*self.factor1,0)
+        self._position_fired()
 
     def _upup_fired(self):
-            self.cryo.rbewegen(0,self.y*self.factor1)
-            self._position_fired()
-
+        self.cryo.rbewegen(0,self.y*self.factor1)
+        self._position_fired()
 
 
     def _rmove_fired(self):
@@ -151,12 +153,17 @@ class CryoGUI(HasTraits):
 
 
     def _move_fired(self):
-            self.cryo.bewegen(self.movex,self.movey)
-            self.ausgabe=self.cryo.posi()
+        self.cryo.bewegen(self.movex,self.movey)
+        self.ausgabe=self.cryo.posi()
 
     def _setzero_fired(self):
-            self.cryo.setzero(self.movex,self.movey)
+        self.cryo.setpos(self.movex,self.movey)
 
+    def _stop_fired(self):
+        self.cryo.stop()
+
+    def _status_fired(self):
+        self.ausgabe=self.cryo.status()
 
     def _checkbox_changed(self):
         self.cryo.toggle_simulation("Cryo")
