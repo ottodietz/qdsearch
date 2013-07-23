@@ -17,6 +17,8 @@ from SimSerial import SimSerial
 
 
 class Spectro(SimSerial):
+    new_simulation=False
+    commando_position="last"
 
     def wavelength_durchlauf_kontrolle(self,ziel):
         ziel=round(ziel,3) # rundet auf die 3. Nachkommastelle
@@ -60,7 +62,12 @@ class Spectro(SimSerial):
         self.flushInput()
         self.write("?NM \r")
         tmp=self.readline()
+        print tmp
         return(self.konvertiere_ausgabe(tmp))
+
+    def _questionmarkNM(self,string):
+        self.buffer=self.nm
+
 
     def grating_aendern(self,grat):
         print grat

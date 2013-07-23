@@ -13,14 +13,15 @@ from  window_spectrometer import SpectrometerGUI
 from  window_cryo import CryoGUI
 
 call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
+call_menu_spectrometer = Action(name='spectrometer menu', accelerator='Ctrl+p', action='call_spectrometer_menu')
 
-printen = Action(name='test Print',accelerator="Ctrl+p",
+printen = Action(name='test Print',accelerator="Ctrl+t",
     action='test_function')
 
 menu = MenuBar(Menu(CloseAction, name='File'),
     Menu(UndoAction, RedoAction,printen,
     name='Edit'),
-    Menu(name='Spectrometer'),
+    Menu(call_menu_spectrometer,name='Spectrometer'),
     Menu(call_menu_cryo,name='Cryo'),
     Menu(HelpAction, name='Help'))
 
@@ -48,6 +49,10 @@ class MainWindow(HasTraits):
 
     def call_cryo_menu(self):
        self.cryo_instance.configure_traits(view='view_menu')
+
+    def call_spectrometer_menu(self):
+        print 'the spectrometer menu will follow'
+       #self.spectrometer_instance.configure_traits(view='view_menu')
 
 main = MainWindow()
 if __name__ == '__main__':

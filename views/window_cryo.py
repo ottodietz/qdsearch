@@ -73,7 +73,9 @@ class CryoGUI(HasTraits):
                     HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
                     ),
                     buttons = [OKButton, CancelButton,],
-            resizable = True, width = 400, height = 150)
+            resizable = True, width = 400, height = 150,
+            kind='livemodal'
+         )
 
     def _identity_fired(self):
             self.ausgabe=self.cryo.identify()

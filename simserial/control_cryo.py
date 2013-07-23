@@ -7,7 +7,7 @@ reload(SimSerial)
 from SimSerial import SimSerial
 
 class Cryo(SimSerial):
-    device="cryo"
+    new_simulation=True
     commando_position="last"
     number_of_EOL=1 # if they are two characters written together (without space) it is one EOL
 

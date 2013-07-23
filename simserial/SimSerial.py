@@ -31,21 +31,21 @@ class SimSerial(serial.Serial):
     def toggle_simulation(self,geraet):
         if self.simulation:
             self.simulation=False
-            print("simulation aus")
+            print("simulation off")
             super(SimSerial,self).__init__(*self.initargs,**self.initkwargs)
 
         else:
             self.simulation=True
             serial.Serial.close(self)
             # super(SimSerial,self).close() besser: aber noch ausprobieren
-            print("simulation an")
+            print("simulation on")
 
 
     def write(self,string):
         if self.simulation==True:
          """temporily condition while simserial is under construction and the new version of SimSerial
          is only running with cryo"""
-         if self.device=="cryo":
+         if self.new_simulation:
             name=self.search_function_name(string)
 
             try:
@@ -201,4 +201,10 @@ class SimSerial(serial.Serial):
             name='_'+command[0:spaces[0]]
         else:
             name='_'+command[0:spaces[0]]
+        name=self.replace_special_characters(name)
+        return(name)
+
+    def replace_special_characters(self,name):
+        name=name.replace('?','questionmark')
+        name=name.replace('!','exclamationmark')
         return(name)
