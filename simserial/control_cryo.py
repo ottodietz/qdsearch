@@ -86,6 +86,15 @@ class Cryo(SimSerial):
     def _Ctrplusc(self,string):
         print 'abbruch'
 
+    def convert_output(self,string):
+        a=string.find(" ")
+        b=string.find(" ",a+1)
+        c=string.find(" ",b+1)
+        d=string.find(" ",c+1)
+        x=float(string[b:c])
+        y=float(string[c+1:d])
+        return(x,y)
+
 
 
 

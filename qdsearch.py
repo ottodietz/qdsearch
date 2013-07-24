@@ -31,8 +31,8 @@ class MainWindow(HasTraits):
     spectrometer_instance = Instance( SpectrometerGUI, () )
     cryo_instance=Instance(CryoGUI,())
     inst_group = Group(
-        Item('spectrometer_instance', style = 'custom',show_label=False, label="spektrometer",),
         Item('cryo_instance', style = 'custom',show_label=False,label="cryo",),
+        Item('spectrometer_instance', style = 'custom',show_label=False, label="spektrometer",),
         layout='tabbed')
 
     traits_view = View(

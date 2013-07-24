@@ -36,8 +36,7 @@ class CryoGUI(HasTraits):
     downdown=Button(label='vv')
     leftleft=Button(label='<<')
     rightright=Button(label='>>')
-    factor1=int(3)
-
+    factor1=CInt(10,desc='defines the factor between a normal relativ move and a wide relativ move')
 
 
     position=Button()
@@ -74,6 +73,7 @@ class CryoGUI(HasTraits):
 
     view_menu=View(VGroup(HGroup(Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
                     HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
+                    HGroup(Item('factor1',label='Step range factor'))
                     ),
                     buttons = [OKButton, CancelButton,],
             resizable = True, width = 400, height = 150,
@@ -146,11 +146,9 @@ class CryoGUI(HasTraits):
         self.cryo.rbewegen(0,self.y*self.factor1)
         self._position_fired()
 
-
     def _rmove_fired(self):
         self.x=self.rmovex
         self.y=self.rmovey
-
 
     def _move_fired(self):
         self.cryo.bewegen(self.movex,self.movey)
@@ -167,6 +165,12 @@ class CryoGUI(HasTraits):
 
     def _checkbox_changed(self):
         self.cryo.toggle_simulation("Cryo")
+        if not self.cryo.checkbox:
+            self.refresh_cryo_gui()
+
+    def refresh_cryo_gui(self):
+        position=self.cryo.posi()
+        [self.movex,self.movey]=self.cryo.convert_output(position)
 
 
 if __name__=="__main__":
