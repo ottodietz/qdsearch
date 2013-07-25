@@ -12,6 +12,7 @@ from enthought.pyface.api import error,warning,information
 import control_spectrometer
 reload(control_spectrometer)
 from control_spectrometer import Spectro
+
 import Voltage
 reload(Voltage)
 from Voltage import Voltage
@@ -223,8 +224,8 @@ if __name__=="__main__":
     main=SpectrometerGUI()
     main.configure_traits()
     if main.spectro.simulation==0:
-        print"schliessen"
+        print"close"
         main.spectro.close()
     if main.ivolt.simulation==0:
-        print"schliessen Voltage"
+        print"close Voltage"
         main.ivolt.close()

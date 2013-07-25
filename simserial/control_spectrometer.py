@@ -10,8 +10,8 @@ import time
 from enthought.chaco.tools.api import PanTool, ZoomTool
 from enthought.pyface.api import error,warning,information
 
-import SimSerial
-reload(SimSerial)
+##import SimSerial
+##reload(SimSerial)
 from SimSerial import SimSerial
 
 

@@ -2,8 +2,8 @@
 from enthought.traits.api import*
 from enthought.traits.ui.api import*
 
-import SimSerial
-reload(SimSerial)
+##import SimSerial
+##reload(SimSerial)
 from SimSerial import SimSerial
 
 class Cryo(SimSerial):
@@ -12,6 +12,7 @@ class Cryo(SimSerial):
     number_of_EOL=1 # if they are two characters written together (without space) it is one EOL
 
     def identify(self):
+        self.flushInput()
         self.write("identify \r")
         temp=self.readline()
         return(temp)
@@ -21,6 +22,7 @@ class Cryo(SimSerial):
         self.buffer="identify"
 
     def posi(self):
+        self.flushInput()
         self.write("p \r")
         temp=self.readline()
         return(temp)
@@ -73,6 +75,8 @@ class Cryo(SimSerial):
         self.posy = 0.0
 
     def status(self):
+        """0 if cryo is finished and 1 if it is working"""
+        self.flushInput()
         self.write('st \r')
         tmp=self.readline()
         return(tmp)
@@ -81,10 +85,10 @@ class Cryo(SimSerial):
         self.buffer='status ok'
 
     def stop(self):
-        self.write('Ctr+c \r')
+        self.write('\x03 \r') #ctrl +c
 
     def _Ctrplusc(self,string):
-        print 'abbruch'
+        print 'abort'
 
     def convert_output(self,string):
         a=string.find(" ")

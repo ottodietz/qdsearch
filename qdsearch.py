@@ -58,11 +58,11 @@ main = MainWindow()
 if __name__ == '__main__':
     main.configure_traits()
     if main.cryo_instance.cryo.simulation==0:
-        print"schliessen cryo"
+        print"close cryo"
         main.cryo_instance.cryo.close()
     if main. spectrometer_instance.spectro.simulation==0:
-        print"schliessen spectro"
-        main. spectrometer_instance.spectro.close()
-    if main. spectrometer_instance.ivolt.simulation==0:
-        print"schliessen Voltage"
-        main. spectrometer_instance.ivolt.close()
+        print"close spectro"
+        main.spectrometer_instance.spectro.close()
+    if main.spectrometer_instance.ivolt.simulation==0:
+        print"close Voltage"
+        main.spectrometer_instance.ivolt.close()

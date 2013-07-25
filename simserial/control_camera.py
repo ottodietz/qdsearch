@@ -1,14 +1,15 @@
 from ctypes import *
+import thread
 
 class Camera():
     totalCameras=c_long()
 
     def toggle_simulation(self,simulation):
         if simulation:
-            self.close()
+            print 'Close:',self.atm.close()
         if not simulation:
             self.atm=WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
-            print "Init:", atm.Initialize(None)
+            print "Init:", self.atm.Initialize(None)
             print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
             print "SetReadMode:",self.atm.SetReadMode(0) #FullverticalBinning
             print "SetAcqMode:",self.atm.SetAcquisitionMode(1) # single shoot
