@@ -85,7 +85,7 @@ class CryoGUI(HasTraits):
 
 
     def _position_fired(self):
-        self.ausgabe=self.cryo.posi()
+        self.ausgabe=self.cryo.position()
 
     def _cal_fired(self):
         self.ausgabe=self.cryo.cal()
@@ -151,8 +151,8 @@ class CryoGUI(HasTraits):
         self.y=self.rmovey
 
     def _move_fired(self):
-        self.cryo.bewegen(self.movex,self.movey)
-        self.ausgabe=self.cryo.posi()
+        self.cryo.move(self.movex,self.movey)
+        self.ausgabe=self.cryo.position()
 
     def _setzero_fired(self):
         self.cryo.setpos(self.movex,self.movey)
@@ -165,7 +165,7 @@ class CryoGUI(HasTraits):
 
     def _checkbox_changed(self):
         self.cryo.toggle_simulation("Cryo")
-       # if not self.cryo.checkbox:
+       # if not self.checkbox:
         #    self.refresh_cryo_gui()
 
     def refresh_cryo_gui(self):

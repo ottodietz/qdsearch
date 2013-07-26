@@ -1,6 +1,7 @@
 
 from enthought.traits.api import*
 from enthought.traits.ui.api import*
+import time
 
 ##import SimSerial
 ##reload(SimSerial)
@@ -21,7 +22,7 @@ class Cryo(SimSerial):
     def _identify(self,string):
         self.buffer="identify"
 
-    def posi(self):
+    def position(self):
         self.flushInput()
         self.write("p \r")
         temp=self.readline()
@@ -45,7 +46,7 @@ class Cryo(SimSerial):
         self.posy+=float(string[c+1:d])
 
     # direct move
-    def bewegen(self,x,y):
+    def move(self,x,y):
         self.write("0 0 "+str(x)+" "+str(y)+" m \r")
 
     # simulation direct move
@@ -75,14 +76,14 @@ class Cryo(SimSerial):
         self.posy = 0.0
 
     def status(self):
-        """0 if cryo is finished and 1 if it is working"""
+        """0 if cryo is finished and 1 if it is working. Number is saved in the first character [0]."""
         self.flushInput()
         self.write('st \r')
         tmp=self.readline()
-        return(tmp)
+        return(tmp[0])
 
     def _st(self,string):
-        self.buffer='status ok'
+        self.buffer='0'
 
     def stop(self):
         self.write('\x03 \r') #ctrl +c
@@ -91,6 +92,7 @@ class Cryo(SimSerial):
         print 'abort'
 
     def convert_output(self,string):
+        # does not work corectly
         a=string.find(" ")
         b=string.find(" ",a+1)
         c=string.find(" ",b+1)
@@ -98,6 +100,15 @@ class Cryo(SimSerial):
         x=float(string[b:c])
         y=float(string[c+1:d])
         return(x,y)
+
+    def waiting(self):
+        """not testet"""
+        running=True
+        while running:
+            running=self.status
+            print 'waiting'
+            time.sleep(0.1)
+
 
 
 
