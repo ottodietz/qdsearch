@@ -165,11 +165,11 @@ class CryoGUI(HasTraits):
 
     def _checkbox_changed(self):
         self.cryo.toggle_simulation("Cryo")
-       # if not self.checkbox:
-        #    self.refresh_cryo_gui()
+        if not self.checkbox:
+            self.refresh_cryo_gui()
 
     def refresh_cryo_gui(self):
-        position=self.cryo.posi()
+        position=self.cryo.position()
         [self.movex,self.movey]=self.cryo.convert_output(position)
 
 

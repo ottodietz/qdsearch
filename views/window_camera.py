@@ -2,6 +2,7 @@
 from enthought.traits.api import*
 from enthought.traits.ui.api import*
 import pylab
+import thread
 
 import control_camera
 reload (control_camera)
@@ -13,15 +14,19 @@ class CameraGUI(HasTraits):
     camera=Camera()
 
     checkbox_camera=Bool(True)
+    cooler=Bool(False)
 
     plot=Button()
     acqusition=Button()
     temperature=Button()
 
 
+
     traits_view=View(VGroup(
                         HGroup(Item('acqusition'), Item('plot',show_label=False),Item('temperature',show_label=False)),
-                        Item('checkbox_camera',label='Simulation')),
+                        HGroup(Item('checkbox_camera',label='Simulation'),
+                        #Item('cooler')
+                        )),
                         resizable = True )
 
     def _acqusition_fired(self):
@@ -37,6 +42,12 @@ class CameraGUI(HasTraits):
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
+
+    def _cooler_changed(self):
+        if self.cooler:
+            self.camera.cooler_on()
+        else:
+            self.camera.cooler_off()
 
     def _plot_fired(self):
         print self.line[:]

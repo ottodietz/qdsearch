@@ -5,13 +5,11 @@ from enthought.traits.ui.api import*
 #from enthought.chaco.api import Plot, ArrayPlotData
 from numpy import arange,linspace,sin
 #from enthought.enable.component_editor import ComponentEditor
-import thread
 import time
 from enthought.chaco.tools.api import PanTool, ZoomTool
 from enthought.pyface.api import error,warning,information
 
-##import SimSerial
-##reload(SimSerial)
+
 from SimSerial import SimSerial
 
 

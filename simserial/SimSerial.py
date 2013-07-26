@@ -97,7 +97,7 @@ class SimSerial(serial.Serial):
                 thread.start_new_thread(self.simulation_durchlauf,(ziel,))
 
             if string==("?NM \r"):
-                self.buffer=self.nm
+                self.buffer=' '+str(self.nm)+' '
 
             if string==("?GRATINGS \r"):
                 pass
@@ -110,7 +110,7 @@ class SimSerial(serial.Serial):
 
 
             if string==("?NM/MIN \r"):
-                self.buffer=self.nm_je_min
+                self.buffer=' '+str(self.nm_je_min)+' '
 
             if (string.find("GOTO")!=-1):
                 self.buffer=string+" ok"
@@ -163,7 +163,7 @@ class SimSerial(serial.Serial):
 
     def readline(self):
         if self.simulation:
-            return(" "+str(self.buffer)+" ")
+            return(str(self.buffer))
         else:
             return(serial.Serial.readline(self))
             # return(super(SimSerial,self).close()) besser: aber noch ausprobieren

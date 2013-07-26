@@ -32,6 +32,12 @@ class Camera():
         print "ShutDown:", self.atm.ShutDown()
 
     def temperature(self):
-        temperature=int()
+        temperature=c_long()
         print 'GetTemperature', self.atm.GetTemperature(byref(temperature))
-        print temperature
+        print temperature.value
+
+    def cooler_on(self):
+        print 'Cooler on:',self.atm.CoolerON()
+
+    def cooler_off(self):
+        print 'Cooler off:',self.atm.CoolerOFF()

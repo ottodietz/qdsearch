@@ -3,8 +3,7 @@ from enthought.traits.api import*
 from enthought.traits.ui.api import*
 import time
 
-##import SimSerial
-##reload(SimSerial)
+
 from SimSerial import SimSerial
 
 class Cryo(SimSerial):
@@ -80,6 +79,7 @@ class Cryo(SimSerial):
         self.flushInput()
         self.write('st \r')
         tmp=self.readline()
+        print tmp
         return(tmp[0])
 
     def _st(self,string):
@@ -92,7 +92,7 @@ class Cryo(SimSerial):
         print 'abort'
 
     def convert_output(self,string):
-        # does not work corectly
+        string=string.replace('    ','')
         a=string.find(" ")
         b=string.find(" ",a+1)
         c=string.find(" ",b+1)
@@ -102,12 +102,12 @@ class Cryo(SimSerial):
         return(x,y)
 
     def waiting(self):
-        """not testet"""
         running=True
-        while running:
-            running=self.status
+        while running :
+            running=int(self.status())
             print 'waiting'
-            time.sleep(0.1)
+            time.sleep(0.5)
+        print 'fertig'
 
 
 

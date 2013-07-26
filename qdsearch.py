@@ -75,6 +75,7 @@ class MainWindow(HasTraits):
 
     def test_function(self):
         print"test"
+        thread.start_new_thread(self.cryo_instance.cryo.waiting,())
 
     def call_cryo_menu(self):
        self.cryo_instance.configure_traits(view='view_menu')
