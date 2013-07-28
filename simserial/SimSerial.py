@@ -1,7 +1,7 @@
 from __future__ import division
 import serial
 import time
-import thread
+
 
 class SimSerial(serial.Serial):
     commando_position="first"
@@ -14,8 +14,7 @@ class SimSerial(serial.Serial):
     buffer=str()
     posx=float(1.0)
     posy=float(1.0)
-    nm=float(0)
-    nm_je_min=float(10.0)
+
 
 
     def __init__(self,*args,**kwargs):
@@ -47,6 +46,7 @@ class SimSerial(serial.Serial):
          is only running with cryo"""
          if self.new_simulation:
             name=self.search_function_name(string)
+
 
             try:
                     getattr(self,name)(string)
@@ -174,30 +174,17 @@ class SimSerial(serial.Serial):
             #super(SimSerial,self).flushOutput()
 
 
-
-    def simulation_durchlauf(self,ziel):
-        if self.nm-ziel <0:
-            vorzeichen=1
-        else:
-            vorzeichen=-1
-        start=time.clock()
-        aktuell=time.clock()
-        startposition=self.nm
-        while self.nm < ziel-0.01:
-            aktuell=time.clock()
-            time.sleep(0.1)
-            self.nm=round(startposition+self.nm_je_min*(aktuell-start)/60*vorzeichen,3)
-
     def search_function_name(self,command):
+        print command
         spaces = []
         position = 0
         for x in command:
             if x == ' ':
                 spaces.append(position)
             position += 1
-        if len(spaces)>2 and self.commando_position=="last":
+        if len(spaces)>1 and self.commando_position=="last":
             name='_'+command[spaces[len(spaces)-self.number_of_EOL-1]+1:spaces[len(spaces)-self.number_of_EOL]]
-        elif   len(spaces)>2 and self.commando_position=="first":
+        elif   len(spaces)>1 and self.commando_position=="first":
             name='_'+command[0:spaces[0]]
         else:
             name='_'+command[0:spaces[0]]
@@ -205,8 +192,8 @@ class SimSerial(serial.Serial):
         return(name)
 
     def replace_special_characters(self,name):
-        name=name.replace('?','questionmark')
-        name=name.replace('!','exclamationmark')
-        name=name.replace('+','plus')
-        name=name.replace('-','minus')
+        _sign=['?','!','+','-','<','>','/']
+        _replace=['questionmark','exclamationmark','plus','minus','less_than','greater_than','slash']
+        for i in range(len(_sign)):
+            name=name.replace(_sign[i],_replace[i])
         return(name)

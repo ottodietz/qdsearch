@@ -1,13 +1,11 @@
 
 from enthought.traits.api import*
 from enthought.traits.ui.api import*
-#from traitsui.menu import OKButton, CancelButton
-#from enthought.chaco.api import Plot, ArrayPlotData
 from numpy import arange,linspace,sin
-#from enthought.enable.component_editor import ComponentEditor
 import time
 from enthought.chaco.tools.api import PanTool, ZoomTool
 from enthought.pyface.api import error,warning,information
+import thread
 
 
 from SimSerial import SimSerial
@@ -15,7 +13,11 @@ from SimSerial import SimSerial
 
 
 class Spectro(SimSerial):
-    new_simulation=False
+    # for simulation
+    nm=float(0)
+    nm_je_min=float(10.0)
+
+    new_simulation=True
     commando_position="last"
 
     def wavelength_durchlauf_controlled(self,aim):
@@ -24,6 +26,25 @@ class Spectro(SimSerial):
             print ("falsche input: Wellenlaenge muss zwischen 0 und 1000 liegen ")
         else:
             self.write(str(aim)+" >NM \r")
+
+    def _greater_thanNM(self,string):
+        a=string.find(" ")
+        aim=float(string[0:a])
+        print "starte thread"
+        thread.start_new_thread(self.simulation_durchlauf,(aim,))
+
+    def simulation_durchlauf(self,aim):
+        if self.nm-aim <0:
+            vorzeichen=1
+        else:
+            vorzeichen=-1
+        start=time.clock()
+        aktuell=time.clock()
+        startposition=self.nm
+        while self.nm < aim-0.01:
+            aktuell=time.clock()
+            time.sleep(0.1)
+            self.nm=round(startposition+self.nm_je_min*(aktuell-start)/60*vorzeichen,3)
 
     def mono_stop(self):
         self.write("MONO-STOP \r")
@@ -35,6 +56,13 @@ class Spectro(SimSerial):
         else:
             self.write(str(aim)+" NM \r")
 
+    def _NM(self,string):
+        self.buffer=string+" ok"
+        space=string.find(" ")
+        self.nm=float(string[0:space])
+        print self.nm
+
+
     def wavelength_goto(self,aim):
         aim=round(aim,3)
         if aim <0 or aim >1000:
@@ -42,8 +70,12 @@ class Spectro(SimSerial):
         else:
             self.write(str(aim)+" GOTO \r")
 
-    def velocity(self,tempo):
+    def _GOTO(self,string):
+        self.buffer=string+" ok"
+        a=string.find(" ")
+        self.nm=float(string[0:a])
 
+    def velocity(self,tempo):
         tempo=round(tempo,3)
         if tempo<0.010 or tempo>666.666:
             warning(parent=None, title="warning", message="falscher Wert fuer die velocity: sie muss zwischen 0.010 und 666.666 nm/min liegen")
@@ -51,11 +83,20 @@ class Spectro(SimSerial):
         else:
             self.write(str(tempo)+ " NM/MIN \r")
 
+    def _NMslashMIN(self,string):
+        self.buffer=string+" ok"
+        a=string.find(" ")
+        self.nm_je_min=float(string[0:a])
+
+
     def output_velocity(self):
         self.flushInput()
         self.write("?NM/MIN \r")
         tmp=self.readline()
         return(self.convert_output(tmp))
+
+    def _questionmarkNMslashMIN(self,string):
+        self.buffer=' '+str(self.nm_je_min)+' '
 
     def output_position(self):
         self.flushInput()
@@ -65,8 +106,7 @@ class Spectro(SimSerial):
         return(self.convert_output(tmp))
 
     def _questionmarkNM(self,string):
-        self.buffer=self.nm
-
+        self.buffer=' '+str(self.nm)+' '
 
     def grating_change(self,grat):
         print grat
@@ -77,6 +117,7 @@ class Spectro(SimSerial):
         self.write(mirror+" \r")
 
     def convert_output(self,tmp):
+        print tmp
         a=tmp.find(" ")
         b=tmp.find(" ",a+2)
         if a<0 or b<0:

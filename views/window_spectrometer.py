@@ -84,7 +84,7 @@ class SpectrometerGUI(HasTraits):
             self.input_goto=0
         else:
             self.spectro.wavelength_goto(self.input_goto)
-            self.spectro.warten()
+            self.spectro.waiting()
 
     def _nm_fired(self):
         if self.input_nm>1000:
@@ -95,7 +95,7 @@ class SpectrometerGUI(HasTraits):
             self.input_nm=0
         else:
             self.spectro.wavelength_durchlauf(self.input_nm)
-            self.spectro.warten()
+            self.spectro.waiting()
 
     def _nm_controlled_fired(self):
         if self.input_nm>1000:
@@ -216,6 +216,7 @@ class SpectrometerGUI(HasTraits):
     def _abort_fired(self):
         self.spectro.mono_stop()
         self.measurement_process=False
+
 
 
 
