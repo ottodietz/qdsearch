@@ -18,89 +18,90 @@ class Spectro(SimSerial):
     new_simulation=False
     commando_position="last"
 
-    def wavelength_durchlauf_kontrolle(self,ziel):
-        ziel=round(ziel,3) # rundet auf die 3. Nachkommastelle
-        if ziel <0 or ziel >1000:
-            print ("falsche Eingabe: Wellenlaenge muss zwischen 0 und 1000 liegen ")
+    def wavelength_durchlauf_controlled(self,aim):
+        aim=round(aim,3) # rundet auf die 3. Nachkommastelle
+        if aim <0 or aim >1000:
+            print ("falsche input: Wellenlaenge muss zwischen 0 und 1000 liegen ")
         else:
-            self.write(str(ziel)+" >NM \r")
+            self.write(str(aim)+" >NM \r")
 
     def mono_stop(self):
         self.write("MONO-STOP \r")
 
-    def wavelength_durchlauf(self,ziel):
-        ziel=round(ziel,3) # rundet auf die 3. Nachkommastelle
-        if ziel <0 or ziel >1000:
+    def wavelength_durchlauf(self,aim):
+        aim=round(aim,3) # rundet auf die 3. Nachkommastelle
+        if aim <0 or aim >1000:
             warning(parent=None, title="warning", message="falsche Wert fuer die Wellenlaenge: sie muss zwischen 0 und 1000 nm liegen  ")
         else:
-            self.write(str(ziel)+" NM \r")
+            self.write(str(aim)+" NM \r")
 
-    def wavelength_goto(self,ziel):
-        ziel=round(ziel,3)
-        if ziel <0 or ziel >1000:
+    def wavelength_goto(self,aim):
+        aim=round(aim,3)
+        if aim <0 or aim >1000:
             warning(parent=None, title="warning", message="falsche Wert fuer die Wellenlaenge: sie muss zwischen 0 und 1000 nm liegen  ")
         else:
-            self.write(str(ziel)+" GOTO \r")
+            self.write(str(aim)+" GOTO \r")
 
-    def geschwindigkeit(self,v):
-        v=round(v,3)
-        if v<0.010 or v>666.666:
-            warning(parent=None, title="warning", message="falscher Wert fuer die Geschwindigkeit: sie muss zwischen 0.010 und 666.666 nm/min liegen")
-            main.eingabe_nm=500.0
+    def velocity(self,tempo):
+
+        tempo=round(tempo,3)
+        if tempo<0.010 or tempo>666.666:
+            warning(parent=None, title="warning", message="falscher Wert fuer die velocity: sie muss zwischen 0.010 und 666.666 nm/min liegen")
+            main.input_nm=500.0
         else:
-            self.write(str(v)+ " NM/MIN \r")
+            self.write(str(tempo)+ " NM/MIN \r")
 
-    def ausgabe_geschwindigkeit(self):
+    def output_velocity(self):
         self.flushInput()
         self.write("?NM/MIN \r")
         tmp=self.readline()
-        return(self.konvertiere_ausgabe(tmp))
+        return(self.convert_output(tmp))
 
-    def ausgabe_position(self):
+    def output_position(self):
         self.flushInput()
         self.write("?NM \r")
         tmp=self.readline()
         print tmp
-        return(self.konvertiere_ausgabe(tmp))
+        return(self.convert_output(tmp))
 
     def _questionmarkNM(self,string):
         self.buffer=self.nm
 
 
-    def grating_aendern(self,grat):
+    def grating_change(self,grat):
         print grat
         self.write(grat+" GRATING \r")
 
-    def exit_mirror_aendern(self,mirror):
+    def exit_mirror_change(self,mirror):
         self.write("EXIT-MIRROR \r")
         self.write(mirror+" \r")
 
-    def konvertiere_ausgabe(self,tmp):
+    def convert_output(self,tmp):
         a=tmp.find(" ")
         b=tmp.find(" ",a+2)
         if a<0 or b<0:
             error(parent=None, title="error", message= "fehler: falscher string sollte Konvertiert werden: "+ str(tmp))
             return(tmp)
         else:
-            ausgabe=tmp[a:b]
-            return(ausgabe)
+            output=tmp[a:b]
+            return(output)
 
-    def warten(self):
-        """Ueberprueft ob Spektrometer ans ziel gekommen ist"""
+    def waiting(self):
+        """Ueberprueft ob Spektrometer ans aim gekommen ist"""
         self.flushInput()
         i=0
-        fertig=False
-        while (not fertig) and (i<20): # i noch als Abbruch drinne, falls die Funktion ins leere laeuft
+        finish=False
+        while (not finish) and (i<20): # i noch als Abbruch drinne, falls die Funktion ins leere laeuft
             print i
             i=i+1
             temp=self.readline()
             print temp
             if temp.find("ok") !=-1:
-                print "gefunden"
-                fertig=True
+                print "found"
+                finish=True
             time.sleep(1)
 
-    def ausgabe_grating(self):
+    def output_grating(self):
         grating=[]
         self.write("?GRATINGS \r")
         self.readline()
@@ -110,16 +111,16 @@ class Spectro(SimSerial):
             if temp.find("Not Installed")==-1:
                 grating.append(temp)
 
-        """fragt das aktuelle grating ab"""
+        """fragt das currente grating ab"""
         self.flushInput()
         self.write("?GRATING \r")
-        grating_aktuell=self.readline()
-        grating_aktuell=int(grating_aktuell[10])
-        grating[grating_aktuell-1]=grating[grating_aktuell-1].replace("\x1a", " ") # -1 da Liste bei 0 anfaengt und Grating bei 1
-        return(grating,grating_aktuell)
+        grating_current=self.readline()
+        grating_current=int(grating_current[10])
+        grating[grating_current-1]=grating[grating_current-1].replace("\x1a", " ") # -1 da Liste bei 0 anfaengt und Grating bei 1
+        return(grating,grating_current)
 
-    def ausgabe_exit_mirror(self):
-        """liest das aktuelle stellung des Exit_mirrors aus und gibt sie zur?ck"""
+    def output_exit_mirror(self):
+        """liest das currente stellung des Exit_mirrors aus und gibt sie zur?ck"""
         self.write("EXIT-MIRROR \r")
         time.sleep(0.1)
         self.flushInput()
@@ -130,6 +131,6 @@ class Spectro(SimSerial):
         elif test.find("front")!=-1:
             return("front")
         else:
-             print "fehler"
+             print "error by exit mirror"
 
 

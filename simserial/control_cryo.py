@@ -32,7 +32,7 @@ class Cryo(SimSerial):
         self.buffer=str(self.posx)+" "+str(self.posy)
 
     # relative move
-    def rbewegen(self,x,y):
+    def rmove(self,x,y):
         self.write("0 0 "+str(x)+" "+str(y)+" r \r")
 
     # simulation relativ move

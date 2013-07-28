@@ -50,7 +50,7 @@ class MainWindow(HasTraits):
     cryo_instance=Instance(CryoGUI,())
     camera_instance=Instance(CameraGUI,())
 
-    test=Group(Item('textfield',label='Ausdehnung der Probe',style='readonly'),
+    test=Group(Item('textfield',label='Step width by scanning',style='readonly'),
                         HGroup(Item('x1'),Spring(),Item('x2')),
                         HGroup(Item('y1'),Spring(),Item('y2')),
                         HGroup(Item('width_sample'),Spring(),Item('height_sample')),
@@ -60,7 +60,7 @@ class MainWindow(HasTraits):
 
     inst_group = Group(
         Item('cryo_instance', style = 'custom',show_label=False,label="cryo",),
-        Item('spectrometer_instance', style = 'custom',show_label=False, label="spektrometer",),
+        Item('spectrometer_instance', style = 'custom',show_label=False, label="spectrometer",),
         VGroup(test,Item('camera_instance',style='custom',show_label=False),label='scan sample'),
         layout='tabbed')
 
@@ -90,7 +90,7 @@ class MainWindow(HasTraits):
         else:
             simu=True
             if simu:
-                print 'in dieser Funktion werden weitere Funktionen folgen!'
+                print 'The function will follow!'
             else:
                 """x1 muss kleiner x2 sein analog y2"""
                 searching=True
@@ -111,9 +111,9 @@ class MainWindow(HasTraits):
                     while searching:
                         if self.threshold_voltage < self.spectrometer_instance.ivolt.lesen(): # vergleicht schwellenspannung mit aktueller
                             self.cryo_instance.cryo.stop() # stopt cryo
-                            self.spectrometer_instance.spectro.exit_mirror_aendern('front') # klappt spiegel vom spectro auf kamera um
+                            self.spectrometer_instance.spectro.exit_mirror_change('front') # klappt spiegel vom spectro auf kamera um
                             measurement_data=self.camera_instance.camera.acqisition() # nimmt das spektrum auf
-                            self.spectrometer_instance.spectro.exit_mirror_aendern('side') # klappt spiegel vom spectro auf ausgang um
+                            self.spectrometer_instance.spectro.exit_mirror_change('side') # klappt spiegel vom spectro auf ausgang um
                             [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #speichert die aktuellen koordinaten ab
                             self.cryo_instance.cryo.move(x_target,y_target+vorzeichen*height) # faehrt stueck weiter um von QD weg zusein
                             self.cryo_instance.cryo.waiting() # wartet bis cryo vom QD weg ist

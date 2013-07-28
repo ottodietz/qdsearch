@@ -32,13 +32,13 @@ class CameraGUI(HasTraits):
     def _acqusition_fired(self):
         """das hier in neuen thread auf zu machen funktioniert so nicht, da dann line leer
         Da nicht auf ende der funktion gewartet wird, muss anders gel?st werden"""
-        if self.camera.init_aktiv:
+        if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             self.line=self.camera.acqisition()
 
     def _checkbox_camera_changed(self):
-        if self.camera.init_aktiv:
+        if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
@@ -55,7 +55,7 @@ class CameraGUI(HasTraits):
         pylab.show()
 
     def _temperature_fired(self):
-        if self.camera.init_aktiv:
+        if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             self.camera.temperature()
