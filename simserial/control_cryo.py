@@ -88,9 +88,6 @@ class Cryo(SimSerial):
     def stop(self):
         self.write('\x03 \r') #ctrl +c
 
-    def _Ctrplusc(self,string):
-        print 'abort'
-
     def convert_output(self,string):
         string=string.replace('    ','')
         a=string.find(" ")

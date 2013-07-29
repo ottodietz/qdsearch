@@ -4,6 +4,7 @@ from traitsui.api import *
 from traitsui.menu import OKButton, CancelButton
 import thread
 from enthought.pyface.api import error,warning,information
+import time
 
 import window_cryo
 reload( window_cryo)
@@ -45,23 +46,26 @@ class MainWindow(HasTraits):
     wavelength=CFloat(500)
     threshold_voltage=CFloat(2)
     scan_sample=Button()
+    abort=Button()
+    test=Button()
+    finished=True
 
     spectrometer_instance = Instance( SpectrometerGUI, () )
     cryo_instance=Instance(CryoGUI,())
     camera_instance=Instance(CameraGUI,())
 
-    test=Group(Item('textfield',label='Step width by scanning',style='readonly'),
+    scanning=Group(Item('textfield',label='Step width by scanning',style='readonly'),
                         HGroup(Item('x1'),Spring(),Item('x2')),
                         HGroup(Item('y1'),Spring(),Item('y2')),
                         HGroup(Item('width_sample'),Spring(),Item('height_sample')),
                         HGroup(Item('wavelength'),Spring(),Item('threshold_voltage')),
-                        HGroup(Item('scan_sample',show_label=False)),
+                        HGroup(Item('scan_sample',show_label=False),Item('abort',show_label=False),Item('test',show_label=False)),
                         )
 
     inst_group = Group(
         Item('cryo_instance', style = 'custom',show_label=False,label="cryo",),
         Item('spectrometer_instance', style = 'custom',show_label=False, label="spectrometer",),
-        VGroup(test,Item('camera_instance',style='custom',show_label=False),label='scan sample'),
+        VGroup(scanning,Item('camera_instance',style='custom',show_label=False),label='scan sample'),
         layout='tabbed')
 
     traits_view = View(
@@ -90,61 +94,118 @@ class MainWindow(HasTraits):
         else:
             simu=True
             if simu:
-                print 'The function will follow!'
+                print 'this function will follow!'
             else:
                 """x1 muss kleiner x2 sein analog y2"""
                 searching=True
+                self.finished=False
                 x_start=self.x1
                 y_start=self.y1
                 x_target=self.x1
                 y_target=self.y2
+                x_koords=[]
+                y_koords=[]
+                spektra=[]
+                sign=1 #wird spaeter berechnet wenn einegabe der gr??e  keine rolle mehr spielt
+
+                """Werte aus GUI einlesen, damit suche weiter l?uft auch wenn GUI ge?nert wird"""
                 width=self.width_sample #x-koordinaten abstand
                 height=self.height_sample #  y koordinaten abstand
-                self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
-                """es muss noch der spiegel ?berpr?ft werden und ggf umgeklappt werden"""
-                self.cryo_instance.cryo.waiting() #wartet bis dort angekommen
+                threshold_voltage=self.threshold_voltage # Schwellenspannung
 
-                self.cryo_instance.cryo.move(x_target,y_target)#faengt an zumersten ziel zu fahren
-                """ Matrix oder ?hnliches einf?gen in derdie x koords, die y, koords und die Messpunkte gespeichert werden, IDEE=koords ganz hinten
-                oder vorne abspeichern"""
-                while not finished:
+                self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
+                if self.spectrometer_instance.exit_mirror_value=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+                     self.spectrometer_instance.spectro.exit_mirror_change('side')
+                self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
+                self.cryo_instance.cryo.move(x_target,y_target)#faengt an zum ersten ziel zu fahren
+
+                """ ein Thread aufmachen fuer den Teil if hreshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
+                sodass sie parallel laufen koennen"""
+                while not self.finished:
                     while searching:
-                        if self.threshold_voltage < self.spectrometer_instance.ivolt.lesen(): # vergleicht schwellenspannung mit aktueller
+                        if threshold_voltage < self.spectrometer_instance.ivolt.lesen(): # vergleicht schwellenspannung mit aktueller
                             self.cryo_instance.cryo.stop() # stopt cryo
                             self.spectrometer_instance.spectro.exit_mirror_change('front') # klappt spiegel vom spectro auf kamera um
-                            measurement_data=self.camera_instance.camera.acqisition() # nimmt das spektrum auf
+                            spectrum=self.camera_instance.camera.acqisition() # nimmt das spektrum auf
                             self.spectrometer_instance.spectro.exit_mirror_change('side') # klappt spiegel vom spectro auf ausgang um
                             [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #speichert die aktuellen koordinaten ab
-                            self.cryo_instance.cryo.move(x_target,y_target+vorzeichen*height) # faehrt stueck weiter um von QD weg zusein
+                            x_koords.append(x)
+                            y_koords.append(y)
+                            spektra.append(spectrum)
+                            self.cryo_instance.cryo.move(x_target,y_target+sign*height) # faehrt stueck weiter um von QD weg zusein
                             self.cryo_instance.cryo.waiting() # wartet bis cryo vom QD weg ist
-                            self.cryo_instance.cryo.move(x_target,y_target) # f?hrt weiter
+                            """aufpassen, dass er waerend er vom QD weg faehrt nicht ueber das ende hinaus (also x/y_target) faehrt"""
+                            self.cryo_instance.cryo.move(x_target,y_target) # faehrt weiter
+                            searching=True # da wenn cryo.status parallel abgefragt wird es auf False gesetz worden ist vremutlich muss der ganze thread dann neu gestartet werden
                         if not self.cryo_instance.cryo.status():
                             searching=False
+
                         # berechnet xwerte fuer naechsten durchlaf
-                        x_start=x_target
-                        x_target=x_target+width
-                        self.cryo_instance.cryo.move(x_target,y_target) #faehrt zur neuen x koordinate
-                        self.cryo_instance.cryo.waiting()
-                        # berechnet y werte fuer den naechsten durchlauf
-                        y_start=temp
-                        y_start=y_target
-                        y_target=temp
-                        """abfrage aender wenn nicht genau richtigen koords erreicht sind faehrt er ins leere"""
-                        if x_start==self.x2 and y_start==self.y2: #schaut ob ende erreicht worden ist
-                            finished=True
+                    x_start=x_target
+                    x_target=x_target+width
+                    self.cryo_instance.cryo.move(x_target,y_target) #faehrt zur neuen x koordinate
+                    self.cryo_instance.cryo.waiting()
+                    # berechnet y werte fuer den naechsten durchlauf
+                    y_start=temp
+                    y_start=y_target
+                    y_target=temp
+                    if x_start>=self.x2 and y_start>=self.y2: #schaut ob ende erreicht worden ist
+                        """hier wird mit werten aus der GUI verglichen, das spaeter aendern"""
+                        self.finished=True
+                    else:
                         self.cryo_instance.cryo.move(x_target,y_target) # gibt neues ziel an
+                        searching=True
+                print 'suchdurchlauf fertig'
 
 
+            """"dann folgt noch auslesen der Koordinaten und alles abspeicerhn"""
 
 
+    def _test_fired(self): # tests the movement of the cryo
+                """x1 muss kleiner x2 sein analog y2"""
+                searching=True
+                self.finished=False
+                x_start=self.x1
+                y_start=self.y1
+                x_target=self.x1
+                y_target=self.y2
+                sign=1 #wird spaeter berechnet wenn einegabe der gr??e  keine rolle mehr spielt
+
+                """Werte aus GUI einlesen, damit suche weiter l?uft auch wenn GUI ge?nert wird"""
+                width=self.width_sample #x-koordinaten abstand
+                height=self.height_sample #  y koordinaten abstand
+
+                self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
+                self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
+                self.cryo_instance.cryo.move(x_target,y_target)#faengt an zum ersten ziel zu fahren
+
+                while not self.finished:
+                    while searching:
+                        if not self.cryo_instance.cryo.status():
+                            searching=False
+
+                        # berechnet xwerte fuer naechsten durchlaf
+                    x_start=x_target
+                    x_target=x_target+width
+                    self.cryo_instance.cryo.move(x_target,y_target) #faehrt zur neuen x koordinate
+                    self.cryo_instance.cryo.waiting()
+                    # berechnet y werte fuer den naechsten durchlauf
+                    y_start=temp
+                    y_start=y_target
+                    y_target=temp
+                    if x_start>=self.x2 and y_start>=self.y2: #schaut ob ende erreicht worden ist
+                        """hier wird mit werten aus der GUI verglichen, das spaeter aendern"""
+                        self.finished=True
+                    else:
+                        self.cryo_instance.cryo.move(x_target,y_target) # gibt neues ziel an
+                print 'suchdurchlauf fertig'
 
 
-                    """"dann folgt noch auslesen der Koordinaten und alles abspeicerhn"""
-
-
-
-
-
+    def _abort_fired(self):
+        self.finished=True
+        self.cryo_instance.cryo.stop() #stopt cryo
+        #self.spectrometer_instance.spectro.mono_stop()# stoppt spectrometer wobei das garnicht an sein sollte
+        print 'abort'
 
 
 

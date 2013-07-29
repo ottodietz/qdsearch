@@ -49,6 +49,7 @@ class Spectro(SimSerial):
     def mono_stop(self):
         self.write("MONO-STOP \r")
 
+
     def wavelength_durchlauf(self,aim):
         aim=round(aim,3) # rundet auf die 3. Nachkommastelle
         if aim <0 or aim >1000:

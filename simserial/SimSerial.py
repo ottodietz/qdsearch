@@ -16,11 +16,9 @@ class SimSerial(serial.Serial):
     posy=float(1.0)
 
 
-
     def __init__(self,*args,**kwargs):
         self.initkwargs=kwargs
         self.initargs=args
-
 
 
         """ Beide Moeglichkeiten um den Port zu oeffnen
@@ -46,12 +44,13 @@ class SimSerial(serial.Serial):
          is only running with cryo"""
          if self.new_simulation:
             name=self.search_function_name(string)
-
-
             try:
                     getattr(self,name)(string)
             except:
-                print('No simulation function found.')
+                try:
+                    getattr(self,name)()
+                except:
+                    print('No simulation function found.')
 
          else:
 
@@ -149,7 +148,6 @@ class SimSerial(serial.Serial):
             if string==("B") and (string.find("\r")==-1) :
                 print ("blinken")
 
-
             if (string.find("S")==0)  and (string.find("\r")==-1):
                 print ("setvoltage")
         else:
@@ -173,9 +171,12 @@ class SimSerial(serial.Serial):
             serial.Serial.flushInput(self)
             #super(SimSerial,self).flushOutput()
 
+    def flushOutput(self):
+        if not self.simulation:
+            serial.Serial.flushOutput(self)
+
 
     def search_function_name(self,command):
-        print command
         spaces = []
         position = 0
         for x in command:
@@ -186,6 +187,8 @@ class SimSerial(serial.Serial):
             name='_'+command[spaces[len(spaces)-self.number_of_EOL-1]+1:spaces[len(spaces)-self.number_of_EOL]]
         elif   len(spaces)>1 and self.commando_position=="first":
             name='_'+command[0:spaces[0]]
+        elif spaces==[]:
+            name='_'+command
         else:
             name='_'+command[0:spaces[0]]
         name=self.replace_special_characters(name)
