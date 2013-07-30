@@ -79,8 +79,7 @@ class Cryo(SimSerial):
         self.flushInput()
         self.write('st \r')
         tmp=self.readline()
-        print tmp
-        return(tmp[0])
+        return(int(tmp[0]))
 
     def _st(self,string):
         self.buffer='0'

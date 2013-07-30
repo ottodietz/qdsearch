@@ -18,6 +18,7 @@ class Voltage(SimSerial):
         print 'blinken'
 
     def read_voltage(self):
+        start = time.clock()
         temp=''
         self.flushInput()
         while (temp.find("Voltage")==-1):
@@ -25,7 +26,24 @@ class Voltage(SimSerial):
             #time.sleep(0.1)
             temp=self.readline()
         voltage=temp[9:14]
+        ende = time.clock()
+        # print "the function runs %1.2f s" % (ende - start)
         return(float(voltage))
+
+    def read_voltage_new(self):
+        start = time.clock()
+        temp=''
+        self.flushInput()
+        self.write('V')
+        time.sleep(0.9)
+        number=self.inWaiting()
+        temp=self.read(number)
+        a=temp.find('Voltage')
+        voltage=temp[a+9:a+14]
+        ende = time.clock()
+        print "the function runs %1.2f s" % (ende - start)
+        return(float(voltage))
+
 
     def _V(self):
         self.buffer='Voltage'+'  '+str(self.voltage_simulation)

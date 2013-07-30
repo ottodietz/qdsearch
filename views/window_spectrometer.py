@@ -187,8 +187,8 @@ class SpectrometerGUI(HasTraits):
 
 
     def _checkbox_spectrometer_changed(self):
-        self.spectro.toggle_simulation("spektrometer")
-        if not self.checkbox_spektrometer:
+        self.spectro.toggle_simulation("spectrometer")
+        if not self.checkbox_spectrometer:
             self.spectrometer_gui_refresh()
 
     def _checkbox_voltmeter_changed(self):

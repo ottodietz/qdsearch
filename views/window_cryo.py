@@ -165,7 +165,7 @@ class CryoGUI(HasTraits):
         self.cryo.stop()
 
     def _status_fired(self):
-        self.output=self.cryo.status()
+        self.output=str(self.cryo.status())
 
     def _checkbox_changed(self):
         self.cryo.toggle_simulation("Cryo")

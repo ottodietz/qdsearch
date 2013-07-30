@@ -175,6 +175,11 @@ class SimSerial(serial.Serial):
         if not self.simulation:
             serial.Serial.flushOutput(self)
 
+    def inWaiting(self):
+        if not self.simulation:
+            return(serial.Serial.inWaiting(self))
+
+
 
     def search_function_name(self,command):
         spaces = []
