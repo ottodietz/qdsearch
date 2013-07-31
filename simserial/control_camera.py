@@ -31,7 +31,7 @@ class Camera():
     def close(self):
         print "ShutDown:", self.atm.ShutDown()
 
-    def temperature(self):
+    def gettemperature(self):
         temperature=c_long()
         print 'GetTemperature', self.atm.GetTemperature(byref(temperature))
         print temperature.value
@@ -41,3 +41,28 @@ class Camera():
 
     def cooler_off(self):
         print 'Cooler off:',self.atm.CoolerOFF()
+
+    def gettemperature_range(self):
+        mintemp=c_long()
+        maxtemp=c_long()
+        print 'Gettemperature_range:', self.atm.GetTemperatureRange(byref(mintemp),byref(maxtemp))
+        print 'min temp' ,
+        print mintemp
+        print 'maxtemp' ,
+        print maxtemp
+
+    def settemperature(self):
+        temperature=0
+        print 'settemperature', self.atm.SetTemperature(temperature)
+
+    def gettemperature_status(self):
+        sensortemp=c_float()
+        targettemp=c_float()
+        AmbientTemp=c_float()
+        cooler_volt=c_float()
+        print'temperautre_status:', self.atm.GetTemperatureStatus(byref(sensortemp),byref(targettemp),byref(AmbientTemp),byref(cooler_volt))
+        print 'sensortemp:',
+        print sensortemp
+        print 'targettemp',
+        print targettemp
+

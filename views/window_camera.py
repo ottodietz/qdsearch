@@ -19,13 +19,17 @@ class CameraGUI(HasTraits):
     plot=Button()
     acqusition=Button()
     temperature=Button()
+    status=Button()
+    settemperature=Button()
+
 
 
 
     traits_view=View(VGroup(
                         HGroup(Item('acqusition'), Item('plot',show_label=False),Item('temperature',show_label=False)),
                         HGroup(Item('checkbox_camera',label='Simulation'),
-                        #Item('cooler')
+                        HGroup(Item('status')),
+                        HGroup(Item('cooler',show_label=False),Item('settemperature',show_label=False))
                         )),
                         resizable = True )
 
@@ -58,7 +62,14 @@ class CameraGUI(HasTraits):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
-            self.camera.temperature()
+            self.camera.gettemperature()
+
+    def _status_fired(self):
+        self.camera.gettemperature_status()
+        self.camera.gettemperature_range()
+
+    def _settemperature_fired(self):
+        self.camera.settemperature()
 
 
 

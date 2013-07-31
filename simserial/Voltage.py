@@ -23,11 +23,10 @@ class Voltage(SimSerial):
         self.flushInput()
         while (temp.find("Voltage")==-1):
             self.write("V")
-            #time.sleep(0.1)
             temp=self.readline()
         voltage=temp[9:14]
         ende = time.clock()
-        # print "the function runs %1.2f s" % (ende - start)
+        print "the function read runs %1.2f s" % (ende - start)
         return(float(voltage))
 
     def read_voltage_new(self):
@@ -35,13 +34,19 @@ class Voltage(SimSerial):
         temp=''
         self.flushInput()
         self.write('V')
-        time.sleep(0.9)
+        time.sleep(1)
         number=self.inWaiting()
+        print number
         temp=self.read(number)
         a=temp.find('Voltage')
-        voltage=temp[a+9:a+14]
+        print a
+        if a!=-1:
+            voltage=temp[a+9:a+14]
+        else:
+            voltage=0
+            print 'can not read voltage correctly'
         ende = time.clock()
-        print "the function runs %1.2f s" % (ende - start)
+        print "the function read 2 runs %1.2f s" % (ende - start)
         return(float(voltage))
 
 
