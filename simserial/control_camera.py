@@ -12,7 +12,7 @@ class Camera():
     def toggle_simulation(self,simulation):
         self.init_active=True
         if simulation:
-            self.closing_camera()
+            self.close()
         if not simulation:
             self.atm=WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
             self.camera_active=True

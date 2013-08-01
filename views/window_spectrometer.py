@@ -131,6 +131,7 @@ class SpectrometerGUI(HasTraits):
 
 
 
+
     def _search_maximum_fired(self):
         if not self.measurement_process:
             start_value=self.input_goto-self.scan_bereich/2.0
