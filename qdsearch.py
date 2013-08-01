@@ -111,7 +111,7 @@ class MainWindow(HasTraits):
                 """temporaere start und zielwerte"""
                 x_start=x1
                 y_start=y1
-                x_target=x2
+                x_target=x1
                 y_target=y2
 
                 x_koords=[]
@@ -130,7 +130,7 @@ class MainWindow(HasTraits):
                 self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
                 self.cryo_instance.cryo.move(x_target,y_target)#faengt an zum ersten ziel zu fahren
 
-                """ ein Thread aufmachen fuer den Teil if hreshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
+                """ ein Thread aufmachen fuer den Teil if threshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
                 sodass sie parallel laufen koennen"""
                 while not self.finished:
                     while self.searching:
@@ -181,6 +181,7 @@ class MainWindow(HasTraits):
        thread.start_new_thread(self.test,())
 
     def test(self):
+                """this function works without voltmeter! it uses random values for the voltage"""
                 """x1 muss kleiner x2 sein analog y2"""
                 self.searching=True
                 self.finished=False
@@ -206,34 +207,51 @@ class MainWindow(HasTraits):
                 threshold_voltage=self.threshold_voltage # Schwellenspannung
 
                 self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
+                print 'testet ob die spiegel umgeklappt sind'
+                if self.spectrometer_instance.exit_mirror_value=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+                     self.spectrometer_instance.spectro.exit_mirror_change('side')
+                print 'spiegel umklappen fertig'
                 self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
                 self.cryo_instance.cryo.move(x_target,y_target)#faengt an zum ersten ziel zu fahren
 
-                """ ein Thread aufmachen fuer den Teil if hreshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
+                """ ein Thread aufmachen fuer den Teil if threshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
                 sodass sie parallel laufen koennen"""
                 while not self.finished:
                     while self.searching:
-                        if threshold_voltage < self.spectrometer_instance.ivolt.read_voltage(): # vergleicht schwellenspannung mit aktueller
-                            print 'found QD, set finished True'
-                            self.finished=True
-
+                        if threshold_voltage < self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
+                            print 'Spannung wurde erreicht'
+                            self.cryo_instance.cryo.stop() # stopt cryo
+                            self.spectrometer_instance.spectro.exit_mirror_change('front') # klappt spiegel vom spectro auf kamera um
+                            print 'spiegel wurde umgeklappt'
+                            print 'foto shoot'
+                            self.spectrometer_instance.spectro.exit_mirror_change('side') # klappt spiegel vom spectro auf ausgang um
+                            print 'spiegel wurde umgeklappt'
+                            [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #speichert die aktuellen koordinaten ab
+                            print 'koords abgespeichert'
+                            x_koords.append(x)
+                            y_koords.append(y)
+                            self.cryo_instance.cryo.move(x_target,y_target+sign*height) # faehrt stueck weiter um von QD weg zusein
+                            print ' achte darauf dass das Vorzeichen beim wegfahren ist noch nicht definiert!!!'
+                            self.cryo_instance.cryo.waiting() # wartet bis cryo vom QD weg ist
+                            """aufpassen, dass er waerend er vom QD weg faehrt nicht ueber das ende hinaus (also x/y_target) faehrt"""
+                            self.cryo_instance.cryo.move(x_target,y_target) # faehrt weiter
+                            self.searching=True # da wenn cryo.status parallel abgefragt wird es auf False gesetz worden ist vremutlich muss der ganze thread dann neu gestartet werden
                         if not self.cryo_instance.cryo.status():
                             self.searching=False
 
-
-                        print x_target
-                        print y_target
                     """ the comparasion is with calculated values it would be better to take the actuall postion of the cryo"""
                     """by calculating they are internal rounding erros and than it run one time more than it should"""
-                    if (x_target+0.000000001>=x2 and (y_target>=y2 or y_target<=y1)) or self.finished: #check if end coordinates are reached
-                        print 'set finish'
+                    print x_target
+                    print y_target
+                    if (x_target>=x2 and (y_target>=y2 or y_target<=y1)) or self.finished: #check if end coordinates are reached
+                        print 'setfinished'
                         self.finished=True
                     else:
                         """instead of calculating new values relative move could be used"""
                         # calculates x value for next searching
                         x_start=x_target
                         x_target=x_target+width
-
+                        print 'x_target'+str(x_target)
                         self.cryo_instance.cryo.move(x_target,y_target) #goes to new x coordinate
                         self.cryo_instance.cryo.waiting()
 
@@ -241,9 +259,14 @@ class MainWindow(HasTraits):
                         temp=y_start
                         y_start=y_target
                         y_target=temp
+                        print 'y_target'+ str(y_target)
 
                         self.cryo_instance.cryo.move(x_target,y_target) # new target
                         self.searching=True
+                print 'x koords'
+                print x_koords
+                print 'ykoords'
+                print y_koords
                 print 'searching finish'
 
 

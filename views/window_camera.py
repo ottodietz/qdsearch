@@ -21,15 +21,19 @@ class CameraGUI(HasTraits):
     temperature=Button()
     status=Button()
     settemperature=Button()
+    inputtemperature=Int()
+
+    output=Str()
 
 
 
 
     traits_view=View(VGroup(
                         HGroup(Item('acqusition'), Item('plot',show_label=False),Item('temperature',show_label=False)),
-                        HGroup(Item('checkbox_camera',label='Simulation'),
-                        HGroup(Item('status')),
-                        HGroup(Item('cooler',show_label=False),Item('settemperature',show_label=False))
+                        HGroup(Item('checkbox_camera',label='Simulation')),
+                        HGroup(Item('status',show_label=False),Item('settemperature',show_label=False),Item('inputtemperature')),
+                        HGroup(Item('cooler'),
+                        HGroup(Item('output',show_label=False, style='readonly'))
                         )),
                         resizable = True )
 
@@ -41,17 +45,6 @@ class CameraGUI(HasTraits):
         else:
             self.line=self.camera.acqisition()
 
-    def _checkbox_camera_changed(self):
-        if self.camera.init_active:
-            information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
-        else:
-            thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
-
-    def _cooler_changed(self):
-        if self.cooler:
-            self.camera.cooler_on()
-        else:
-            self.camera.cooler_off()
 
     def _plot_fired(self):
         print self.line[:]
@@ -69,7 +62,21 @@ class CameraGUI(HasTraits):
         self.camera.gettemperature_range()
 
     def _settemperature_fired(self):
-        self.camera.settemperature()
+        self.camera.settemperature(self.inputtemperature)
+
+    def _checkbox_camera_changed(self):
+        if self.camera.init_active:
+            information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
+        else:
+            if checkbox_camera:
+                cooler=False
+            thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
+
+    def _cooler_changed(self):
+        if self.cooler:
+            self.camera.cooler_on()
+        else:
+            self.camera.cooler_off()
 
 
 
@@ -78,5 +85,7 @@ class CameraGUI(HasTraits):
 if __name__=="__main__":
     main=CameraGUI()
     main.configure_traits()
-    if not main.checkbox_camera:
-        print'close:',main.camera.close()
+    while main.camera.camera_active:
+        thread.start_new_thread(main.camera.closing_camera,())
+
+

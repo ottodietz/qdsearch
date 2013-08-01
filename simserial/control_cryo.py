@@ -29,7 +29,7 @@ class Cryo(SimSerial):
 
     #simulation position
     def _p(self,string):
-        self.buffer=str(self.posx)+" "+str(self.posy)
+        self.buffer="0 "+"0 "+str(self.posx)+" "+str(self.posy)
 
     # relative move
     def rmove(self,x,y):
