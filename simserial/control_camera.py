@@ -1,5 +1,6 @@
 from ctypes import *
 import thread
+import time
 
 
 class Camera():
@@ -29,6 +30,7 @@ class Camera():
         print "StartAcq:",self.atm.StartAcquisition()
         print "Wait:",self.atm.WaitForAcquisition()
         print "GetMostRecentImage",self.atm.GetMostRecentImage(byref(line),c_ulong(pixel))
+        print 'cancel acq:', self.atm.AbortAcquisition()
         return(line)
 
     def close(self):
@@ -70,7 +72,7 @@ class Camera():
         print 'targettemp',
         print targettemp
 
-    def closing_camera():
+    def closing_camera(self):
         print 'closing camera start'
         temperature=self.gettemperature()
         while temperature<-1:

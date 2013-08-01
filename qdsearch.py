@@ -5,6 +5,7 @@ from traitsui.menu import OKButton, CancelButton
 import thread
 from enthought.pyface.api import error,warning,information
 import time
+from ctypes import *
 
 
 import window_cryo
@@ -80,7 +81,8 @@ class MainWindow(HasTraits):
 
     def test_function(self):
         print"test"
-        thread.start_new_thread(self.cryo_instance.cryo.waiting,())
+        print self.spectrometer_instance.exit_mirror_value
+
 
     def call_cryo_menu(self):
        self.cryo_instance.configure_traits(view='view_menu')
@@ -116,7 +118,7 @@ class MainWindow(HasTraits):
 
                 x_koords=[]
                 y_koords=[]
-                spektra=[]
+                spectra=[]
                 sign=1 #wird spaeter berechnet wenn einegabe der gr??e  keine rolle mehr spielt
 
                 """Werte aus GUI einlesen, damit suche weiter l?uft auch wenn GUI ge?nert wird"""
@@ -125,7 +127,7 @@ class MainWindow(HasTraits):
                 threshold_voltage=self.threshold_voltage # Schwellenspannung
 
                 self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
-                if self.spectrometer_instance.exit_mirror_value=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+                if self.spectrometer_instance.current_exit_mirror=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
                      self.spectrometer_instance.spectro.exit_mirror_change('side')
                 self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
                 self.cryo_instance.cryo.move(x_target,y_target)#faengt an zum ersten ziel zu fahren
@@ -142,12 +144,17 @@ class MainWindow(HasTraits):
                             [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #speichert die aktuellen koordinaten ab
                             x_koords.append(x)
                             y_koords.append(y)
-                            spektra.append(spectrum)
-                            self.cryo_instance.cryo.move(x_target,y_target+sign*height) # faehrt stueck weiter um von QD weg zusein
-                            print ' achte darauf dass das Vorzeichen beim wegfahren ist noch nicht definiert!!!'
-                            self.cryo_instance.cryo.waiting() # wartet bis cryo vom QD weg ist
-                            """aufpassen, dass er waerend er vom QD weg faehrt nicht ueber das ende hinaus (also x/y_target) faehrt"""
-                            self.cryo_instance.cryo.move(x_target,y_target) # faehrt weiter
+                            spectra.append(spectrum)
+                            """hier auf Richtung des Cryos achten, mitehilfe von sign 2 verschiedene Bedigungen schaffen!"""
+                            if (y+sign*height<y_target and sign==1):
+                                self.cryo_instance.cryo.move(x,y+sign*height) # faehrt stueck weiter um von QD weg zusein
+                                print ' achte darauf dass das Vorzeichen beim wegfahren ist noch nicht definiert!!!'
+                                self.cryo_instance.cryo.waiting() # wartet bis cryo vom QD weg ist
+                                """aufpassen, dass er waerend er vom QD weg faehrt nicht ueber das ende hinaus (also x/y_target) faehrt"""
+                                self.cryo_instance.cryo.move(x_target,y_target) # faehrt weiter
+                                print 'faehrt weiter'
+                            else:
+                                self.searching=False
                             self.searching=True # da wenn cryo.status parallel abgefragt wird es auf False gesetz worden ist vremutlich muss der ganze thread dann neu gestartet werden
                         if not self.cryo_instance.cryo.status():
                             self.searching=False
@@ -198,7 +205,7 @@ class MainWindow(HasTraits):
 
                 x_koords=[]
                 y_koords=[]
-                spektra=[]
+                spectra=[]
                 sign=1 #wird spaeter berechnet wenn einegabe der gr??e  keine rolle mehr spielt
 
                 """Werte aus GUI einlesen, damit suche weiter l?uft auch wenn GUI ge?nert wird"""
@@ -208,7 +215,8 @@ class MainWindow(HasTraits):
 
                 self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
                 print 'testet ob die spiegel umgeklappt sind'
-                if self.spectrometer_instance.exit_mirror_value=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+                if self.spectrometer_instance.current_exit_mirror=='front':
+                     print 'spiegel war nicht umgeklappt' #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
                      self.spectrometer_instance.spectro.exit_mirror_change('side')
                 print 'spiegel umklappen fertig'
                 self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
@@ -223,19 +231,25 @@ class MainWindow(HasTraits):
                             self.cryo_instance.cryo.stop() # stopt cryo
                             self.spectrometer_instance.spectro.exit_mirror_change('front') # klappt spiegel vom spectro auf kamera um
                             print 'spiegel wurde umgeklappt'
-                            print 'foto shoot'
+                            spectrum=self.camera_instance.camera.acqisition()
                             self.spectrometer_instance.spectro.exit_mirror_change('side') # klappt spiegel vom spectro auf ausgang um
                             print 'spiegel wurde umgeklappt'
                             [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #speichert die aktuellen koordinaten ab
                             print 'koords abgespeichert'
                             x_koords.append(x)
                             y_koords.append(y)
-                            self.cryo_instance.cryo.move(x_target,y_target+sign*height) # faehrt stueck weiter um von QD weg zusein
-                            print ' achte darauf dass das Vorzeichen beim wegfahren ist noch nicht definiert!!!'
-                            self.cryo_instance.cryo.waiting() # wartet bis cryo vom QD weg ist
-                            """aufpassen, dass er waerend er vom QD weg faehrt nicht ueber das ende hinaus (also x/y_target) faehrt"""
-                            self.cryo_instance.cryo.move(x_target,y_target) # faehrt weiter
-                            self.searching=True # da wenn cryo.status parallel abgefragt wird es auf False gesetz worden ist vremutlich muss der ganze thread dann neu gestartet werden
+                            spectra.append(spectrum)
+                            """hier auf Richtung des Cryos achten, mitehilfe von sign 2 verschiedene Bedigungen schaffen!"""
+                            if  (y+sign*height<y_target and sign==1):
+                                self.cryo_instance.cryo.move(x,y+sign*height) # faehrt stueck weiter um von QD weg zusein
+                                print ' achte darauf dass das Vorzeichen beim wegfahren ist noch nicht definiert!!!'
+                                self.cryo_instance.cryo.waiting() # wartet bis cryo vom QD weg ist
+                                """aufpassen, dass er waerend er vom QD weg faehrt nicht ueber das ende hinaus (also x/y_target) faehrt"""
+                                self.cryo_instance.cryo.move(x_target,y_target) # faehrt weiter
+                                print 'faehrt weiter'
+                            else:
+                                self.searching=False
+                            #self.searching=True # da wenn cryo.status parallel abgefragt wird es auf False gesetz worden ist vremutlich muss der ganze thread dann neu gestartet werden
                         if not self.cryo_instance.cryo.status():
                             self.searching=False
 
@@ -267,6 +281,7 @@ class MainWindow(HasTraits):
                 print x_koords
                 print 'ykoords'
                 print y_koords
+                print spectra
                 print 'searching finish'
 
 

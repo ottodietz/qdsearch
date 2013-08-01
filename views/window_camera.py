@@ -47,7 +47,6 @@ class CameraGUI(HasTraits):
 
 
     def _plot_fired(self):
-        print self.line[:]
         pylab.plot(self.line[:])
         pylab.show()
 
@@ -68,8 +67,9 @@ class CameraGUI(HasTraits):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
-            if checkbox_camera:
-                cooler=False
+            if self.checkbox_camera:
+                print 'new tread'
+                self.cooler=False
             thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
 
     def _cooler_changed(self):
@@ -85,7 +85,7 @@ class CameraGUI(HasTraits):
 if __name__=="__main__":
     main=CameraGUI()
     main.configure_traits()
-    while main.camera.camera_active:
-        thread.start_new_thread(main.camera.closing_camera,())
+    #while main.camera.camera_active:
+     #   thread.start_new_thread(main.camera.closing_camera,())
 
 
