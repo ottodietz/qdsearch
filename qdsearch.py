@@ -12,6 +12,8 @@ from enable.api import BaseTool
 from enthought.chaco.api import Plot, ArrayPlotData
 from enthought.enable.component_editor import ComponentEditor
 from enthought.chaco.tools.api import PanTool, ZoomTool
+from enthought.traits.ui.file_dialog  \
+    import open_file,save_file
 
 
 import window_cryo
@@ -29,11 +31,13 @@ from window_camera import CameraGUI
 
 call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
 call_menu_spectrometer = Action(name='spectrometer menu', accelerator='Ctrl+p', action='call_spectrometer_menu')
+save_to=Action(name='Save as',action='save_to')
+open_to=Action(name='open...',action='open_to')
 
 printen = Action(name='test Print',accelerator="Ctrl+t",
     action='test_function')
 
-menu = MenuBar(Menu(CloseAction, name='File'),
+menu = MenuBar(Menu(CloseAction,save_to,open_to, name='File'),
     Menu(UndoAction, RedoAction,printen,
     name='Edit'),
     Menu(call_menu_spectrometer,name='Spectrometer'),
@@ -63,23 +67,28 @@ class PlotTool(BaseTool):
 
     def normal_mouse_move(self,event):
         [x,y]=self.component.map_data((event.x,event.y))
-        main.show_spectrum(x,y)
+        main.plot_spectrum(x,y,'current')
 
+    def normal_right_down(self,event):
+        [x,y]=self.component.map_data((event.x,event.y))
+        main.plot_spectrum(x,y,'compare')
 
 
 class MainWindow(HasTraits):
+    file_name=File('measurement/spectra.pick')
 
     """for scanning sample"""
     textfield=Str()
-    x1=CFloat(2)
-    x2=CFloat(2)
-    y1=CFloat(2)
-    y2=CFloat(2.025)
+    x1=CFloat(2.05)
+    x2=CFloat(2.15)
+    y1=CFloat(2.1)
+    y2=CFloat(2.2)
     width_sample=CFloat(0.025)
     height_sample=CFloat(0.025)
     wavelength=CFloat(500)
     threshold_voltage=CFloat(3)
     scan_sample=Button()
+    scan_sample_step=Button()
     abort=Button()
     finished=True
     x_koords=[]
@@ -89,7 +98,6 @@ class MainWindow(HasTraits):
     plot=Instance(Plot)
     plot_current=Instance(Plot)
     plot_compare=Instance(Plot)
-    load_file=Button()
 
     spectrometer_instance = Instance( SpectrometerGUI, () )
     cryo_instance=Instance(CryoGUI,())
@@ -100,8 +108,8 @@ class MainWindow(HasTraits):
                         HGroup(Item('y1'),Spring(),Item('y2')),
                         HGroup(Item('width_sample',label='width_sample (x)'),Spring(),Item('height_sample',label='height_sample (y)')),
                         HGroup(Item('wavelength'),Spring(),Item('threshold_voltage')),
-                        HGroup(Item('scan_sample',show_label=False),Item('abort',show_label=False)),
-                        Item('load_file') )
+                        HGroup(Item('scan_sample',show_label=False),Item('scan_sample_step',show_label=False),Item('abort',show_label=False)),
+                        )
 
     inst_group = Group(
         Item('cryo_instance', style = 'custom',show_label=False,label="cryo",),
@@ -120,7 +128,6 @@ class MainWindow(HasTraits):
     resizable = True
     )
 
-
     def test_function(self):
         print"test"
 
@@ -138,34 +145,31 @@ class MainWindow(HasTraits):
         if self.camera_instance.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
-            """x1 muss kleiner x2 sein analog y2"""
+            self.x_koords=[]
+            self.y_koords=[]
+            self.spectra=[]
             self.searching=True
             self.finished=False
-            """nimmt werde aus GUI zum abgleich ob angekommen"""
             x1=self.x1
             y1=self.y1
             x2=self.x2
             y2=self.y2
-
             if x1>x2:
                 temp=x1
                 x1=x2
                 x2=temp
-            """temporaere start und zielwerte"""
             x_start=x1
             y_start=y1
             x_target=x1
             y_target=y2
 
-            f = open("measurement/spectra.pick", "w") # creates new file
+            f = open(self.file_name, "w") # creates new file
             f.close()
 
             if y_start<y_target:
                 sign=1
             else:
                 sign=-1
-
-            """Werte aus GUI einlesen, damit suche weiter l?uft auch wenn GUI ge?nert wird"""
             width=self.width_sample #x-koordinaten abstand
             height=self.height_sample #  y koordinaten abstand
             threshold_voltage=self.threshold_voltage # Schwellenspannung
@@ -174,8 +178,9 @@ class MainWindow(HasTraits):
             if self.spectrometer_instance.current_exit_mirror=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
                  self.spectrometer_instance.current_exit_mirror='side'#self.spectrometer_instance.exit_mirror_value[1
             self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
-            self.cryo_instance.cryo.move(x_target,y_target)#faengt an zum ersten ziel zu fahren
 
+
+            self.cryo_instance.cryo.move(x_target,y_target)#faengt an zum ersten ziel zu fahren
             """ ein Thread aufmachen fuer den Teil if threshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
             sodass sie parallel laufen koennen"""
             while not self.finished:
@@ -183,7 +188,7 @@ class MainWindow(HasTraits):
                     if threshold_voltage < self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
                         self.cryo_instance.cryo.stop() # stopt cryo
                         self.take_spectrum()
-                        self.ploten()
+                        self.plotten()
                         [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #die werte koennten aus zu letzt gespeicherten oder aber von take spectrum uebergeben werden
                         if  (y+sign*height<y_target and sign==1) or(y+sign*height>y_target and sign==-1):
                             self.cryo_instance.cryo.move(x,y+sign*height) # faehrt stueck weiter um von QD weg zusein
@@ -216,14 +221,83 @@ class MainWindow(HasTraits):
 
                     self.cryo_instance.cryo.move(x_target,y_target) # new target
                     self.searching=True
-            print 'x koords'
-            print self.x_koords
-            print 'ykoords'
-            print self.y_koords
-            print self.spectra
             print 'searching finish'
 
+    def _scan_sample_step_fired(self):
+        thread.start_new_thread(self.scanning_step,())
 
+    def scanning_step(self):
+        if self.camera_instance.camera.init_active:
+            information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
+        else:
+            self.searching=True
+            self.finished=False
+            x1=self.x1
+            self.x_koords=[]
+            self.y_koords=[]
+            self.spectra=[]
+            y1=self.y1
+            x2=self.x2
+            y2=self.y2
+            if x1>x2:
+                temp=x1
+                x1=x2
+                x2=temp
+            x_start=x1
+            y_start=y1
+            x_target=x1
+            y_target=y2
+            f = open(self.file_name, "w") # creates new file
+            f.close()
+
+            if y_start<y_target:
+                sign=1
+            else:
+                sign=-1
+            width=self.width_sample #x-koordinaten abstand
+            height=self.height_sample #  y koordinaten abstand
+            threshold_voltage=self.threshold_voltage # Schwellenspannung
+
+            self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
+            if self.spectrometer_instance.current_exit_mirror=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+                 self.spectrometer_instance.current_exit_mirror='side'#self.spectrometer_instance.exit_mirror_value[1
+            self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
+            [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
+
+
+            """ ein Thread aufmachen fuer den Teil if threshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
+            sodass sie parallel laufen koennen"""
+            while not self.finished:
+                while ((y<y_target and sign==1) or (y>y_target and sign==-1)) and not self.finished:
+                    if threshold_voltage < self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
+                            self.take_spectrum()
+                            self.plotten()
+                    [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #die werte koennten aus zu letzt gespeicherten oder aber von take spectrum uebergeben werden
+                    if  (y<y_target and sign==1) or(y>y_target and sign==-1):
+                        print 'faehrt'
+                        self.cryo_instance.cryo.move(x,y+sign*height) # faehrt stueck weiter um von QD weg zusein
+                        self.cryo_instance.cryo.waiting()
+
+                """ the comparasion is with calculated values it would be better to take the actuall postion of the cryo"""
+                """by calculating they are internal rounding erros and than it run one time more than it should"""
+                if (x_target>=x2 and (y_target>=y2 or y_target<=y1)) or self.finished: #check if end coordinates are reached
+                    self.finished=True
+                else:
+                    """instead of calculating new values relative move could be used"""
+                    # calculates x value for next searching
+                    x_start=x_target
+                    x_target=x_target+width
+                    [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
+                    self.cryo_instance.cryo.move(x_target,y_target) #goes to new x coordinate
+                    self.cryo_instance.cryo.waiting()
+                    [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
+
+                     # calculates y value for next searching
+                    temp=y_start
+                    y_start=y_target
+                    y_target=temp
+                    sign=sign*-1
+            print 'searching finish'
 
 
     def _abort_fired(self):
@@ -252,20 +326,19 @@ class MainWindow(HasTraits):
         spectrum=[]
 
     def save_to_file(self,x,y,spectrum):
-        f = open("measurement/spectra.pick", "a")
+        f = open(self.file_name, "a")
         pickle.dump([x,y,spectrum],f)
         f.close()
 
-    def ploten(self):
+    def plotten(self):
         plotdata = ArrayPlotData(x=self.x_koords, y=self.y_koords)
         plot = Plot(plotdata)
         plot.plot(("x", "y"), type="scatter", color="blue")
-        plot.title = "sin(x) * x^3"
+        plot.title = ""
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
         plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
         plot.tools.append(PlotTool(component=plot))
         self.plot=plot
-        print 'plot gesetzt'
 
     def create_wavelength_for_plotting(self,number_y_values):
         """ this function calculates the measured wavelength because the camera can not differentiate between the different wavelength, the calculation is done
@@ -291,30 +364,35 @@ class MainWindow(HasTraits):
         x_axis=numpy.arange(x_min,x_max,stepwise)
         return(x_axis)
 
-    def show_spectrum(self,x,y):
+    def plot_spectrum(self,x,y,field):
         tol=0.001
         for i in range(len(self.x_koords)):
             x_gap=abs(x-self.x_koords[i])
             y_gap=abs(y-self.y_koords[i])
             if x_gap <tol and y_gap<tol:
-                print 'nah genug dran'
-                print self.spectra[i]
-                print self.x_koords[i]
-                print self.y_koords[i]
-                self.plot_spectrum(self.x_koords[i],self.y_koords[i],self.spectra[i])
+                spectrum=self.spectra[i]
+                wavelength=self.create_wavelength_for_plotting(len(spectrum))
+                plotdata = ArrayPlotData(x=wavelength, y=spectrum)
+                plot = Plot(plotdata)
+                plot.plot(("x", "y"), type="scatter", color="blue")
+                plot.title = 'spectrum of QD ' +str(self.x_koords[i])+' '+str(self.y_koords[i])
+                plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
+                plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
+                if field=='current':
+                    self.plot_current=plot
+                if field=='compare':
+                    self.plot_compare=plot
 
-    def plot_spectrum(self,x,y,spectrum):
-        wavelength=self.create_wavelength_for_plotting(len(spectrum))
-        plotdata = ArrayPlotData(x=wavelength, y=spectrum)
-        plot = Plot(plotdata)
-        plot.plot(("x", "y"), type="scatter", color="blue")
-        plot.title = 'spectrum of QD' +str(x)+' '+str(y)
-        plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
-        plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
-        self.plot_current=plot
-
-    def _load_file_fired(self):
-        value=self.load()
+    def load(self):
+        f = open(self.file_name, "r")
+        reading=True
+        value=[]
+        while reading:
+            try:
+                value.append(pickle.load(f))
+            except:
+                reading=False
+        f.close()
         x=[]
         y=[]
         spectrum=[]
@@ -325,26 +403,28 @@ class MainWindow(HasTraits):
         self.x_koords=x
         self.y_koords=y
         self.spectra=spectrum
-        self.ploten()
+        print self.x_koords
+        print self.y_koords
+        print self.spectra
+        self.plotten()
 
+    def save_to(self):
+        file_name = save_file()
+        if file_name != '':
+            self.file_name = file_name
+        self.save_file()
 
-    def load(self):
-        f = open("measurement/spectra.pick", "r")
-        reading=True
-        value=[]
-        while reading:
-            try:
-                value.append(pickle.load(f))
-            except:
-                print 'alles ausgelesen'
-                reading=False
-        for i in range(len(value)):
-            print value[i]
-        return value
+    def open_to(self):
+        file_name = open_file()
+        if file_name != '':
+            self.file_name = file_name
+        self.load()
+
+    def save_file(self):
+        f = open(self.file_name, "w")
+        for i in range(len(self.x_koords)):
+            pickle.dump([self.x_koords[i],self.y_koords[i],self.spectra[i]],f)
         f.close()
-
-
-
 
 
 
