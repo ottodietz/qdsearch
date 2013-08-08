@@ -29,7 +29,7 @@ class Cryo(SimSerial):
 
     #simulation position
     def _p(self,string):
-        self.buffer="0 "+"0 "+str(self.posx)+" "+str(self.posy)
+        self.buffer="0 "+"0 "+str(self.posx)+" "+str(self.posy)+' '
 
     # relative move
     def rmove(self,x,y):
@@ -55,7 +55,7 @@ class Cryo(SimSerial):
         c=string.find(" ",b+1)
         d=string.find(" ",c+1)
         self.posx=float(string[b:c])
-        self.posy=float(string[c+1:d])
+        self.posy=float(string[c+1:d+1])
 
     # rangemeasure, postive Limits
     def rm(self):

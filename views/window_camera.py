@@ -80,14 +80,16 @@ class CameraGUI(HasTraits):
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
             self.change_checkbox()
         else:
+
             if self.checkbox_camera:
                 self.cooler=False
                 if self.camera.gettemperature() >-1:
-                    pass
-                # thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
+                    thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
                 else:
                     print 'can not start simulation while temperature camera is under 0 degrees'
                     thread.start_new_thread(self.change_checkbox,())
+            else:
+                thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,)) # if the simulation was runing it can be deactivate
 
 
     def change_checkbox(self):
@@ -109,5 +111,4 @@ if __name__=="__main__":
     main.configure_traits()
     #while main.camera.camera_active:
      #   thread.start_new_thread(main.camera.closing_camera,())
-
 

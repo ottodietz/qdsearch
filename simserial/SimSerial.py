@@ -50,7 +50,8 @@ class SimSerial(serial.Serial):
                 try:
                     getattr(self,name)()
                 except:
-                    print('No simulation function found.')
+                    pass
+                    #print('No simulation function found.')
 
          else:
 

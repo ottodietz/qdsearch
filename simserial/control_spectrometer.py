@@ -20,37 +20,39 @@ class Spectro(SimSerial):
     new_simulation=True
     commando_position="last"
 
-    def wavelength_durchlauf_controlled(self,aim):
+    def wavelength_controlled_nm(self,aim):
         aim=round(aim,3) # rundet auf die 3. Nachkommastelle
-        if aim <0 or aim >1000:
-            print ("falsche input: Wellenlaenge muss zwischen 0 und 1000 liegen ")
+        if aim <0 or aim >1500:
+            print ("falsche input: Wellenlaenge muss zwischen 0 und 1500 liegen ")
         else:
             self.write(str(aim)+" >NM \r")
 
     def _greater_thanNM(self,string):
         a=string.find(" ")
         aim=float(string[0:a])
-        print "starte thread"
-        thread.start_new_thread(self.simulation_durchlauf,(aim,))
+        thread.start_new_thread(self.simulation_controlled_nm,(aim,))
 
-    def simulation_durchlauf(self,aim):
+    def simulation_controlled_nm(self,aim):
+        self.change_wavelength=True
         if self.nm-aim <0:
-            vorzeichen=1
+            sign=1
         else:
-            vorzeichen=-1
+            sign=-1
         start=time.clock()
-        aktuell=time.clock()
         startposition=self.nm
-        while self.nm < aim-0.01:
+        while ((self.nm < aim-0.01 and sign==1) or (self.nm-0.01 > aim and sign==-1) )and self.change_wavelength:
             aktuell=time.clock()
             time.sleep(0.1)
-            self.nm=round(startposition+self.nm_je_min*(aktuell-start)/60*vorzeichen,3)
+            self.nm=round(startposition+self.nm_je_min*(aktuell-start)/60*sign,3)
 
     def mono_stop(self):
         self.write("MONO-STOP \r")
 
+    def _MONOminusSTOP(self):
+        self.change_wavelength=False
 
-    def wavelength_durchlauf(self,aim):
+
+    def wavelength_uncontrolled_nm(self,aim):
         aim=round(aim,3) # rundet auf die 3. Nachkommastelle
         if aim <0 or aim >1000:
             warning(parent=None, title="warning", message="falsche Wert fuer die Wellenlaenge: sie muss zwischen 0 und 1000 nm liegen  ")
@@ -61,7 +63,6 @@ class Spectro(SimSerial):
         self.buffer=string+" ok"
         space=string.find(" ")
         self.nm=float(string[0:space])
-        print self.nm
 
 
     def wavelength_goto(self,aim):
@@ -89,7 +90,6 @@ class Spectro(SimSerial):
         a=string.find(" ")
         self.nm_je_min=float(string[0:a])
 
-
     def output_velocity(self):
         self.flushInput()
         self.write("?NM/MIN \r")
@@ -103,7 +103,6 @@ class Spectro(SimSerial):
         self.flushInput()
         self.write("?NM \r")
         tmp=self.readline()
-        print tmp
         return(self.convert_output(tmp))
 
     def _questionmarkNM(self,string):
@@ -118,7 +117,6 @@ class Spectro(SimSerial):
         self.write(mirror+" \r")
 
     def convert_output(self,tmp):
-        print tmp
         a=tmp.find(" ")
         b=tmp.find(" ",a+2)
         if a<0 or b<0:
@@ -131,13 +129,9 @@ class Spectro(SimSerial):
     def waiting(self):
         """Ueberprueft ob Spektrometer ans aim gekommen ist"""
         self.flushInput()
-        i=0
         finish=False
-        while (not finish) and (i<20): # i noch als Abbruch drinne, falls die Funktion ins leere laeuft
-            print i
-            i=i+1
+        while (not finish):
             temp=self.readline()
-            print temp
             if temp.find("ok") !=-1:
                 print "found"
                 finish=True

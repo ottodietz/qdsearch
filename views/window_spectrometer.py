@@ -83,8 +83,12 @@ class SpectrometerGUI(HasTraits):
             warning(parent=None, title="warning", message="zu kleine input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
             self.input_goto=0
         else:
-            self.spectro.wavelength_goto(self.input_goto)
-            self.spectro.waiting()
+            if not self.measurement_process:
+                self.input_nm=self.input_goto
+                self.spectro.wavelength_goto(self.input_goto)
+                self.spectro.waiting()
+            else:
+                information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
     def _nm_fired(self):
         if self.input_nm>1000:
@@ -94,8 +98,12 @@ class SpectrometerGUI(HasTraits):
             warning(parent=None, title="warning", message="zu kleine input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
             self.input_nm=0
         else:
-            self.spectro.wavelength_durchlauf(self.input_nm)
-            self.spectro.waiting()
+            if not self.measurement_process:
+                self.input_goto=self.input_nm
+                self.spectro.wavelength_uncontrolled_nm(self.input_nm)
+                self.spectro.waiting()
+            else:
+                information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
     def _nm_controlled_fired(self):
         if self.input_nm>1000:
@@ -105,19 +113,35 @@ class SpectrometerGUI(HasTraits):
             warning(parent=None, title="warning", message="zu kleine input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
             self.input_nm=0
         else:
-            self.spectro.wavelength_durchlauf_controlled(self.input_nm)
+            if not self.measurement_process:
+                self.input_goto=self.input_nm
+                self.spectro.wavelength_controlled_nm(self.input_nm)
+            else:
+                information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
     def _nmjemin_fired(self):
-        self.spectro.velocity(self.input_nmjemin)
+        if not self.measurement_process:
+            self.spectro.velocity(self.input_nmjemin)
+        else:
+            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
     def _position_fired(self):
-        self.output=self.spectro.output_position()
+        if not self.measurement_process:
+            self.output=self.spectro.output_position()
+        else:
+            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
     def _identify_fired(self):
-        self.output=self.spectro.ident()
+        if not self.measurement_process:
+            self.output=self.spectro.ident()
+        else:
+            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
     def _output_nmjemin_fired(self):
-        self.output=self.spectro.output_velocity()
+        if not self.measurement_process:
+            self.output=self.spectro.output_velocity()
+        else:
+            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
 
     def _current_grating_changed(self):
@@ -130,8 +154,6 @@ class SpectrometerGUI(HasTraits):
             self.spectro.exit_mirror_change(self.current_exit_mirror)
 
 
-
-
     def _search_maximum_fired(self):
         if not self.measurement_process:
             start_value=self.input_goto-self.scan_bereich/2.0
@@ -140,18 +162,17 @@ class SpectrometerGUI(HasTraits):
                 start_value=0
             thread.start_new_thread(self.measure,(start_value,end_value,))
         else:
-            information(parent=None, title="information", message="es laeuft schon ein Messvorgang, dieser muss zuerst beendet werden bevor ein neuer starten kann")
+            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
 
     def measure(self,start_value,end_value):
         self.spectro.wavelength_goto(start_value)
         self.spectro.waiting()
-        self.spectro.wavelength_durchlauf_controlled(end_value)
+        self.spectro.wavelength_controlled_nm(end_value)
         self.measurement_process=True
         start=time.clock()
         self.measured_values=[]
         self.wavelength=[]
-        self.measurement_process=True
 
         while self.measurement_process:
             self.measured_values.append(self.ivolt.measure())
