@@ -7,7 +7,6 @@ import time
 from SimSerial import SimSerial
 
 class Cryo(SimSerial):
-    new_simulation=True
     commando_position="last"
     number_of_EOL=1 # if they are two characters written together (without space) it is one EOL
 
@@ -65,7 +64,6 @@ class Cryo(SimSerial):
     def cal(self):
         self.write("cal \r")
 
-
     # set current position
     def setpos(self,x,y):
         self.write("0 0 "+str(x)+" "+str(y)+" setpos \r")
@@ -103,7 +101,7 @@ class Cryo(SimSerial):
             running=int(self.status())
             print 'waiting'
             time.sleep(0.5)
-        print 'fertig'
+        print 'finished'
 
 
 

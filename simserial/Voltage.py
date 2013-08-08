@@ -28,6 +28,7 @@ class Voltage(SimSerial):
         #ende = time.clock()
         #print "the function read runs %1.2f s" % (ende - start)
         return(float(voltage))
+        print voltage
 
     def read_voltage_new(self):
         #start = time.clock()
@@ -36,10 +37,8 @@ class Voltage(SimSerial):
         self.write('V')
         time.sleep(1)
         number=self.inWaiting()
-        print number
         temp=self.read(number)
         a=temp.find('Voltage')
-        print a
         if a!=-1:
             voltage=temp[a+9:a+14]
         else:

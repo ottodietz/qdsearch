@@ -16,8 +16,6 @@ class Spectro(SimSerial):
     # for simulation
     nm=float(0)
     nm_je_min=float(10.0)
-
-    new_simulation=True
     commando_position="last"
 
     def wavelength_controlled_nm(self,aim):
@@ -50,7 +48,6 @@ class Spectro(SimSerial):
 
     def _MONOminusSTOP(self):
         self.change_wavelength=False
-
 
     def wavelength_uncontrolled_nm(self,aim):
         aim=round(aim,3) # rundet auf die 3. Nachkommastelle

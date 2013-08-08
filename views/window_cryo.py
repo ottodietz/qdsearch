@@ -168,7 +168,7 @@ class CryoGUI(HasTraits):
         self.output=str(self.cryo.status())
 
     def _checkbox_changed(self):
-        self.cryo.toggle_simulation("Cryo")
+        self.cryo.toggle_simulation()
         if not self.checkbox:
             self.refresh_cryo_gui()
 
@@ -180,7 +180,7 @@ class CryoGUI(HasTraits):
 if __name__=="__main__":
     main=CryoGUI()
     main.configure_traits()
-    if main.cryo.simulation==0:
+    if not main.cryo.simulation:
         print"close cryo"
         main.cryo.close()
 

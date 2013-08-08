@@ -209,13 +209,12 @@ class SpectrometerGUI(HasTraits):
 
 
     def _checkbox_spectrometer_changed(self):
-        self.spectro.toggle_simulation("spectrometer")
+        self.spectro.toggle_simulation()
         if not self.checkbox_spectrometer:
             self.spectrometer_gui_refresh()
 
     def _checkbox_voltmeter_changed(self):
-        self.ivolt.toggle_simulation("voltmeter")
-
+        self.ivolt.toggle_simulation()
 
     def spectrometer_gui_refresh(self):
         self.refresh_active=True
@@ -241,13 +240,12 @@ class SpectrometerGUI(HasTraits):
 
 
 
-
 if __name__=="__main__":
     main=SpectrometerGUI()
     main.configure_traits()
-    if main.spectro.simulation==0:
+    if not main.spectro.simulation:
         print"close spectrometer"
         main.spectro.close()
-    if main.ivolt.simulation==0:
+    if not main.ivolt.simulation:
         print"close Voltage"
         main.ivolt.close()

@@ -103,12 +103,8 @@ class CameraGUI(HasTraits):
             self.camera.cooler_off()
 
 
-
-
-
 if __name__=="__main__":
     main=CameraGUI()
     main.configure_traits()
-    #while main.camera.camera_active:
-     #   thread.start_new_thread(main.camera.closing_camera,())
+
 
