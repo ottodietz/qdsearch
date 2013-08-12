@@ -1,7 +1,7 @@
 from enthought.traits.api import*
 from enthought.traits.ui.api import*
 from traitsui.menu import OKButton, CancelButton
-from enthought.pyface.api import confirm
+from enthought.pyface.api import confirm,ImageResource
 
 import control_cryo
 reload (control_cryo)
@@ -24,19 +24,19 @@ class CryoGUI(HasTraits):
     rmove=Button()
     # Buttons
 
-    up=Button(label="^")
-    down=Button(label="v")
-    right=Button(label=">")
-    left=Button(label="<")
-    northwest=Button(label='^<')
-    southwest=Button(label='v<')
-    northeast=Button(label='^>')
-    southeast=Button(label='v>')
+    up=Button(image=ImageResource('image_cryo/up.png'))
+    down=Button(image=ImageResource('image_cryo/down.png'))
+    right=Button(image=ImageResource('image_cryo/right.png'))
+    left=Button(image=ImageResource('image_cryo/left.png'))
+    northwest=Button(image=ImageResource('image_cryo/northwest'))
+    southwest=Button(image=ImageResource('image_cryo/southwest'))
+    northeast=Button(image=ImageResource('image_cryo/northeast'))
+    southeast=Button(image=ImageResource('image_cryo/southeast'))
 
-    upup=Button(label='^^')
-    downdown=Button(label='vv')
-    leftleft=Button(label='<<')
-    rightright=Button(label='>>')
+    upup=Button(image=ImageResource('image_cryo/upup'))
+    downdown=Button(image=ImageResource('image_cryo/downdown.png'))
+    leftleft=Button(image=ImageResource('image_cryo/leftleft.png'))
+    rightright=Button(image=ImageResource('image_cryo/rightright.png'))
     factor1=CInt(10,desc='defines the factor between a normal relativ move and a wide relativ move')
 
 
@@ -60,11 +60,11 @@ class CryoGUI(HasTraits):
                          VGroup(HGroup(Item("movex",resizable = True,label="x"),Item("movey",resizable = True,label="y"),Item("move",resizable=True,show_label=False)),
                             HGroup (Item("position", show_label=False,resizable = True),Spring(resizable = True), Item("identity", show_label=False,resizable = True)),
                             HGroup (Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
-                            HGroup(Item("upup", show_label=False, resizable = True)),
-                            HGroup(Item('northwest',show_label=False,resizable = True),Item("up", show_label=False, resizable = True),Item('northeast',show_label=False,resizable = True)),
-                            HGroup(Item("leftleft",  resizable = True,show_label=False), Item("left",  resizable = True,show_label=False), Spring(resizable = True),Item("right", resizable = True, show_label=False),Item("rightright", resizable = True, show_label=False)),
-                            HGroup(Item('southwest',show_label=False,resizable = True),Item("down", show_label=False, resizable = True),Item('southeast',show_label=False,resizable = True)),
-                            HGroup(Item("downdown", show_label=False, resizable = True)),
+                            HGroup(Item("upup", show_label=False, resizable = True,style='custom')),
+                            HGroup(Item('northwest',show_label=False,resizable = True,style='custom'),Item("up", show_label=False, resizable = True,style='custom'),Item('northeast',show_label=False,resizable = True,style='custom')),
+                            HGroup(Item("leftleft",  resizable = True,show_label=False,style='custom'), Item("left",  resizable = True,show_label=False,style='custom'), Spring(resizable = True),Item("right", resizable = True, show_label=False,style='custom'),Item("rightright",style='custom', resizable = True, show_label=False)),
+                            HGroup(Item('southwest',show_label=False,resizable = True,style='custom'),Item("down", show_label=False, resizable = True,style='custom'),Item('southeast',show_label=False,resizable = True,style='custom')),
+                            HGroup(Item("downdown", show_label=False, resizable = True,style='custom')),
                             HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
                             HGroup(Item('stop',show_label=False,resizable=True),Item('status',show_label=False,resizable=True))),
             Item("output",style="readonly"),

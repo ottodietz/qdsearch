@@ -28,22 +28,22 @@ class CameraGUI(HasTraits):
 
     checkbox_camera=Bool(True)
     cooler=Bool(False)
-
     plot=Button()
     acqusition=Button()
     temperature=Button()
     status=Button()
     settemperature=Button()
     inputtemperature=Int()
+    outputtemperature=Str()
 
     output=Str()
 
 
     traits_view=View(VGroup(
-                        HGroup(Item('acqusition'), Item('plot',show_label=False),Item('temperature',show_label=False)),
-                        HGroup(Item('checkbox_camera',label='Simulation')),
+                        HGroup(Item('acqusition',show_label=False), Item('plot',show_label=False),Item('temperature',show_label=False),Item('outputtemperature',show_label=False,style='readonly')),
                         HGroup(Item('status',show_label=False),Item('settemperature',show_label=False),Item('inputtemperature')),
                         HGroup(Item('cooler'),
+                        HGroup(Item('checkbox_camera',label='Simulation camera')),
                         HGroup(Item('output',show_label=False, style='readonly'))
                         )),
                         handler=CameraGUIHandler(),
@@ -66,7 +66,8 @@ class CameraGUI(HasTraits):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
-            self.camera.gettemperature()
+            temp=self.camera.gettemperature()
+            outputtemperature='current temperature'+str(temp)
 
     def _status_fired(self):
         self.camera.gettemperature_status()

@@ -85,7 +85,6 @@ class MainWindow(HasTraits):
     y2=CFloat(2.2)
     width_sample=CFloat(0.025)
     height_sample=CFloat(0.025)
-    wavelength=CFloat(500)
     threshold_voltage=CFloat(3)
     scan_sample=Button()
     scan_sample_step=Button()
@@ -94,10 +93,11 @@ class MainWindow(HasTraits):
     x_koords=[]
     y_koords=[]
     spectra=[]
-
+    wavelength=CFloat(0)
     plot=Instance(Plot)
     plot_current=Instance(Plot)
     plot_compare=Instance(Plot)
+
 
     spectrometer_instance = Instance( SpectrometerGUI, () )
     cryo_instance=Instance(CryoGUI,())
@@ -107,7 +107,7 @@ class MainWindow(HasTraits):
                         HGroup(Item('x1'),Spring(),Item('x2')),
                         HGroup(Item('y1'),Spring(),Item('y2')),
                         HGroup(Item('width_sample',label='width_sample (x)'),Spring(),Item('height_sample',label='height_sample (y)')),
-                        HGroup(Item('wavelength'),Spring(),Item('threshold_voltage')),
+                        HGroup(Item('wavelength',style='readonly',label='current wavelength'),Spring(),Item('threshold_voltage')),
                         HGroup(Item('scan_sample',show_label=False),Item('scan_sample_step',show_label=False),Item('abort',show_label=False)),
                         )
 
@@ -185,10 +185,11 @@ class MainWindow(HasTraits):
             sodass sie parallel laufen koennen"""
             while not self.finished:
                 while self.searching:
+                    [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
+                    self.plot_map([x,[y]],x_start,x_target,y_start,y_target)
                     if threshold_voltage < self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
                         self.cryo_instance.cryo.stop() # stopt cryo
                         self.take_spectrum()
-                        self.plotten()
                         [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #die werte koennten aus zu letzt gespeicherten oder aber von take spectrum uebergeben werden
                         if  (y+sign*height<y_target and sign==1) or(y+sign*height>y_target and sign==-1):
                             self.cryo_instance.cryo.move(x,y+sign*height) # faehrt stueck weiter um von QD weg zusein
@@ -264,17 +265,16 @@ class MainWindow(HasTraits):
             self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
             [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
 
-
-            """ ein Thread aufmachen fuer den Teil if threshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
-            sodass sie parallel laufen koennen"""
             while not self.finished:
                 while ((y<y_target and sign==1) or (y>y_target and sign==-1)) and not self.finished:
                     if threshold_voltage < self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
                             self.take_spectrum()
-                            self.plotten()
                     [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #die werte koennten aus zu letzt gespeicherten oder aber von take spectrum uebergeben werden
+                    self.plot_map([x],[y],x1,x2,y1,y2)
+                    #print x
+                    #print y
+                    #print sign
                     if  (y<y_target and sign==1) or(y>y_target and sign==-1):
-                        print 'faehrt'
                         self.cryo_instance.cryo.move(x,y+sign*height) # faehrt stueck weiter um von QD weg zusein
                         self.cryo_instance.cryo.waiting()
 
@@ -330,14 +330,25 @@ class MainWindow(HasTraits):
         pickle.dump([x,y,spectrum],f)
         f.close()
 
-    def plotten(self):
-        plotdata = ArrayPlotData(x=self.x_koords, y=self.y_koords)
+    def plot_map(self,*optional):
+        if len(optional)>1:
+            plotdata = ArrayPlotData(x=self.x_koords, y=self.y_koords,x2=optional[0],y2=optional[1])
+        else:
+             plotdata = ArrayPlotData(x=self.x_koords, y=self.y_koords)
         plot = Plot(plotdata)
         plot.plot(("x", "y"), type="scatter", color="blue")
         plot.title = ""
-        plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
-        plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
+        plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
+        plot.tools.append(PanTool(plot, constrain_key="shift"))
         plot.tools.append(PlotTool(component=plot))
+        if len(optional)>1:
+            plot.plot(('x2','y2'),type='scatter',color='red')
+        if len(optional)>3:
+            plot.range2d.x_range.low=optional[2]
+            plot.range2d.x_range.high=optional[3]
+        if len(optional)>5:
+            plot.range2d.y_range.low=optional[4]
+            plot.range2d.y_range.high=optional[5]
         self.plot=plot
 
     def create_wavelength_for_plotting(self,number_y_values):
@@ -374,7 +385,7 @@ class MainWindow(HasTraits):
                 wavelength=self.create_wavelength_for_plotting(len(spectrum))
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum)
                 plot = Plot(plotdata)
-                plot.plot(("x", "y"), type="scatter", color="blue")
+                plot.plot(("x", "y"), type="line", color="blue")
                 plot.title = 'spectrum of QD ' +str(self.x_koords[i])+' '+str(self.y_koords[i])
                 plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
                 plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
@@ -406,7 +417,7 @@ class MainWindow(HasTraits):
         print self.x_koords
         print self.y_koords
         print self.spectra
-        self.plotten()
+        self.plot_map()
 
     def save_to(self):
         file_name = save_file()

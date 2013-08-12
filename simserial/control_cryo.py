@@ -99,9 +99,9 @@ class Cryo(SimSerial):
         running=True
         while running :
             running=int(self.status())
-            print 'waiting'
+            #print 'waiting'
             time.sleep(0.5)
-        print 'finished'
+        #print 'finished'
 
 
 
