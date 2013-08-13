@@ -2,8 +2,6 @@ from enthought.traits.api import*
 from enthought.traits.ui.api import*
 from traitsui.menu import OKButton, CancelButton
 from enthought.pyface.api import confirm,ImageResource
-import thread
-import time
 
 import control_cryo
 reload (control_cryo)
@@ -52,6 +50,7 @@ class CryoGUI(HasTraits):
 
 
 
+
     checkbox=Bool(True, label="Simulation")
 
     x=0.1
@@ -82,11 +81,9 @@ class CryoGUI(HasTraits):
             kind='livemodal'
          )
 
-    def __init__(self):
-        thread.start_new_thread(self.refresh_cryo_gui,())
-
     def _identity_fired(self):
         self.output=self.cryo.identify()
+
 
     def _position_fired(self):
         self.output=self.cryo.position()
@@ -99,42 +96,56 @@ class CryoGUI(HasTraits):
 
     def _up_fired(self):
         self.cryo.rmove(0,self.y)
+        self._position_fired()
 
     def _down_fired(self):
         self.cryo.rmove(0,-self.y)
+        self._position_fired()
 
     def _left_fired(self):
         self.cryo.rmove(-self.x,0)
+        self._position_fired()
+
 
     def _right_fired(self):
         self.cryo.rmove(self.x,0)
+        self._position_fired()
 
     def _northwest_fired(self):
         self.cryo.rmove(-self.x,self.y)
+        self._position_fired()
 
 
     def _northeast_fired(self):
         self.cryo.rmove(self.x,self.y)
+        self._position_fired()
 
 
     def _southwest_fired(self):
         self.cryo.rmove(-self.x,-self.y)
+        self._position_fired()
 
 
     def _southeast_fired(self):
         self.cryo.rmove(self.x,-self.y)
+        self._position_fired()
+
 
     def _downdown_fired(self):
         self.cryo.rmove(0,-self.y*self.factor1)
+        self._position_fired()
 
     def _leftleft_fired(self):
           self.cryo.rmove(-self.x*self.factor1,0)
+          self._position_fired()
 
     def _rightright_fired(self):
         self.cryo.rmove(self.x*self.factor1,0)
+        self._position_fired()
 
     def _upup_fired(self):
         self.cryo.rmove(0,self.y*self.factor1)
+        self._position_fired()
 
     def _rmove_fired(self):
         self.x=self.rmovex
@@ -142,6 +153,7 @@ class CryoGUI(HasTraits):
 
     def _move_fired(self):
         self.cryo.move(self.movex,self.movey)
+        self.output=self.cryo.position()
 
     def _setzero_fired(self):
         answer=confirm(parent=None, title="confirmation", message="You want to set a new point of origin. All previous coordinates can be become useless. Do you want to continue?  ")
@@ -158,17 +170,11 @@ class CryoGUI(HasTraits):
     def _checkbox_changed(self):
         self.cryo.toggle_simulation()
         if not self.checkbox:
-            position=self.cryo.position()
-            [self.movex,self.movey]=self.cryo.convert_output(position)
+            self.refresh_cryo_gui()
 
     def refresh_cryo_gui(self):
-        while not (self.checkbox):
-            print 'refresh'
-            try:
-                self.output=self.cryo.position()
-            except:
-                pass
-            time.sleep(2)
+        position=self.cryo.position()
+        [self.movex,self.movey]=self.cryo.convert_output(position)
 
 
 if __name__=="__main__":
@@ -177,5 +183,4 @@ if __name__=="__main__":
     if not main.cryo.simulation:
         print"close cryo"
         main.cryo.close()
-        main.cryo.checkbox=False
 
