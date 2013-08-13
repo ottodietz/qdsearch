@@ -31,6 +31,7 @@ from window_camera import CameraGUI
 
 call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
 call_menu_spectrometer = Action(name='spectrometer menu', accelerator='Ctrl+p', action='call_spectrometer_menu')
+call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
 save_to=Action(name='Save as',action='save_to')
 open_to=Action(name='open...',action='open_to')
 
@@ -38,10 +39,11 @@ printen = Action(name='test Print',accelerator="Ctrl+t",
     action='test_function')
 
 menu = MenuBar(Menu(CloseAction,save_to,open_to, name='File'),
-    Menu(UndoAction, RedoAction,printen,
+    Menu(printen,
     name='Edit'),
     Menu(call_menu_spectrometer,name='Spectrometer'),
     Menu(call_menu_cryo,name='Cryo'),
+    Menu(call_menu_scan_sample,name='scan_sample'),
     Menu(HelpAction, name='Help'))
 
 class MainWindowHandler(Handler):
@@ -60,10 +62,7 @@ class PlotTool(BaseTool):
 
     def normal_left_dclick(self, event):
         [x,y]=self.component.map_data((event.x,event.y))
-        x=round(x,3)
-        y=round(y,3)
-        print x
-        print y
+        main.move_cryo(x,y)
 
     def normal_mouse_move(self,event):
         [x,y]=self.component.map_data((event.x,event.y))
@@ -76,6 +75,9 @@ class PlotTool(BaseTool):
 
 class MainWindow(HasTraits):
     file_name=File('measurement/spectra.pick')
+
+    """for setting"""
+    toleranz=CFloat(0.001,desc='gives the toleranzradius for mouse move and click on the plot ')
 
     """for scanning sample"""
     textfield=Str()
@@ -128,6 +130,8 @@ class MainWindow(HasTraits):
     resizable = True
     )
 
+    setting_view=View(Item('toleranz'),kind='livemodal')
+
     def test_function(self):
         print"test"
 
@@ -137,6 +141,9 @@ class MainWindow(HasTraits):
     def call_spectrometer_menu(self):
         print 'the spectrometer menu will follow'
        #self.spectrometer_instance.configure_traits(view='view_menu')
+
+    def call_scan_sample_menu(self):
+        self.configure_traits(view='setting_view')
 
     def _scan_sample_fired(self):
         thread.start_new_thread(self.scanning,())
@@ -376,11 +383,10 @@ class MainWindow(HasTraits):
         return(x_axis)
 
     def plot_spectrum(self,x,y,field):
-        tol=0.001
         for i in range(len(self.x_koords)):
             x_gap=abs(x-self.x_koords[i])
             y_gap=abs(y-self.y_koords[i])
-            if x_gap <tol and y_gap<tol:
+            if x_gap <self.toleranz and y_gap<self.toleranz:
                 spectrum=self.spectra[i]
                 wavelength=self.create_wavelength_for_plotting(len(spectrum))
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum)
@@ -393,6 +399,16 @@ class MainWindow(HasTraits):
                     self.plot_current=plot
                 if field=='compare':
                     self.plot_compare=plot
+
+    def move_cryo(self,x,y):
+        if self.finished:
+            for i in range(len(self.x_koords)):
+                x_gap=abs(x-self.x_koords[i])
+                y_gap=abs(y-self.y_koords[i])
+                if x_gap <self.toleranz and y_gap<self.toleranz:
+                    self.cryo_instance.cryo.move(self.x_koords[i],self.y_koords[i])
+                    break
+
 
     def load(self):
         f = open(self.file_name, "r")
@@ -447,6 +463,7 @@ if __name__ == '__main__':
     if not main.cryo_instance.cryo.simulation:
         print"close cryo"
         main.cryo_instance.cryo.close()
+        main.cryo_instance.cryo.checkbox=False
     if not main. spectrometer_instance.spectro.simulation:
         print"close spectro"
         main.spectrometer_instance.spectro.close()

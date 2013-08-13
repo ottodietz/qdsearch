@@ -35,7 +35,7 @@ class Voltage(SimSerial):
         temp=''
         self.flushInput()
         self.write('V')
-        time.sleep(1)
+        time.sleep(0.2)
         number=self.inWaiting()
         temp=self.read(number)
         a=temp.find('Voltage')
