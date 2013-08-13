@@ -35,16 +35,12 @@ call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
 save_to=Action(name='Save as',action='save_to')
 open_to=Action(name='open...',action='open_to')
 
-printen = Action(name='test Print',accelerator="Ctrl+t",
-    action='test_function')
+
 
 menu = MenuBar(Menu(CloseAction,save_to,open_to, name='File'),
-    Menu(printen,
-    name='Edit'),
     Menu(call_menu_spectrometer,name='Spectrometer'),
     Menu(call_menu_cryo,name='Cryo'),
-    Menu(call_menu_scan_sample,name='scan_sample'),
-    Menu(HelpAction, name='Help'))
+    Menu(call_menu_scan_sample,name='scan_sample'))
 
 class MainWindowHandler(Handler):
     def close(self, info, isok):
@@ -78,6 +74,7 @@ class MainWindow(HasTraits):
 
     """for setting"""
     toleranz=CFloat(0.001,desc='gives the toleranzradius for mouse move and click on the plot ')
+    offset=CFloat(12)
 
     """for scanning sample"""
     textfield=Str()
@@ -104,12 +101,11 @@ class MainWindow(HasTraits):
     spectrometer_instance = Instance( SpectrometerGUI, () )
     cryo_instance=Instance(CryoGUI,())
     camera_instance=Instance(CameraGUI,())
-
     scanning=Group(Item('textfield',label='Step width by scanning',style='readonly'),
                         HGroup(Item('x1'),Spring(),Item('x2')),
                         HGroup(Item('y1'),Spring(),Item('y2')),
                         HGroup(Item('width_sample',label='width_sample (x)'),Spring(),Item('height_sample',label='height_sample (y)')),
-                        HGroup(Item('wavelength',style='readonly',label='current wavelength'),Spring(),Item('threshold_voltage')),
+                        HGroup(Spring(),Item('threshold_voltage')),
                         HGroup(Item('scan_sample',show_label=False),Item('scan_sample_step',show_label=False),Item('abort',show_label=False)),
                         )
 
@@ -130,10 +126,9 @@ class MainWindow(HasTraits):
     resizable = True
     )
 
-    setting_view=View(Item('toleranz'),kind='livemodal')
-
-    def test_function(self):
-        print"test"
+    setting_view=View(Item('toleranz'),Item('offset'),
+                        buttons = [OKButton, CancelButton,],
+                        kind='livemodal')
 
     def call_cryo_menu(self):
        self.cryo_instance.configure_traits(view='view_menu')
@@ -379,7 +374,7 @@ class MainWindow(HasTraits):
             x_min=0
             x_max=number_y_values
         stepwise=(x_max-x_min)/float(number_y_values)
-        x_axis=numpy.arange(x_min,x_max,stepwise)
+        x_axis=numpy.arange(x_min+self.offset*stepwise,x_max+self.offset*stepwise,stepwise)
         return(x_axis)
 
     def plot_spectrum(self,x,y,field):
@@ -437,6 +432,7 @@ class MainWindow(HasTraits):
 
     def save_to(self):
         file_name = save_file()
+        print file_name
         if file_name != '':
             self.file_name = file_name
         self.save_file()

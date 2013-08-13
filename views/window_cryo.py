@@ -12,7 +12,6 @@ class CryoGUI(HasTraits):
     cryo=Cryo('COM3', 9600, timeout=1)
 
     output=Str()
-    # Felder und Button zur direkten Bewegung
     movex=CFloat(1.0)
     movey=CFloat(1.0)
     move=Button()
@@ -22,8 +21,6 @@ class CryoGUI(HasTraits):
     rmovex=CFloat(0.1)
     rmovey=CFloat(0.1)
     rmove=Button()
-    # Buttons
-
     up=Button(image=ImageResource('image_cryo/up.png'))
     down=Button(image=ImageResource('image_cryo/down.png'))
     right=Button(image=ImageResource('image_cryo/right.png'))
@@ -32,7 +29,6 @@ class CryoGUI(HasTraits):
     southwest=Button(image=ImageResource('image_cryo/southwest'))
     northeast=Button(image=ImageResource('image_cryo/northeast'))
     southeast=Button(image=ImageResource('image_cryo/southeast'))
-
     upup=Button(image=ImageResource('image_cryo/upup'))
     downdown=Button(image=ImageResource('image_cryo/downdown.png'))
     leftleft=Button(image=ImageResource('image_cryo/leftleft.png'))

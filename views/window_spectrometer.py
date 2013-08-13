@@ -64,7 +64,7 @@ class SpectrometerGUI(HasTraits):
                                      HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"))
                                     ),
                             Item("plot",editor=ComponentEditor(),show_label=False)),
-                     width=750,height=350,buttons = [OKButton,], resizable = True,title="Spectrometer")
+                     width=750,height=350,buttons = [OKButton,], resizable = True)
 
 
     def __init__(self):

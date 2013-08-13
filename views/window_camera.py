@@ -47,7 +47,7 @@ class CameraGUI(HasTraits):
                         HGroup(Item('output',show_label=False, style='readonly'))
                         )),
                         handler=CameraGUIHandler(),
-                        resizable = True )
+                        resizable = True, title='camera' )
 
     def _acqusition_fired(self):
         """das hier in neuen thread auf zu machen funktioniert so nicht, da dann line leer
