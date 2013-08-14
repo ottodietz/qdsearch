@@ -1,6 +1,7 @@
 
 from enthought.traits.api import*
 from enthought.traits.ui.api import*
+from traitsui.menu import OKButton, CancelButton
 import pylab
 import thread
 import time
@@ -21,7 +22,7 @@ class CameraGUIHandler(Handler):
             if main.camera.gettemperature() >-1:
                 return True
             else:
-                print'Please wait until the temperature of the camera is above 0 degrees'
+                information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
 
 class CameraGUI(HasTraits):
     camera=Camera()
@@ -36,6 +37,12 @@ class CameraGUI(HasTraits):
     inputtemperature=Int()
     outputtemperature=Str()
 
+    """menu"""
+    readmode=Int(0)
+    acquisitionmode=Int(1)
+    exposuretime=CFloat(0.1)
+    use=Button(label='use current values')
+
     output=Str()
 
 
@@ -47,11 +54,13 @@ class CameraGUI(HasTraits):
                         HGroup(Item('output',show_label=False, style='readonly'))
                         )),
                         handler=CameraGUIHandler(),
-                        resizable = True, title='camera' )
+                        resizable = True, )
+
+    view_menu=View(VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'),
+                    Item('use'),),
+                        buttons = [ 'OK' ],resizable=True)
 
     def _acqusition_fired(self):
-        """das hier in neuen thread auf zu machen funktioniert so nicht, da dann line leer
-        Da nicht auf ende der funktion gewartet wird, muss anders gel?st werden"""
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
@@ -87,7 +96,7 @@ class CameraGUI(HasTraits):
                 if self.camera.gettemperature() >-1:
                     thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
                 else:
-                    print 'can not start simulation while temperature camera is under 0 degrees'
+                    information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
                     thread.start_new_thread(self.change_checkbox,())
             else:
                 thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,)) # if the simulation was runing it can be deactivate
@@ -102,6 +111,11 @@ class CameraGUI(HasTraits):
             self.camera.cooler_on()
         else:
             self.camera.cooler_off()
+
+    def _use_fired(self):
+       self.camera.readmode=self.readmode
+       self.camera.acquisitionmode=self.acquisitionmode
+       self.camera.exposuretime=self.exposuretime
 
 
 if __name__=="__main__":

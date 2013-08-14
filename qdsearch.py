@@ -29,19 +29,21 @@ from  window_spectrometer import SpectrometerGUI
 from  window_cryo import CryoGUI
 from window_camera import CameraGUI
 
+
+"""for creating the menu"""
 call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
-call_menu_spectrometer = Action(name='spectrometer menu', accelerator='Ctrl+p', action='call_spectrometer_menu')
+call_menu_camera = Action(name='camera menu', accelerator='Ctrl+p', action='call_camera_menu')
 call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
 save_to=Action(name='Save as',action='save_to')
 open_to=Action(name='open...',action='open_to')
 
 
-
-menu = MenuBar(Menu(CloseAction,save_to,open_to, name='File'),
-    Menu(call_menu_spectrometer,name='Spectrometer'),
+menu = MenuBar(Menu(save_to,open_to, CloseAction,name='File'),
+    Menu(call_menu_camera,name='Spectrometer'),
     Menu(call_menu_cryo,name='Cryo'),
     Menu(call_menu_scan_sample,name='scan_sample'))
 
+"""handle by closing window"""
 class MainWindowHandler(Handler):
     def close(self, info, isok):
         # Return True to indicate that it is OK to close the window.#
@@ -52,10 +54,10 @@ class MainWindowHandler(Handler):
             if main.camera_instance.camera.gettemperature() >-1:
                 return True
             else:
-                print'Please wait until the temperature of the camera is above 0 degrees'
+                information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
 
+"""events on the plot"""
 class PlotTool(BaseTool):
-
     def normal_left_dclick(self, event):
         [x,y]=self.component.map_data((event.x,event.y))
         main.move_cryo(x,y)
@@ -82,8 +84,8 @@ class MainWindow(HasTraits):
     x2=CFloat(2.15)
     y1=CFloat(2.1)
     y2=CFloat(2.2)
-    width_sample=CFloat(0.025)
-    height_sample=CFloat(0.025)
+    width_step=CFloat(0.025)
+    height_step=CFloat(0.025)
     threshold_voltage=CFloat(3)
     scan_sample=Button()
     scan_sample_step=Button()
@@ -102,19 +104,20 @@ class MainWindow(HasTraits):
     cryo_instance=Instance(CryoGUI,())
     camera_instance=Instance(CameraGUI,())
     scanning=Group(Item('textfield',label='Step width by scanning',style='readonly'),
-                        HGroup(Item('x1'),Spring(),Item('x2')),
-                        HGroup(Item('y1'),Spring(),Item('y2')),
-                        HGroup(Item('width_sample',label='width_sample (x)'),Spring(),Item('height_sample',label='height_sample (y)')),
-                        HGroup(Spring(),Item('threshold_voltage')),
-                        HGroup(Item('scan_sample',show_label=False),Item('scan_sample_step',show_label=False),Item('abort',show_label=False)),
+                        HGroup(Item('x1'),Item('x2'),Item('width_step',label='width step (x)  '),Spring(),Item('scan_sample_step',show_label=False)),
+                        HGroup(Item('y1'),Item('y2'),Item('height_step',label='height step (y) '),Item('threshold_voltage')),
+                        HGroup(Item('scan_sample',show_label=False,),),
+                        enabled_when='searching==False',
                         )
 
     inst_group = Group(
-        Item('cryo_instance', style = 'custom',show_label=False,label="cryo",),
-        Item('spectrometer_instance', style = 'custom',show_label=False, label="spectrometer",),
-        VGroup(scanning,Item('camera_instance',style='custom',show_label=False),label='scan sample'),
-        HGroup(Item('plot',editor=ComponentEditor(),show_label=False,height=100,width =200),
-            VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,width =10,height=20),Item('plot_compare',editor=ComponentEditor(),show_label=False,width =10,height=20)),label='plots'),
+        Item('cryo_instance', style = 'custom',show_label=False,label="cryo", enabled_when='searching==False'),
+        Item('spectrometer_instance', style = 'custom',show_label=False, label="spectrometer", enabled_when='searching==False'),
+        VGroup(HGroup(Item('plot',editor=ComponentEditor(),show_label=False,height=100,width =200),
+                    VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,width =10,height=20),
+                        Item('plot_compare',editor=ComponentEditor(),show_label=False,width =10,height=20))),
+                    HGroup(scanning,Item('abort',show_label=False)),label='scan sample',
+                    ),
         layout='tabbed')
 
     traits_view = View(
@@ -133,9 +136,8 @@ class MainWindow(HasTraits):
     def call_cryo_menu(self):
        self.cryo_instance.configure_traits(view='view_menu')
 
-    def call_spectrometer_menu(self):
-        print 'the spectrometer menu will follow'
-       #self.spectrometer_instance.configure_traits(view='view_menu')
+    def call_camera_menu(self):
+       self.spectrometer_instance.camera_instance.configure_traits(view='view_menu')
 
     def call_scan_sample_menu(self):
         self.configure_traits(view='setting_view')
@@ -160,6 +162,10 @@ class MainWindow(HasTraits):
                 temp=x1
                 x1=x2
                 x2=temp
+            if y1>y2:
+                temp=y1
+                y1=y2
+                y2=temp
             x_start=x1
             y_start=y1
             x_target=x1
@@ -172,10 +178,6 @@ class MainWindow(HasTraits):
                 sign=1
             else:
                 sign=-1
-            width=self.width_sample #x-koordinaten abstand
-            height=self.height_sample #  y koordinaten abstand
-            threshold_voltage=self.threshold_voltage # Schwellenspannung
-
             self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
             if self.spectrometer_instance.current_exit_mirror=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
                  self.spectrometer_instance.current_exit_mirror='side'#self.spectrometer_instance.exit_mirror_value[1
@@ -189,7 +191,7 @@ class MainWindow(HasTraits):
                 while self.searching:
                     [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
                     self.plot_map([x,[y]],x_start,x_target,y_start,y_target)
-                    if threshold_voltage < self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
+                    if self.threshold_voltage< self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
                         self.cryo_instance.cryo.stop() # stopt cryo
                         self.take_spectrum()
                         [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #die werte koennten aus zu letzt gespeicherten oder aber von take spectrum uebergeben werden
@@ -212,7 +214,7 @@ class MainWindow(HasTraits):
                     """instead of calculating new values relative move could be used"""
                     # calculates x value for next searching
                     x_start=x_target
-                    x_target=x_target+width
+                    x_target=x_target+self.width_step
                     self.cryo_instance.cryo.move(x_target,y_target) #goes to new x coordinate
                     self.cryo_instance.cryo.waiting()
 
@@ -246,6 +248,10 @@ class MainWindow(HasTraits):
                 temp=x1
                 x1=x2
                 x2=temp
+            if y1>y2:
+                temp=y1
+                y1=y2
+                y2=temp
             x_start=x1
             y_start=y1
             x_target=x1
@@ -257,9 +263,6 @@ class MainWindow(HasTraits):
                 sign=1
             else:
                 sign=-1
-            width=self.width_sample #x-koordinaten abstand
-            height=self.height_sample #  y koordinaten abstand
-            threshold_voltage=self.threshold_voltage # Schwellenspannung
 
             self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
             if self.spectrometer_instance.current_exit_mirror=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
@@ -269,15 +272,12 @@ class MainWindow(HasTraits):
 
             while not self.finished:
                 while ((y<y_target and sign==1) or (y>y_target and sign==-1)) and not self.finished:
-                    if threshold_voltage < self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
+                    if self.threshold_voltage< self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
                             self.take_spectrum()
                     [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #die werte koennten aus zu letzt gespeicherten oder aber von take spectrum uebergeben werden
                     self.plot_map([x],[y],x1,x2,y1,y2)
-                    #print x
-                    #print y
-                    #print sign
                     if  (y<y_target and sign==1) or(y>y_target and sign==-1):
-                        self.cryo_instance.cryo.move(x,y+sign*height) # faehrt stueck weiter um von QD weg zusein
+                        self.cryo_instance.cryo.move(x,y+sign*self.height_step) # faehrt stueck weiter um von QD weg zusein
                         self.cryo_instance.cryo.waiting()
 
                 """ the comparasion is with calculated values it would be better to take the actuall postion of the cryo"""
@@ -288,7 +288,7 @@ class MainWindow(HasTraits):
                     """instead of calculating new values relative move could be used"""
                     # calculates x value for next searching
                     x_start=x_target
-                    x_target=x_target+width
+                    x_target=x_target+self.width_step
                     [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
                     self.cryo_instance.cryo.move(x_target,y_target) #goes to new x coordinate
                     self.cryo_instance.cryo.waiting()
@@ -396,6 +396,7 @@ class MainWindow(HasTraits):
                     self.plot_compare=plot
 
     def move_cryo(self,x,y):
+        """looks whether a measured point is in the near of the plot event"""
         if self.finished:
             for i in range(len(self.x_koords)):
                 x_gap=abs(x-self.x_koords[i])

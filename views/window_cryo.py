@@ -54,26 +54,26 @@ class CryoGUI(HasTraits):
 
     traits_view=View(
                          VGroup(HGroup(Item("movex",resizable = True,label="x"),Item("movey",resizable = True,label="y"),Item("move",resizable=True,show_label=False)),
-                            HGroup (Item("position", show_label=False,resizable = True),Spring(resizable = True), Item("identity", show_label=False,resizable = True)),
-                            HGroup (Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
                             HGroup(Item("upup", show_label=False, resizable = True,style='custom')),
                             HGroup(Item('northwest',show_label=False,resizable = True,style='custom'),Item("up", show_label=False, resizable = True,style='custom'),Item('northeast',show_label=False,resizable = True,style='custom')),
-                            HGroup(Item("leftleft",  resizable = True,show_label=False,style='custom'), Item("left",  resizable = True,show_label=False,style='custom'), Spring(resizable = True),Item("right", resizable = True, show_label=False,style='custom'),Item("rightright",style='custom', resizable = True, show_label=False)),
+                            HGroup(Item("leftleft",  resizable = True,show_label=False,style='custom'), Item("left",  resizable = True,show_label=False,style='custom'), Item("position", show_label=False,resizable = True),Item("right", resizable = True, show_label=False,style='custom'),Item("rightright",style='custom', resizable = True, show_label=False)),
                             HGroup(Item('southwest',show_label=False,resizable = True,style='custom'),Item("down", show_label=False, resizable = True,style='custom'),Item('southeast',show_label=False,resizable = True,style='custom')),
                             HGroup(Item("downdown", show_label=False, resizable = True,style='custom')),
                             HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
                             HGroup(Item('stop',show_label=False,resizable=True),Item('status',show_label=False,resizable=True))),
+                            HGroup (Spring(height=20)),
             Item("output",style="readonly"),
-            Item("checkbox"),
+            HGroup(Item("checkbox"),Spring(width=350)),
             buttons = [OKButton, CancelButton,],
             resizable = True, width = 400, height = 400)
 
     view_menu=View(VGroup(HGroup(Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
                     HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
-                    HGroup(Item('factor1',label='Step range factor'))
-                    ),
+                    HGroup(Item('factor1',label='Step range factor')),
+                    HGroup(Item("identity", show_label=False,resizable = True))
+                                  ),
                     buttons = [OKButton, CancelButton,],
-            resizable = True, width = 400, height = 150,
+            resizable = True, width = 400, height = 200,
             kind='livemodal'
          )
 

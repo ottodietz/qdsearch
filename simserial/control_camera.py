@@ -8,6 +8,9 @@ class Camera():
     init_active=False
     camera_active=False
     low_temperature=False
+    readmode=int(0)
+    acquisitionmode=int(1)
+    exposuretime=c_float(0.1)
 
     def toggle_simulation(self,simulation):
         self.init_active=True
@@ -18,9 +21,9 @@ class Camera():
             self.camera_active=True
             print "Init:", self.atm.Initialize(None)
             print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
-            print "SetReadMode:",self.atm.SetReadMode(0) #FullverticalBinning
-            print "SetAcqMode:",self.atm.SetAcquisitionMode(1) # single shoot
-            print "SetExpTime:",self.atm.SetExposureTime(c_float(0.1)) #Belichtungsdauer
+            print "SetReadMode:",self.atm.SetReadMode(self.readmode) #FullverticalBinning
+            print "SetAcqMode:",self.atm.SetAcquisitionMode(self.acquisitionmode) # single shoot
+            print "SetExpTime:",self.atm.SetExposureTime(self.exposuretime) #Belichtungsdauer
         self.init_active=False
 
 

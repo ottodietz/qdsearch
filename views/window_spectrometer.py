@@ -17,12 +17,17 @@ import Voltage
 reload(Voltage)
 from Voltage import Voltage
 
+import window_camera
+reload (window_camera)
+from window_camera import CameraGUI
+
 
 class SpectrometerGUI(HasTraits):
     ivolt=Voltage('COM7', 115200, timeout=1)
     spectro=Spectro('COM4', 9600, timeout=1)
     measurement_process=False
     refresh_active=False
+    camera_instance=Instance(CameraGUI,())
 
     plot = Instance(Plot)
 
@@ -53,18 +58,19 @@ class SpectrometerGUI(HasTraits):
 
 
     traits_view=View(HGroup(VGroup(HGroup(Item("input_goto",show_label=False),Item("goto",show_label=False),
-                                        Item("scan_bereich",show_label=False),Item("search_maximum",show_label=False)),
-                                     HGroup(Item("input_nm",show_label=False),Item("nm",show_label=False),
-                                            Item("nm_controlled",show_label=False),Spring(),Item('abort',show_label=False)),
-                                     HGroup(Item("input_nmjemin",show_label=False),Item("nmjemin",show_label=False)),
-                                     HGroup(Item("position",show_label=False),Spring(),Item("output_nmjemin",show_label=False)),
-                                     Item('current_grating', editor=EnumEditor(name='grating_value'), label='Gratings'),
-                                         HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),Spring()),
+                                        Item("scan_bereich",show_label=False),Item("search_maximum",show_label=False),enabled_when='measurement_process==False'),
+                                     HGroup(Item("input_nm",show_label=False,enabled_when='measurement_process==False'),Item("nm",show_label=False,enabled_when='measurement_process==False'),
+                                            Item("nm_controlled",show_label=False,enabled_when='measurement_process==False'),Spring(),Item('abort',show_label=False)),
+                                     HGroup(Item("input_nmjemin",show_label=False),Item("nmjemin",show_label=False),enabled_when='measurement_process==False'),
+                                     HGroup(Item("position",show_label=False),Spring(),Item("output_nmjemin",show_label=False),enabled_when='measurement_process==False'),
+                                     Item('current_grating', editor=EnumEditor(name='grating_value'), label='Gratings',enabled_when='measurement_process==False'),
+                                         HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),Spring(),enabled_when='measurement_process==False'),
                                      Item("output",style="readonly"),
-                                     HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"))
+                                     HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"),enabled_when='measurement_process==False'),
+                                     HGroup(Item('camera_instance',show_label=False, style = 'custom'),)
                                     ),
                             Item("plot",editor=ComponentEditor(),show_label=False)),
-                     width=750,height=350,buttons = [OKButton,], resizable = True)
+                     width=750,height=500,buttons = [OKButton,], resizable = True)
 
 
     def __init__(self):
@@ -83,12 +89,10 @@ class SpectrometerGUI(HasTraits):
             warning(parent=None, title="warning", message="zu kleine input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
             self.input_goto=0
         else:
-            if not self.measurement_process:
                 self.input_nm=self.input_goto
                 self.spectro.wavelength_goto(self.input_goto)
                 self.spectro.waiting()
-            else:
-                information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
+
 
     def _nm_fired(self):
         if self.input_nm>1000:
@@ -98,12 +102,11 @@ class SpectrometerGUI(HasTraits):
             warning(parent=None, title="warning", message="zu kleine input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
             self.input_nm=0
         else:
-            if not self.measurement_process:
                 self.input_goto=self.input_nm
                 self.spectro.wavelength_uncontrolled_nm(self.input_nm)
                 self.spectro.waiting()
-            else:
-                information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
+
+
 
     def _nm_controlled_fired(self):
         if self.input_nm>1000:
@@ -113,56 +116,41 @@ class SpectrometerGUI(HasTraits):
             warning(parent=None, title="warning", message="zu kleine input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
             self.input_nm=0
         else:
-            if not self.measurement_process:
                 self.input_goto=self.input_nm
                 self.spectro.wavelength_controlled_nm(self.input_nm)
-            else:
-                information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
+
 
     def _nmjemin_fired(self):
-        if not self.measurement_process:
             self.spectro.velocity(self.input_nmjemin)
-        else:
-            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
+
 
     def _position_fired(self):
-        if not self.measurement_process:
             self.output=self.spectro.output_position()
-        else:
-            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
+
 
     def _identify_fired(self):
-        if not self.measurement_process:
             self.output=self.spectro.ident()
-        else:
-            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
+
 
     def _output_nmjemin_fired(self):
-        if not self.measurement_process:
             self.output=self.spectro.output_velocity()
-        else:
-            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
 
 
     def _current_grating_changed(self):
        if not self.refresh_active: # ueberprueft ob der Wert wegen einer aktualisierung geaendert worden ist, dann kein Befehl senden
          self.spectro.grating_change(self.current_grating[1])
 
-
     def _current_exit_mirror_changed(self):
         if not self.refresh_active:
             self.spectro.exit_mirror_change(self.current_exit_mirror)
 
-
     def _search_maximum_fired(self):
-        if not self.measurement_process:
             start_value=self.input_goto-self.scan_bereich/2.0
             end_value=self.input_goto+self.scan_bereich/2.0
             if start_value <0:
                 start_value=0
             thread.start_new_thread(self.measure,(start_value,end_value,))
-        else:
-            information(parent=None, title="information", message="A measurement is running. Please wait until it is finished.")
+
 
 
     def measure(self,start_value,end_value):
@@ -177,6 +165,7 @@ class SpectrometerGUI(HasTraits):
         while self.measurement_process:
             self.measured_values.append(self.ivolt.measure())
             ende=time.clock()
+            time.sleep(1) # without the method is to fast for the spectrometer
             self.wavelength.append(float(self.spectro.output_position()))
             self.draw(self.wavelength,self.measured_values)
 
