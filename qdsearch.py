@@ -458,7 +458,7 @@ if __name__ == '__main__':
     if not main.cryo_instance.cryo.simulation:
         print"close cryo"
         main.cryo_instance.cryo.close()
-        main.cryo_instance.cryo.checkbox=False
+        main.cryo_instance.cryo.open=False
     if not main. spectrometer_instance.spectro.simulation:
         print"close spectro"
         main.spectrometer_instance.spectro.close()

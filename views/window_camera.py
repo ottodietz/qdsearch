@@ -5,6 +5,7 @@ from traitsui.menu import OKButton, CancelButton
 import pylab
 import thread
 import time
+from ctypes import *
 
 import control_camera
 reload (control_camera)
@@ -76,7 +77,8 @@ class CameraGUI(HasTraits):
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             temp=self.camera.gettemperature()
-            outputtemperature='current temperature'+str(temp)
+            print temp
+            self.outputtemperature='current temperature: '+str(temp)
 
     def _status_fired(self):
         self.camera.gettemperature_status()
@@ -113,13 +115,12 @@ class CameraGUI(HasTraits):
             self.camera.cooler_off()
 
     def _use_fired(self):
-       self.camera.readmode=self.readmode
-       self.camera.acquisitionmode=self.acquisitionmode
-       self.camera.exposuretime=self.exposuretime
+       self.camera.readmode=c_long(self.readmode)
+       self.camera.acquisitionmode=c_long(self.acquisitionmode)
+       self.camera.exposuretime=c_float(self.exposuretime)
 
 
 if __name__=="__main__":
     main=CameraGUI()
     main.configure_traits()
-
 

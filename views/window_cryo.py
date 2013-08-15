@@ -28,7 +28,7 @@ class CryoGUI(HasTraits):
     down=Button(label='v')
     right=Button(label='>')
     left=Button(label='<')
-    northwest=Button(label='^<')
+    northwest=Button('^<')
     southwest=Button(label='v<')
     northeast=Button(label='^>')
     southeast=Button(label='v>')
@@ -164,7 +164,6 @@ class CryoGUI(HasTraits):
 
     def refresh_cryo_gui(self):
         while self.open:
-            print 'refresh'
             try:
                 self.output=self.cryo.position()
             except:
@@ -178,5 +177,4 @@ if __name__=="__main__":
     if not main.cryo.simulation:
         print"close cryo"
         main.cryo.close()
-        main.cryo.checkbox=False
-
+        main.cryo.open=False

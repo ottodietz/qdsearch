@@ -43,7 +43,7 @@ class SpectrometerGUI(HasTraits):
 
     grating_value=List([" 1"," 2"," 3"," 4"])
     current_grating=Str
-    exit_mirror_value=List(["front","side"]) # List notwendig sonst wird drop down nicht aktualisiert
+    exit_mirror_value=List(["front (CCD)","side (APDs)"]) # List notwendig sonst wird drop down nicht aktualisiert
     current_exit_mirror=Str
 
     input_nm=CFloat(0.0)
@@ -142,7 +142,10 @@ class SpectrometerGUI(HasTraits):
 
     def _current_exit_mirror_changed(self):
         if not self.refresh_active:
-            self.spectro.exit_mirror_change(self.current_exit_mirror)
+            if self.current_exit_mirror=='front (CCD)':
+                self.spectro.exit_mirror_change('front')
+            else:
+                self.spectro.exit_mirror_change('side')
 
     def _search_maximum_fired(self):
             start_value=self.input_goto-self.scan_bereich/2.0
@@ -221,8 +224,11 @@ class SpectrometerGUI(HasTraits):
         self.current_grating=self.grating_value[aktuell-1] # -1 da Grating bei 1 anfaengt zu zaehlen und List bei 0
 
     def read_exit_mirror(self):
-        self.current_exit_mirror=self.spectro.output_exit_mirror()
-
+        exit_mirror=self.spectro.output_exit_mirror()
+        if exit_mirror=='front':
+            self.current_exit_mirror=self.exit_mirror_value[0]
+        else:
+            self.current_exit_mirror=self.exit_mirror_value[1]
     def _abort_fired(self):
         self.spectro.mono_stop()
         self.measurement_process=False
