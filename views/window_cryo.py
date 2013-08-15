@@ -2,6 +2,8 @@ from enthought.traits.api import*
 from enthought.traits.ui.api import*
 from traitsui.menu import OKButton, CancelButton
 from enthought.pyface.api import confirm,ImageResource
+import time
+import thread
 
 import control_cryo
 reload (control_cryo)
@@ -10,6 +12,7 @@ from control_cryo import Cryo
 
 class CryoGUI(HasTraits):
     cryo=Cryo('COM3', 9600, timeout=1)
+    open=True
 
     output=Str()
     movex=CFloat(1.0)
@@ -21,18 +24,18 @@ class CryoGUI(HasTraits):
     rmovex=CFloat(0.1)
     rmovey=CFloat(0.1)
     rmove=Button()
-    up=Button(image=ImageResource('image_cryo/up.png'))
-    down=Button(image=ImageResource('image_cryo/down.png'))
-    right=Button(image=ImageResource('image_cryo/right.png'))
-    left=Button(image=ImageResource('image_cryo/left.png'))
-    northwest=Button(image=ImageResource('image_cryo/northwest'))
-    southwest=Button(image=ImageResource('image_cryo/southwest'))
-    northeast=Button(image=ImageResource('image_cryo/northeast'))
-    southeast=Button(image=ImageResource('image_cryo/southeast'))
-    upup=Button(image=ImageResource('image_cryo/upup'))
-    downdown=Button(image=ImageResource('image_cryo/downdown.png'))
-    leftleft=Button(image=ImageResource('image_cryo/leftleft.png'))
-    rightright=Button(image=ImageResource('image_cryo/rightright.png'))
+    up=Button(label='^')
+    down=Button(label='v')
+    right=Button(label='>')
+    left=Button(label='<')
+    northwest=Button(label='^<')
+    southwest=Button(label='v<')
+    northeast=Button(label='^>')
+    southeast=Button(label='v>')
+    upup=Button(label='^^')
+    downdown=Button(label='vv')
+    leftleft=Button(label='<<')
+    rightright=Button(label='>>')
     factor1=CInt(10,desc='defines the factor between a normal relativ move and a wide relativ move')
 
 
@@ -47,6 +50,7 @@ class CryoGUI(HasTraits):
 
 
 
+
     checkbox=Bool(True, label="Simulation")
 
     x=0.1
@@ -54,11 +58,11 @@ class CryoGUI(HasTraits):
 
     traits_view=View(
                          VGroup(HGroup(Item("movex",resizable = True,label="x"),Item("movey",resizable = True,label="y"),Item("move",resizable=True,show_label=False)),
-                            HGroup(Item("upup", show_label=False, resizable = True,style='custom')),
-                            HGroup(Item('northwest',show_label=False,resizable = True,style='custom'),Item("up", show_label=False, resizable = True,style='custom'),Item('northeast',show_label=False,resizable = True,style='custom')),
-                            HGroup(Item("leftleft",  resizable = True,show_label=False,style='custom'), Item("left",  resizable = True,show_label=False,style='custom'), Item("position", show_label=False,resizable = True),Item("right", resizable = True, show_label=False,style='custom'),Item("rightright",style='custom', resizable = True, show_label=False)),
-                            HGroup(Item('southwest',show_label=False,resizable = True,style='custom'),Item("down", show_label=False, resizable = True,style='custom'),Item('southeast',show_label=False,resizable = True,style='custom')),
-                            HGroup(Item("downdown", show_label=False, resizable = True,style='custom')),
+                            HGroup(Item("upup", show_label=False, resizable = True)),
+                            HGroup(Item('northwest',show_label=False,resizable = True,),Item("up", show_label=False, resizable = True),Item('northeast',show_label=False,resizable = True,)),
+                            HGroup(Item("leftleft",  resizable = True,show_label=False,), Item("left",  resizable = True,show_label=False,), Item("position", show_label=False,resizable = True),Item("right", resizable = True, show_label=False,), Item("rightright", resizable = True, show_label=False)),
+                            HGroup(Item('southwest',show_label=False,resizable = True,),Item("down", show_label=False, resizable = True,),Item('southeast',show_label=False,resizable = True,)),
+                            HGroup(Item("downdown", show_label=False, resizable = True,)),
                             HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
                             HGroup(Item('stop',show_label=False,resizable=True),Item('status',show_label=False,resizable=True))),
                             HGroup (Spring(height=20)),
@@ -77,6 +81,9 @@ class CryoGUI(HasTraits):
             kind='livemodal'
          )
 
+    def __init__(self):
+        thread.start_new_thread(self.refresh_cryo_gui,())
+
     def _identity_fired(self):
         self.output=self.cryo.identify()
 
@@ -92,56 +99,43 @@ class CryoGUI(HasTraits):
 
     def _up_fired(self):
         self.cryo.rmove(0,self.y)
-        self._position_fired()
 
     def _down_fired(self):
         self.cryo.rmove(0,-self.y)
-        self._position_fired()
 
     def _left_fired(self):
         self.cryo.rmove(-self.x,0)
-        self._position_fired()
-
 
     def _right_fired(self):
         self.cryo.rmove(self.x,0)
-        self._position_fired()
 
     def _northwest_fired(self):
         self.cryo.rmove(-self.x,self.y)
-        self._position_fired()
 
 
     def _northeast_fired(self):
         self.cryo.rmove(self.x,self.y)
-        self._position_fired()
 
 
     def _southwest_fired(self):
         self.cryo.rmove(-self.x,-self.y)
-        self._position_fired()
 
 
     def _southeast_fired(self):
         self.cryo.rmove(self.x,-self.y)
-        self._position_fired()
 
 
     def _downdown_fired(self):
         self.cryo.rmove(0,-self.y*self.factor1)
-        self._position_fired()
 
     def _leftleft_fired(self):
           self.cryo.rmove(-self.x*self.factor1,0)
-          self._position_fired()
 
     def _rightright_fired(self):
         self.cryo.rmove(self.x*self.factor1,0)
-        self._position_fired()
 
     def _upup_fired(self):
         self.cryo.rmove(0,self.y*self.factor1)
-        self._position_fired()
 
     def _rmove_fired(self):
         self.x=self.rmovex
@@ -149,7 +143,6 @@ class CryoGUI(HasTraits):
 
     def _move_fired(self):
         self.cryo.move(self.movex,self.movey)
-        self.output=self.cryo.position()
 
     def _setzero_fired(self):
         answer=confirm(parent=None, title="confirmation", message="You want to set a new point of origin. All previous coordinates can be become useless. Do you want to continue?  ")
@@ -166,11 +159,17 @@ class CryoGUI(HasTraits):
     def _checkbox_changed(self):
         self.cryo.toggle_simulation()
         if not self.checkbox:
-            self.refresh_cryo_gui()
+            position=self.cryo.position()
+            [self.movex,self.movey]=self.cryo.convert_output(position)
 
     def refresh_cryo_gui(self):
-        position=self.cryo.position()
-        [self.movex,self.movey]=self.cryo.convert_output(position)
+        while self.open:
+            print 'refresh'
+            try:
+                self.output=self.cryo.position()
+            except:
+                pass
+            time.sleep(2)
 
 
 if __name__=="__main__":
@@ -179,4 +178,5 @@ if __name__=="__main__":
     if not main.cryo.simulation:
         print"close cryo"
         main.cryo.close()
+        main.cryo.checkbox=False
 

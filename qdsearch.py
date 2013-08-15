@@ -1,4 +1,3 @@
-
 from traits.api import *
 from traitsui.api import *
 from traitsui.menu import OKButton, CancelButton
@@ -452,11 +451,10 @@ class MainWindow(HasTraits):
 
 
 
-
-
 main = MainWindow()
 if __name__ == '__main__':
     main.configure_traits()
+    main.cryo_instance.open=False
     if not main.cryo_instance.cryo.simulation:
         print"close cryo"
         main.cryo_instance.cryo.close()
