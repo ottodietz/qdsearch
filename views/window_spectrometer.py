@@ -9,6 +9,7 @@ import time
 from enthought.chaco.tools.api import PanTool, ZoomTool
 from enthought.pyface.api import error,warning,information
 from ctypes import *
+import random
 
 import control_spectrometer
 reload(control_spectrometer)
@@ -27,6 +28,7 @@ class SpectrometerGUI(HasTraits):
     ivolt=Voltage('COM7', 115200, timeout=1)
     spectro=Spectro('COM4', 9600, timeout=1)
     measurement_process=False
+    acquisition_process=False
     refresh_active=False
     camera_instance=Instance(CameraGUI,())
 
@@ -54,13 +56,17 @@ class SpectrometerGUI(HasTraits):
     input_goto=CFloat(0.0)
     scan_bereich=CFloat(3)
     position=Button(label="?nm")
-    test=Button()
+    acquisition_button=Button(label='acquisition')
+    abort_acquisition=Button()
 
     output=Str(label="output")
+    """for menu"""
+    continuous_acquisition=Bool(False)
+    waittime=CFloat(2,desc='time between two acquisitions')
 
 
     traits_view=View(HGroup(VGroup(HGroup(Item("input_goto",show_label=False),Item("goto",show_label=False),
-                                        Item("scan_bereich",show_label=False),Item("search_maximum",show_label=False),enabled_when='measurement_process==False'),
+                                        Item("scan_bereich",show_label=False),Item("search_maximum",show_label=False,enabled_when='acquisition_process==False'),enabled_when='measurement_process==False'),
                                      HGroup(Item("input_nm",show_label=False,enabled_when='measurement_process==False'),Item("nm",show_label=False,enabled_when='measurement_process==False'),
                                             Item("nm_controlled",show_label=False,enabled_when='measurement_process==False'),Spring(),Item('abort',show_label=False)),
                                      HGroup(Item("input_nmjemin",show_label=False),Item("nmjemin",show_label=False),enabled_when='measurement_process==False'),
@@ -69,12 +75,14 @@ class SpectrometerGUI(HasTraits):
                                          HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),Spring(),enabled_when='measurement_process==False'),
                                      Item("output",style="readonly"),
                                      HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"),enabled_when='measurement_process==False'),
-                                     HGroup(Item('camera_instance',show_label=False, style = 'custom'),),
-									 HGroup(Item('test',)),
+                                     HGroup(Item('camera_instance',show_label=False, style = 'custom'),enabled_when='acquisition_process==False'),
+									 HGroup(Item('acquisition_button',show_label=False),Item('abort_acquisition',show_label=False)),
                                      ),
-
                             Item("plot",editor=ComponentEditor(),show_label=False)),
                      width=750,height=500,buttons = [OKButton,], resizable = True)
+
+    view_menu=View(Item('continuous_acquisition'), Item('waittime',label='waitting time'),
+                        buttons = [ 'OK' ],resizable=True)
 
 
     def __init__(self):
@@ -158,8 +166,6 @@ class SpectrometerGUI(HasTraits):
                 start_value=0
             thread.start_new_thread(self.measure,(start_value,end_value,))
 
-
-
     def measure(self,start_value,end_value):
         self.spectro.wavelength_goto(start_value)
         self.spectro.waiting()
@@ -237,24 +243,35 @@ class SpectrometerGUI(HasTraits):
         self.spectro.mono_stop()
         self.measurement_process=False
 
-    def take_spectrum(self):
+    def plot_spectrum(self):
         spectrum=[]
         if not self.camera_instance.checkbox_camera:
-            c_spectrum=self.camera_instance.camera.acqisition() # nimmt das spektrum auf
+            c_spectrum=self.camera_instance.camera.acquisition() # nimmt das spektrum auf
         else:
-            c_spectrum=(c_int * 5)(1, 2,5,6)
+            points=random.sample(range(100),5)
+            c_spectrum=(c_int * 5)(points[1],points[2],points[3],points[4],points[0])
         for i in range(len(c_spectrum)):
             spectrum.append(c_spectrum[i])
         wavelength=range(len(spectrum))
-        print wavelength
-        print spectrum
         plotdata = ArrayPlotData(x=wavelength, y=spectrum)
         plot = Plot(plotdata)
         plot.plot(("x", "y"), type="line", color="blue")
         self.plot=plot
 
-    def _test_fired(self):
-        self.take_spectrum()
+    def _acquisition_button_fired(self):
+         thread.start_new_thread(self.acquisition,())
+
+    def acquisition(self):
+        self.acquisition_process=True
+        if not self.continuous_acquisition: #without if two acqusitions are started or an acqusition after waiting is started what is bad by abort the function.
+            self.plot_spectrum()
+        while(self.continuous_acquisition and self.acquisition_process):
+            self.plot_spectrum()
+            time.sleep(self.waittime)
+        self.acquisition_process=False
+
+    def _abort_acquisition_fired(self):
+            self.acquisition_process=False
 
 if __name__=="__main__":
     main=SpectrometerGUI()

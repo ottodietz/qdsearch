@@ -27,7 +27,7 @@ class Camera():
         self.init_active=False
 
 
-    def acqisition(self):
+    def acquisition(self):
         pixel=1024
         line  = (c_long * pixel)()
         print "StartAcq:",self.atm.StartAcquisition()

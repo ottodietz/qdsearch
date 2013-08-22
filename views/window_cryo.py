@@ -12,7 +12,7 @@ from control_cryo import Cryo
 
 class CryoGUI(HasTraits):
     cryo=Cryo('COM3', 9600, timeout=1)
-    open=True
+    cryo_refresh=True
 
     output=Str()
     movex=CFloat(1.0)
@@ -112,10 +112,8 @@ class CryoGUI(HasTraits):
     def _northwest_fired(self):
         self.cryo.rmove(-self.x,self.y)
 
-
     def _northeast_fired(self):
         self.cryo.rmove(self.x,self.y)
-
 
     def _southwest_fired(self):
         self.cryo.rmove(-self.x,-self.y)
@@ -163,7 +161,7 @@ class CryoGUI(HasTraits):
             [self.movex,self.movey]=self.cryo.convert_output(position)
 
     def refresh_cryo_gui(self):
-        while self.open:
+        while self.cryo_refresh:
             try:
                 self.output=self.cryo.position()
             except:
@@ -177,4 +175,4 @@ if __name__=="__main__":
     if not main.cryo.simulation:
         print"close cryo"
         main.cryo.close()
-        main.cryo.open=False
+        main.cryo.cryo_refresh=False

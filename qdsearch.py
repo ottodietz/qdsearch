@@ -32,13 +32,14 @@ from window_camera import CameraGUI
 """for creating the menu"""
 call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
 call_menu_camera = Action(name='camera menu', accelerator='Ctrl+p', action='call_camera_menu')
+call_menu_spectrometer = Action(name='spectrometer menu', accelerator='', action='call_spectrometer_menu')
 call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
 save_to=Action(name='Save as',action='save_to')
 open_to=Action(name='open...',action='open_to')
 
 
 menu = MenuBar(Menu(save_to,open_to, CloseAction,name='File'),
-    Menu(call_menu_camera,name='Spectrometer'),
+    Menu(call_menu_spectrometer,call_menu_camera,name='Spectrometer'),
     Menu(call_menu_cryo,name='Cryo'),
     Menu(call_menu_scan_sample,name='scan_sample'))
 
@@ -104,12 +105,12 @@ class MainWindow(HasTraits):
     scanning=Group(Item('textfield',label='Step width by scanning',style='readonly'),
                         HGroup(Item('x1'),Item('x2'),Item('width_step',label='width step (x)  '),Spring(),Item('scan_sample_step',show_label=False)),
                         HGroup(Item('y1'),Item('y2'),Item('height_step',label='height step (y) '),Item('threshold_voltage')),
-                        enabled_when='searching==False',
+                        enabled_when='finished==True',
                         )
 
     inst_group = Group(
-        Item('cryo_instance', style = 'custom',show_label=False,label="cryo", enabled_when='searching==False'),
-        Item('spectrometer_instance', style = 'custom',show_label=False, label="spectrometer", enabled_when='searching==False'),
+        Item('cryo_instance', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
+        Item('spectrometer_instance', style = 'custom',show_label=False, label="spectrometer", enabled_when='finished==True'),
         VGroup(HGroup(Item('plot',editor=ComponentEditor(),show_label=False,height=100,width =200),
                     VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,width =10,height=20),
                         Item('plot_compare',editor=ComponentEditor(),show_label=False,width =10,height=20))),
@@ -134,18 +135,25 @@ class MainWindow(HasTraits):
        self.cryo_instance.configure_traits(view='view_menu')
 
     def call_camera_menu(self):
-       self.spectrometer_instance.spectrometer_instance.camera_instance.configure_traits(view='view_menu')
+       self.spectrometer_instance.camera_instance.configure_traits(view='view_menu')
+
+    def call_spectrometer_menu(self):
+       self.spectrometer_instance.configure_traits(view='view_menu')
 
     def call_scan_sample_menu(self):
         self.configure_traits(view='setting_view')
 
     def _scan_sample_step_fired(self):
-        thread.start_new_thread(self.scanning_step,())
+        if self.spectrometer_instance.measurement_process or self.spectrometer_instance.acquisition_process:
+            information(parent=None,title='please wait', message='Measurement at the spectrometer is running please finish this first.')
+        else:
+            thread.start_new_thread(self.scanning_step,())
 
     def scanning_step(self):
         if self.spectrometer_instance.camera_instance.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
+            self.cryo_instance.cryo.cryo_refresh=False
             self.searching=True
             self.finished=False
             x1=self.x1
@@ -167,7 +175,7 @@ class MainWindow(HasTraits):
             y_start=y1
             x_target=x1
             y_target=y2
-            f = open(self.file_name, "w") # creates new file
+            f = open('measurement/last_measurement.pick', "w") # creates new file
             f.close()
 
             if y_start<y_target:
@@ -176,8 +184,8 @@ class MainWindow(HasTraits):
                 sign=-1
 
             self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
-            if self.spectrometer_instance.current_exit_mirror=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
-                 self.spectrometer_instance.current_exit_mirror='side'#self.spectrometer_instance.exit_mirror_value[1
+            if self.spectrometer_instance.current_exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+                 self.spectrometer_instance.current_exit_mirror='side (APDs)'#self.spectrometer_instance.exit_mirror_value[1
             self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
             [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
 
@@ -211,6 +219,8 @@ class MainWindow(HasTraits):
                     y_target=temp
                     sign=sign*-1
             print 'searching finish'
+            self.cryo_instance.cryo_refresh=True
+            self.cryo_instance.refresh_cryo_gui()
 
 
     def _abort_fired(self):
@@ -221,16 +231,16 @@ class MainWindow(HasTraits):
 
     def take_spectrum(self):
         spectrum=[]
-        self.spectrometer_instance.current_exit_mirror='front' # klappt spiegel vom spectro auf kamera um
+        self.spectrometer_instance.current_exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(0.5) # for slowing mirrors
         if not self.spectrometer_instance.camera_instance.checkbox_camera:
-            c_spectrum=self.spectrometer_instance.camera_instance.camera.acqisition() # nimmt das spektrum auf
+            c_spectrum=self.spectrometer_instance.camera_instance.camera.acquisition() # nimmt das spektrum auf
         else:
             c_spectrum=(c_float * 5)(1, 2,5,6)
             time.sleep(1) # for slowing mirrors
         for i in range(len(c_spectrum)):
             spectrum.append(c_spectrum[i])
-        self.spectrometer_instance.current_exit_mirror='side' # klappt spiegel vom spectro auf ausgang um
+        self.spectrometer_instance.current_exit_mirror='side (APDs)' # klappt spiegel vom spectro auf ausgang um
         [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #speichert die aktuellen koordinaten ab
         self.x_koords.append(x)
         self.y_koords.append(y)
@@ -239,7 +249,7 @@ class MainWindow(HasTraits):
         spectrum=[]
 
     def save_to_file(self,x,y,spectrum):
-        f = open(self.file_name, "a")
+        f = open('measurement/last_measurement.pick', "a")
         pickle.dump([x,y,spectrum],f)
         f.close()
 
@@ -370,7 +380,7 @@ if __name__ == '__main__':
     if not main.cryo_instance.cryo.simulation:
         print"close cryo"
         main.cryo_instance.cryo.close()
-        main.cryo_instance.cryo.open=False
+        main.cryo_instance.cryo_refresh=False
     if not main.spectrometer_instance.spectro.simulation:
         print"close spectro"
         main.spectrometer_instance.spectro.close()

@@ -31,7 +31,7 @@ class CameraGUI(HasTraits):
     checkbox_camera=Bool(True)
     cooler=Bool(False)
     plot=Button()
-    acqusition=Button()
+    acquisition=Button()
     temperature=Button()
     status=Button()
     settemperature=Button()
@@ -43,12 +43,11 @@ class CameraGUI(HasTraits):
     acquisitionmode=Int(1)
     exposuretime=CFloat(0.1)
     use=Button(label='use current values')
-
     output=Str()
 
 
     traits_view=View(VGroup(
-                        HGroup(Item('acqusition',show_label=False), Item('plot',show_label=False),Item('temperature',show_label=False),Item('outputtemperature',show_label=False,style='readonly')),
+                        HGroup(Item('acquisition',show_label=False), Item('plot',show_label=False),Item('temperature',show_label=False),Item('outputtemperature',show_label=False,style='readonly')),
                         HGroup(Item('status',show_label=False),Item('settemperature',show_label=False),Item('inputtemperature')),
                         HGroup(Item('cooler'),
                         HGroup(Item('checkbox_camera',label='Simulation camera')),
@@ -61,11 +60,11 @@ class CameraGUI(HasTraits):
                     Item('use'),),
                         buttons = [ 'OK' ],resizable=True)
 
-    def _acqusition_fired(self):
+    def _acquisition_fired(self):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
-            self.line=self.camera.acqisition()
+            self.line=self.camera.acquisition()
 
 
     def _plot_fired(self):

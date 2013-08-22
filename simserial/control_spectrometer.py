@@ -11,7 +11,6 @@ import thread
 from SimSerial import SimSerial
 
 
-
 class Spectro(SimSerial):
     # for simulation
     nm=float(0)
