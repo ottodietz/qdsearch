@@ -43,7 +43,6 @@ class Camera():
     def gettemperature(self):
         temperature=c_long()
         print 'GetTemperature', self.atm.GetTemperature(byref(temperature))
-        print temperature.value
         return(temperature.value)
 
     def cooler_on(self):

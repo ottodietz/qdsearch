@@ -46,11 +46,11 @@ menu = MenuBar(Menu(save_to,open_to, CloseAction,name='File'),
 class MainWindowHandler(Handler):
     def close(self, info, isok):
         # Return True to indicate that it is OK to close the window.#
-        if main.camera_instance.checkbox_camera:
+        if main.spectrometer_instance.camera_instance.checkbox_camera:
             return True
         else:
-            main.camera_instance.cooler=False
-            if main.camera_instance.camera.gettemperature() >-1:
+            main.spectrometer_instance.camera_instance.cooler=False
+            if main.spectrometer_instance.camera_instance.camera.gettemperature() >-1:
                 return True
             else:
                 information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
@@ -101,11 +101,9 @@ class MainWindow(HasTraits):
 
     spectrometer_instance = Instance( SpectrometerGUI, () )
     cryo_instance=Instance(CryoGUI,())
-    camera_instance=Instance(CameraGUI,())
     scanning=Group(Item('textfield',label='Step width by scanning',style='readonly'),
                         HGroup(Item('x1'),Item('x2'),Item('width_step',label='width step (x)  '),Spring(),Item('scan_sample_step',show_label=False)),
                         HGroup(Item('y1'),Item('y2'),Item('height_step',label='height step (y) '),Item('threshold_voltage')),
-                        HGroup(Item('scan_sample',show_label=False,),),
                         enabled_when='searching==False',
                         )
 
@@ -136,102 +134,16 @@ class MainWindow(HasTraits):
        self.cryo_instance.configure_traits(view='view_menu')
 
     def call_camera_menu(self):
-       self.spectrometer_instance.camera_instance.configure_traits(view='view_menu')
+       self.spectrometer_instance.spectrometer_instance.camera_instance.configure_traits(view='view_menu')
 
     def call_scan_sample_menu(self):
         self.configure_traits(view='setting_view')
-
-    def _scan_sample_fired(self):
-        thread.start_new_thread(self.scanning,())
-
-    def scanning(self):
-        if self.camera_instance.camera.init_active:
-            information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
-        else:
-            self.x_koords=[]
-            self.y_koords=[]
-            self.spectra=[]
-            self.searching=True
-            self.finished=False
-            x1=self.x1
-            y1=self.y1
-            x2=self.x2
-            y2=self.y2
-            if x1>x2:
-                temp=x1
-                x1=x2
-                x2=temp
-            if y1>y2:
-                temp=y1
-                y1=y2
-                y2=temp
-            x_start=x1
-            y_start=y1
-            x_target=x1
-            y_target=y2
-
-            f = open(self.file_name, "w") # creates new file
-            f.close()
-
-            if y_start<y_target:
-                sign=1
-            else:
-                sign=-1
-            self.cryo_instance.cryo.move(x_start,y_start) #faehrt zum startpunkt
-            if self.spectrometer_instance.current_exit_mirror=='front': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
-                 self.spectrometer_instance.current_exit_mirror='side'#self.spectrometer_instance.exit_mirror_value[1
-            self.cryo_instance.cryo.waiting() #wartet bis cryo dort angekommen
-
-
-            self.cryo_instance.cryo.move(x_target,y_target)#faengt an zum ersten ziel zu fahren
-            """ ein Thread aufmachen fuer den Teil if threshold_voltage < ... und einen fuer den while if not self.cryo_instance.cryo.status() teil ,
-            sodass sie parallel laufen koennen"""
-            while not self.finished:
-                while self.searching:
-                    [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position())
-                    self.plot_map([x,[y]],x_start,x_target,y_start,y_target)
-                    if self.threshold_voltage< self.spectrometer_instance.ivolt.measure(): # vergleicht schwellenspannung mit aktueller
-                        self.cryo_instance.cryo.stop() # stopt cryo
-                        self.take_spectrum()
-                        [x,y]=self.cryo_instance.cryo.convert_output(self.cryo_instance.cryo.position()) #die werte koennten aus zu letzt gespeicherten oder aber von take spectrum uebergeben werden
-                        if  (y+sign*height<y_target and sign==1) or(y+sign*height>y_target and sign==-1):
-                            self.cryo_instance.cryo.move(x,y+sign*height) # faehrt stueck weiter um von QD weg zusein
-                            self.cryo_instance.cryo.waiting() # wartet bis cryo vom QD weg ist
-                            self.cryo_instance.cryo.move(x_target,y_target) # faehrt weiter
-                            print 'faehrt weiter'
-                        else:
-                            self.searching=False
-                       # self.searching=True # da wenn cryo.status parallel abgefragt wird es auf False gesetz worden ist vremutlich muss der ganze thread dann neu gestartet werden
-                    if not self.cryo_instance.cryo.status():
-                        self.searching=False
-
-                """ the comparasion is with calculated values it would be better to take the actuall postion of the cryo"""
-                """by calculating they are internal rounding erros and than it run one time more than it should"""
-                if (x_target>=x2 and (y_target>=y2 or y_target<=y1)) or self.finished: #check if end coordinates are reached
-                    self.finished=True
-                else:
-                    """instead of calculating new values relative move could be used"""
-                    # calculates x value for next searching
-                    x_start=x_target
-                    x_target=x_target+self.width_step
-                    self.cryo_instance.cryo.move(x_target,y_target) #goes to new x coordinate
-                    self.cryo_instance.cryo.waiting()
-
-                     # calculates y value for next searching
-                    temp=y_start
-                    y_start=y_target
-                    y_target=temp
-                    sign=sign*-1
-
-                    self.cryo_instance.cryo.move(x_target,y_target) # new target
-                    self.searching=True
-            print 'searching finish'
 
     def _scan_sample_step_fired(self):
         thread.start_new_thread(self.scanning_step,())
 
     def scanning_step(self):
-        if self.camera_instance.camera.init_active:
+        if self.spectrometer_instance.camera_instance.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             self.searching=True
@@ -311,8 +223,8 @@ class MainWindow(HasTraits):
         spectrum=[]
         self.spectrometer_instance.current_exit_mirror='front' # klappt spiegel vom spectro auf kamera um
         time.sleep(0.5) # for slowing mirrors
-        if not self.camera_instance.checkbox_camera:
-            c_spectrum=self.camera_instance.camera.acqisition() # nimmt das spektrum auf
+        if not self.spectrometer_instance.camera_instance.checkbox_camera:
+            c_spectrum=self.spectrometer_instance.camera_instance.camera.acqisition() # nimmt das spektrum auf
         else:
             c_spectrum=(c_float * 5)(1, 2,5,6)
             time.sleep(1) # for slowing mirrors
@@ -459,11 +371,11 @@ if __name__ == '__main__':
         print"close cryo"
         main.cryo_instance.cryo.close()
         main.cryo_instance.cryo.open=False
-    if not main. spectrometer_instance.spectro.simulation:
+    if not main.spectrometer_instance.spectro.simulation:
         print"close spectro"
         main.spectrometer_instance.spectro.close()
     if not main.spectrometer_instance.ivolt.simulation:
         print"close Voltage"
         main.spectrometer_instance.ivolt.close()
-    if not main.camera_instance.checkbox_camera:
-        main.camera_instance.camera.close()
+    if not main.spectrometer_instance.camera_instance.checkbox_camera:
+        main.spectrometer_instance.camera_instance.camera.close()

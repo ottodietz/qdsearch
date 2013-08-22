@@ -77,7 +77,6 @@ class CameraGUI(HasTraits):
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             temp=self.camera.gettemperature()
-            print temp
             self.outputtemperature='current temperature: '+str(temp)
 
     def _status_fired(self):

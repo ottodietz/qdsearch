@@ -8,6 +8,7 @@ import thread
 import time
 from enthought.chaco.tools.api import PanTool, ZoomTool
 from enthought.pyface.api import error,warning,information
+from ctypes import *
 
 import control_spectrometer
 reload(control_spectrometer)
@@ -53,6 +54,7 @@ class SpectrometerGUI(HasTraits):
     input_goto=CFloat(0.0)
     scan_bereich=CFloat(3)
     position=Button(label="?nm")
+    test=Button()
 
     output=Str(label="output")
 
@@ -67,8 +69,10 @@ class SpectrometerGUI(HasTraits):
                                          HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),Spring(),enabled_when='measurement_process==False'),
                                      Item("output",style="readonly"),
                                      HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"),enabled_when='measurement_process==False'),
-                                     HGroup(Item('camera_instance',show_label=False, style = 'custom'),)
-                                    ),
+                                     HGroup(Item('camera_instance',show_label=False, style = 'custom'),),
+									 HGroup(Item('test',)),
+                                     ),
+
                             Item("plot",editor=ComponentEditor(),show_label=False)),
                      width=750,height=500,buttons = [OKButton,], resizable = True)
 
@@ -233,7 +237,24 @@ class SpectrometerGUI(HasTraits):
         self.spectro.mono_stop()
         self.measurement_process=False
 
+    def take_spectrum(self):
+        spectrum=[]
+        if not self.camera_instance.checkbox_camera:
+            c_spectrum=self.camera_instance.camera.acqisition() # nimmt das spektrum auf
+        else:
+            c_spectrum=(c_int * 5)(1, 2,5,6)
+        for i in range(len(c_spectrum)):
+            spectrum.append(c_spectrum[i])
+        wavelength=range(len(spectrum))
+        print wavelength
+        print spectrum
+        plotdata = ArrayPlotData(x=wavelength, y=spectrum)
+        plot = Plot(plotdata)
+        plot.plot(("x", "y"), type="line", color="blue")
+        self.plot=plot
 
+    def _test_fired(self):
+        self.take_spectrum()
 
 if __name__=="__main__":
     main=SpectrometerGUI()
