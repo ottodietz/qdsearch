@@ -28,21 +28,6 @@ from  window_spectrometer import SpectrometerGUI
 from  window_cryo import CryoGUI
 from window_camera import CameraGUI
 
-
-"""for creating the menu"""
-call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
-call_menu_camera = Action(name='camera menu', accelerator='Ctrl+p', action='call_camera_menu')
-call_menu_spectrometer = Action(name='spectrometer menu', accelerator='', action='call_spectrometer_menu')
-call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
-save_to=Action(name='Save as',action='save_to')
-open_to=Action(name='open...',action='open_to')
-
-
-menu = MenuBar(Menu(save_to,open_to, CloseAction,name='File'),
-    Menu(call_menu_spectrometer,call_menu_camera,name='Spectrometer'),
-    Menu(call_menu_cryo,name='Cryo'),
-    Menu(call_menu_scan_sample,name='scan_sample'))
-
 """handle by closing window"""
 class MainWindowHandler(Handler):
     def close(self, info, isok):
@@ -72,6 +57,12 @@ class PlotTool(BaseTool):
 
 
 class MainWindow(HasTraits):
+    """for creating the menu"""
+    call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
+    save_to=Action(name='Save as',action='save_to')
+    open_to=Action(name='open...',action='open_to')
+    menu1 = Menu(save_to,open_to, CloseAction,name='File')
+    menu2=Menu(call_menu_scan_sample,name='scan_sample')
     file_name=File('measurement/spectra.pick')
 
     """for setting"""
@@ -117,10 +108,9 @@ class MainWindow(HasTraits):
                     HGroup(scanning,Item('abort',show_label=False)),label='scan sample',
                     ),
         layout='tabbed')
-
     traits_view = View(
         inst_group,
-     menubar=menu,
+     menubar=MenuBar(menu1,CryoGUI.menu,SpectrometerGUI.menu,menu2),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
     handler=MainWindowHandler(),

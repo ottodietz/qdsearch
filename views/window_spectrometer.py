@@ -63,7 +63,9 @@ class SpectrometerGUI(HasTraits):
     """for menu"""
     continuous_acquisition=Bool(False)
     waittime=CFloat(2,desc='time between two acquisitions')
-
+    call_menu_camera = Action(name='camera menu', accelerator='Ctrl+p', action='call_camera_menu')
+    call_menu_spectrometer = Action(name='spectrometer menu', accelerator='Ctrl+c', action='call_spectrometer_menu')
+    menu=Menu(call_menu_spectrometer,call_menu_camera,name='Spectrometer')
 
     traits_view=View(HGroup(VGroup(HGroup(Item("input_goto",show_label=False),Item("goto",show_label=False),
                                         Item("scan_bereich",show_label=False),Item("search_maximum",show_label=False,enabled_when='acquisition_process==False'),enabled_when='measurement_process==False'),
@@ -79,10 +81,17 @@ class SpectrometerGUI(HasTraits):
 									 HGroup(Item('acquisition_button',show_label=False),Item('abort_acquisition',show_label=False)),
                                      ),
                             Item("plot",editor=ComponentEditor(),show_label=False)),
+                            menubar=MenuBar(menu),
                      width=750,height=500,buttons = [OKButton,], resizable = True)
 
     view_menu=View(Item('continuous_acquisition'), Item('waittime',label='waitting time'),
-                        buttons = [ 'OK' ],resizable=True)
+                        buttons = [ 'OK' ],resizable=True,kind='livemodal')
+
+    def call_spectrometer_menu(self):
+       self.configure_traits(view='view_menu')
+
+    def call_camera_menu(self):
+       self.camera_instance.configure_traits(view='view_menu')
 
 
     def __init__(self):

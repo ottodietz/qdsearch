@@ -11,6 +11,8 @@ from control_cryo import Cryo
 
 
 class CryoGUI(HasTraits):
+    call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
+    menu =    Menu(call_menu_cryo,name='Cryo')
     cryo=Cryo('COM3', 9600, timeout=1)
     cryo_refresh=True
 
@@ -69,6 +71,7 @@ class CryoGUI(HasTraits):
             Item("output",style="readonly"),
             HGroup(Item("checkbox"),Spring(width=350)),
             buttons = [OKButton, CancelButton,],
+                        menubar=MenuBar(menu),
             resizable = True, width = 400, height = 400)
 
     view_menu=View(VGroup(HGroup(Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
@@ -167,6 +170,9 @@ class CryoGUI(HasTraits):
             except:
                 pass
             time.sleep(2)
+
+    def call_cryo_menu(self):
+       self.configure_traits(view='view_menu')
 
 
 if __name__=="__main__":
