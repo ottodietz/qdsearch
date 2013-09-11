@@ -1,5 +1,4 @@
 from ctypes import *
-import thread
 import time
 
 

@@ -24,7 +24,7 @@ class Spectro(SimSerial):
         else:
             self.write(str(aim)+" >NM \r")
 
-    def _greater_thanNM(self,string):
+    def _greaterNM(self,string):
         a=string.find(" ")
         aim=float(string[0:a])
         thread.start_new_thread(self.simulation_controlled_nm,(aim,))
@@ -92,7 +92,7 @@ class Spectro(SimSerial):
         tmp=self.readline()
         return(self.convert_output(tmp))
 
-    def _questionmarkNMslashMIN(self,string):
+    def _QMNMslashMIN(self,string):
         self.buffer=' '+str(self.nm_je_min)+' '
 
     def output_position(self):
@@ -101,7 +101,7 @@ class Spectro(SimSerial):
         tmp=self.readline()
         return(self.convert_output(tmp))
 
-    def _questionmarkNM(self,string):
+    def _QMNM(self,string):
         self.buffer=' '+str(self.nm)+' '
 
     def grating_change(self,grat):
@@ -143,7 +143,7 @@ class Spectro(SimSerial):
             if temp.find("Not Installed")==-1:
                 grating.append(temp)
 
-        """fragt das currente grating ab"""
+        """fragt das current grating ab"""
         self.flushInput()
         self.write("?GRATING \r")
         grating_current=self.readline()
@@ -152,7 +152,7 @@ class Spectro(SimSerial):
         return(grating,grating_current)
 
     def output_exit_mirror(self):
-        """liest das currente stellung des Exit_mirrors aus und gibt sie zur?ck"""
+        """liest das current stellung des Exit_mirrors aus und gibt sie zur?ck"""
         self.write("EXIT-MIRROR \r")
         time.sleep(0.1)
         self.flushInput()

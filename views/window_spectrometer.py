@@ -76,13 +76,13 @@ class SpectrometerGUI(HasTraits):
                                      Item("output",style="readonly"),
                                      HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"),enabled_when='measurement_process==False'),
                                      HGroup(Item('camera_instance',show_label=False, style = 'custom'),enabled_when='acquisition_process==False'),
-									 HGroup(Item('acquisition_button',show_label=False),Item('abort_acquisition',show_label=False)),
+									 HGroup(Item('acquisition_button',show_label=False),Item('abort_acquisition',show_label=False),Item('continuous_acquisition')),
                                      ),
                             Item("plot",editor=ComponentEditor(),show_label=False)),
                      width=750,height=500,buttons = [OKButton,], resizable = True)
 
-    view_menu=View(Item('continuous_acquisition'), Item('waittime',label='waitting time'),
-                        buttons = [ 'OK' ],resizable=True)
+    view_menu=View( Item('waittime',label='waitting time'),
+                        buttons = [ 'OK' ],resizable=True,kind='modal')
 
 
     def __init__(self):
@@ -128,8 +128,8 @@ class SpectrometerGUI(HasTraits):
             warning(parent=None, title="warning", message="zu kleine input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
             self.input_nm=0
         else:
-                self.input_goto=self.input_nm
-                self.spectro.wavelength_controlled_nm(self.input_nm)
+            self.input_goto=self.input_nm
+            self.spectro.wavelength_controlled_nm(self.input_nm)
 
 
     def _nmjemin_fired(self):
@@ -204,7 +204,7 @@ class SpectrometerGUI(HasTraits):
         plot.plot(("x", "y"), type="line", color="blue")
         #plot.title="title"
         plot.x_axis.title="wavelength [nm]"
-        plot.y_axis.title="intensity"
+        plot.y_axis.title="intensity [V]"
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
         plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
         self.plot = plot

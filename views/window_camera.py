@@ -58,7 +58,7 @@ class CameraGUI(HasTraits):
 
     view_menu=View(VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'),
                     Item('use'),),
-                        buttons = [ 'OK' ],resizable=True)
+                        buttons = [ 'OK' ],resizable=True,kind='modal')
 
     def _acquisition_fired(self):
         if self.camera.init_active:

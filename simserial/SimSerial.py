@@ -31,8 +31,7 @@ class SimSerial(serial.Serial):
             super(SimSerial,self).__init__(*self.initargs,**self.initkwargs)
         else:
             self.simulation=True
-            serial.Serial.close(self)
-            # super(SimSerial,self).close() besser: aber noch ausprobieren
+            self.close()
             print("simulation on")
 
 
@@ -67,7 +66,7 @@ class SimSerial(serial.Serial):
         if not self.simulation:
             serial.Serial.flushOutput(self)
         else:
-            self.buffer=[]
+            self.buffer=str
 
     def inWaiting(self):
         if not self.simulation:
@@ -94,7 +93,7 @@ class SimSerial(serial.Serial):
 
     def replace_special_characters(self,name):
         _sign=['?','!','+','-','<','>','/']
-        _replace=['questionmark','exclamationmark','plus','minus','less_than','greater_than','slash']
+        _replace=['QM','EM','plus','minus','less','greater','slash']
         for i in range(len(_sign)):
             name=name.replace(_sign[i],_replace[i])
         return(name)

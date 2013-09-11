@@ -99,12 +99,11 @@ class MainWindow(HasTraits):
     plot_current=Instance(Plot)
     plot_compare=Instance(Plot)
 
-
     spectrometer_instance = Instance( SpectrometerGUI, () )
     cryo_instance=Instance(CryoGUI,())
     scanning=Group(Item('textfield',label='Step width by scanning',style='readonly'),
-                        HGroup(Item('x1'),Item('x2'),Item('width_step',label='width step (x)  '),Spring(),Item('scan_sample_step',show_label=False)),
-                        HGroup(Item('y1'),Item('y2'),Item('height_step',label='height step (y) '),Item('threshold_voltage')),
+                        HGroup(Item('x1',label='x1 [mm]'),Item('x2', label='x2 [mm]'),Item('width_step',label='width step (x) [mm]  '),Spring(),Item('scan_sample_step',show_label=False)),
+                        HGroup(Item('y1',label='y1 [mm]'),Item('y2',label='y2 [mm]'),Item('height_step',label='height step (y) [mm] '),Item('threshold_voltage',label='threshold voltage [V]')),
                         enabled_when='finished==True',
                         )
 
@@ -177,6 +176,7 @@ class MainWindow(HasTraits):
             y_target=y2
             f = open('measurement/last_measurement.pick', "w") # creates new file
             f.close()
+            self.usedgrating=self.spectrometer_instance.current_grating
 
             if y_start<y_target:
                 sign=1
@@ -272,6 +272,8 @@ class MainWindow(HasTraits):
         if len(optional)>5:
             plot.range2d.y_range.low=optional[4]
             plot.range2d.y_range.high=optional[5]
+        plot.x_axis.title="x-Position on sampe [mm]"
+        plot.y_axis.title="y-Position on sampe [mm]"
         self.plot=plot
 
     def create_wavelength_for_plotting(self,number_y_values):
@@ -281,11 +283,11 @@ class MainWindow(HasTraits):
         900 nm was choosen because it was in the interesting range for the measurement."""
         x_less=[40.97,16.96,6.91] # values for different gratings: 600,1200,1800
         x_more=[40.7,16.4,6.49]
-        if self.spectrometer_instance.current_grating.find(' 600')!=-1:
+        if self.usedgrating.find(' 600')!=-1:
             i=0
-        elif self.spectrometer_instance.current_grating.find(' 1200')!=-1:
+        elif self.usedgrating.find(' 1200')!=-1:
             i=1
-        elif self.spectrometer_instance.current_grating.find(' 1800')!=-1:
+        elif self.usedgrating.find(' 1800')!=-1:
             i=2
         try:
             x_min=self.spectrometer_instance.input_nm-x_less[i]
@@ -308,6 +310,8 @@ class MainWindow(HasTraits):
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum)
                 plot = Plot(plotdata)
                 plot.plot(("x", "y"), type="line", color="blue")
+                plot.x_axis.title="wavelength [nm]"
+                plot.y_axis.title="intensity [V]"
                 plot.title = 'spectrum of QD ' +str(self.x_koords[i])+' '+str(self.y_koords[i])
                 plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
                 plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
@@ -340,16 +344,29 @@ class MainWindow(HasTraits):
         x=[]
         y=[]
         spectrum=[]
-        for i in range(len(value)):
-            x.append(value[i][0])
-            y.append(value[i][1])
-            spectrum.append(value[i][2])
+        if len(value[0])>7: # if is for for compatibility to previous version (before the settings are saved, too), can be delted later
+        #self.spectrometer_instance.current_grating
+            self.spectrometer_instance.input_goto=value[0][0]
+            self.usedgrating=value[0][1]
+            self.x1=value[0][2]
+            self.y1= value[0][3]
+            self.x2= value[0][4]
+            self.y2= value[0][5]
+            self.width_step=value[0][6]
+            self.height_step=value[0][7]
+            self.threshold_voltage= value[0][8]
+            for i in range(1,len(value)):
+                x.append(value[i][0])
+                y.append(value[i][1])
+                spectrum.append(value[i][2])
+        else:
+            for i in range(1,len(value)):
+                x.append(value[i][0])
+                y.append(value[i][1])
+                spectrum.append(value[i][2])
         self.x_koords=x
         self.y_koords=y
         self.spectra=spectrum
-        print self.x_koords
-        print self.y_koords
-        print self.spectra
         self.plot_map()
 
     def save_to(self):
@@ -367,6 +384,8 @@ class MainWindow(HasTraits):
 
     def save_file(self):
         f = open(self.file_name, "w")
+        settings=[self.spectrometer_instance.input_goto,self.spectrometer_instance.current_grating,self.x1,self.x2,self.y1,self.y2, self.width_step, self.height_step, self.threshold_voltage]
+        pickle.dump(settings,f)
         for i in range(len(self.x_koords)):
             pickle.dump([self.x_koords[i],self.y_koords[i],self.spectra[i]],f)
         f.close()
