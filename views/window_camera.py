@@ -60,6 +60,7 @@ class CameraGUI(HasTraits):
                     Item('use'),),
                         buttons = [ 'OK' ],resizable=True,kind='modal')
 
+
     def _acquisition_fired(self):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
