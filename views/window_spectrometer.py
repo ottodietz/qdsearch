@@ -25,7 +25,7 @@ from window_camera import CameraGUI
 
 
 class SpectrometerGUI(HasTraits):
-    ivolt=Voltage('COM7', 115200, timeout=1)
+    ivolt=Voltage('COM9', 115200, timeout=1)
     spectro=Spectro('COM4', 9600, timeout=1)
     measurement_process=False
     acquisition_process=False

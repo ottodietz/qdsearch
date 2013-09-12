@@ -85,7 +85,8 @@ class CryoGUI(HasTraits):
          )
 
     def __init__(self):
-        thread.start_new_thread(self.refresh_cryo_gui,())
+        pass
+        #thread.start_new_thread(self.refresh_cryo_gui,())
 
     def _identity_fired(self):
         self.output=self.cryo.identify()

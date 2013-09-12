@@ -86,6 +86,7 @@ class Cryo(SimSerial):
         self.write('\x03 \r') #ctrl +c
 
     def convert_output(self,string):
+        print string
         string=string.replace('    ','')
         a=string.find(" ")
         b=string.find(" ",a+1)
@@ -99,9 +100,9 @@ class Cryo(SimSerial):
         running=True
         while running :
             running=int(self.status())
-            #print 'waiting'
+            print 'waiting'
             time.sleep(0.5)
-        #print 'finished'
+        print 'finished'
 
 
 

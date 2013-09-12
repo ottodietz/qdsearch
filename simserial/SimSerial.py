@@ -28,7 +28,8 @@ class SimSerial(serial.Serial):
         if self.simulation:
             self.simulation=False
             print("simulation off")
-            super(SimSerial,self).__init__(*self.initargs,**self.initkwargs)
+            serial.Serial.__init__(self, *self.initargs, **self.initkwargs)
+            #super(SimSerial,self).__init__(*self.initargs,**self.initkwargs)
         else:
             self.simulation=True
             self.close()
