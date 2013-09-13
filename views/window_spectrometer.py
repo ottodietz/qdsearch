@@ -21,7 +21,7 @@ import window_camera
 reload (window_camera)
 
 class SpectrometerGUI(HasTraits):
-    ivolt=Voltage.Voltage('COM7', 115200, timeout=1)
+    ivolt=Voltage.Voltage('COM9', 115200, timeout=1)
     spectro=control_spectrometer.Spectro('COM4', 9600, timeout=1)
     measurement_process=False
     acquisition_process=False

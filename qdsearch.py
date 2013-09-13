@@ -95,8 +95,8 @@ class MainWindow(HasTraits):
         Item('cryo_instance', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
         Item('spectrometer_instance', style = 'custom',show_label=False, label="spectrometer", enabled_when='finished==True'),
         VGroup(HGroup(Item('plot',editor=ComponentEditor(),show_label=False,height=100,width =200),
-                    VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,width =10,height=20),
-                        Item('plot_compare',editor=ComponentEditor(),show_label=False,width =10,height=20))),
+                    VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,height=10,width =20),
+                        Item('plot_compare',editor=ComponentEditor(),show_label=False,height=10,width =20))),
                     HGroup(scanning,Item('abort',show_label=False)),label='scan sample',
                     ),
         layout='tabbed')
@@ -135,7 +135,7 @@ class MainWindow(HasTraits):
         if self.spectrometer_instance.camera_instance.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
-            self.cryo_instance.cryo.cryo_refresh=False
+            #self.cryo_instance.cryo.cryo_refresh=False
             self.searching=True
             self.finished=False
             x1=self.x1
@@ -160,6 +160,7 @@ class MainWindow(HasTraits):
             f = open('measurement/last_measurement.pick', "w") # creates new file
             f.close()
             self.usedgrating=self.spectrometer_instance.current_grating
+            self.usednm=self.spectrometer_instance.input_nm
 
             if y_start<y_target:
                 sign=1
@@ -202,8 +203,6 @@ class MainWindow(HasTraits):
                     y_target=temp
                     sign=sign*-1
             print 'searching finish'
-            self.cryo_instance.cryo_refresh=True
-            self.cryo_instance.refresh_cryo_gui()
 
 
     def _abort_fired(self):
@@ -273,8 +272,8 @@ class MainWindow(HasTraits):
         elif self.usedgrating.find(' 1800')!=-1:
             i=2
         try:
-            x_min=self.spectrometer_instance.input_nm-x_less[i]
-            x_max=self.spectrometer_instance.input_nm+x_more[i]
+            x_min=self.usednm-x_less[i]
+            x_max=self.usednm+x_more[i]
 
         except:
             x_min=0
@@ -293,8 +292,8 @@ class MainWindow(HasTraits):
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum)
                 plot = Plot(plotdata)
                 plot.plot(("x", "y"), type="line", color="blue")
-                plot.x_axis.title="wavelength [nm]"
-                plot.y_axis.title="intensity [V]"
+                plot.x_axis.title="Wavelength [nm]"
+                plot.y_axis.title="Counts"
                 plot.title = 'spectrum of QD ' +str(self.x_koords[i])+' '+str(self.y_koords[i])
                 plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
                 plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
@@ -327,8 +326,8 @@ class MainWindow(HasTraits):
         x=[]
         y=[]
         spectrum=[]
-        if len(value[0])>7: # 'if' is for for compatibility to previous version (before the settings are saved, too), can be delted later
-            self.spectrometer_instance.input_goto=value[0][0]
+        if len(value[0])>7: # if is for for compatibility to previous version (before the settings are saved, too), can be delted later
+            self.usednm=value[0][0]
             self.usedgrating=value[0][1]
             self.x1=value[0][2]
             self.y1= value[0][3]

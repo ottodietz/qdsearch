@@ -81,21 +81,22 @@ class Cryo(SimSerial):
 
     def convert_output(self,string):
         string=string.replace('    ','')
-        a=string.find(" ")
-        b=string.find(" ",a+1)
-        c=string.find(" ",b+1)
-        d=string.find(" ",c+1)
-        x=float(string[b:c])
-        y=float(string[c+1:d])
+        string=string.split(' ')
+##        a=string.find(" ")
+##        b=string.find(" ",a+1)
+##        c=string.find(" ",b+1)
+##        d=string.find(" ",c+1)
+##        x=float(string[b:c])
+##        y=float(string[c+1:d])
+        x=float(string[2])
+        y=float(string[3])
         return(x,y)
 
     def waiting(self):
         running=True
         while running :
             running=int(self.status())
-            #print 'waiting'
             time.sleep(0.5)
-        #print 'finished'
 
 
 
