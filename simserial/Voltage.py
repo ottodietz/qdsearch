@@ -4,9 +4,8 @@ import random
 import math
 
 class Voltage(SimSerial):
-
     commando_position="first"
-    number_of_EOL=0
+    EOL=''
     new_simulation=True
 
     voltage_simulation=float(2.511)

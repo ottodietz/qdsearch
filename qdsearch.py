@@ -21,13 +21,6 @@ reload( window_cryo)
 import window_spectrometer
 reload (window_spectrometer)
 
-import window_camera
-reload (window_camera)
-
-from  window_spectrometer import SpectrometerGUI
-from  window_cryo import CryoGUI
-from window_camera import CameraGUI
-
 """handle by closing window"""
 class MainWindowHandler(Handler):
     def close(self, info, isok):
@@ -90,8 +83,8 @@ class MainWindow(HasTraits):
     plot_current=Instance(Plot)
     plot_compare=Instance(Plot)
 
-    spectrometer_instance = Instance( SpectrometerGUI, () )
-    cryo_instance=Instance(CryoGUI,())
+    spectrometer_instance = Instance( window_spectrometer.SpectrometerGUI, () )
+    cryo_instance=Instance(window_cryo.CryoGUI,())
     scanning=Group(Item('textfield',label='Step width by scanning',style='readonly'),
                         HGroup(Item('x1',label='x1 [mm]'),Item('x2', label='x2 [mm]'),Item('width_step',label='width step (x) [mm]  '),Spring(),Item('scan_sample_step',show_label=False)),
                         HGroup(Item('y1',label='y1 [mm]'),Item('y2',label='y2 [mm]'),Item('height_step',label='height step (y) [mm] '),Item('threshold_voltage',label='threshold voltage [V]')),
@@ -109,7 +102,7 @@ class MainWindow(HasTraits):
         layout='tabbed')
     traits_view = View(
         inst_group,
-     menubar=MenuBar(menu1,CryoGUI.menu,SpectrometerGUI.menu,menu2),
+     menubar=MenuBar(menu1,window_cryo.CryoGUI.menu,window_spectrometer.SpectrometerGUI.menu,menu2),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
     handler=MainWindowHandler(),
@@ -262,8 +255,8 @@ class MainWindow(HasTraits):
         if len(optional)>5:
             plot.range2d.y_range.low=optional[4]
             plot.range2d.y_range.high=optional[5]
-        plot.x_axis.title="x-Position on sampe [mm]"
-        plot.y_axis.title="y-Position on sampe [mm]"
+        plot.x_axis.title="x-Position on sample [mm]"
+        plot.y_axis.title="y-Position on sample [mm]"
         self.plot=plot
 
     def create_wavelength_for_plotting(self,number_y_values):
@@ -334,8 +327,7 @@ class MainWindow(HasTraits):
         x=[]
         y=[]
         spectrum=[]
-        if len(value[0])>7: # if is for for compatibility to previous version (before the settings are saved, too), can be delted later
-        #self.spectrometer_instance.current_grating
+        if len(value[0])>7: # 'if' is for for compatibility to previous version (before the settings are saved, too), can be delted later
             self.spectrometer_instance.input_goto=value[0][0]
             self.usedgrating=value[0][1]
             self.x1=value[0][2]

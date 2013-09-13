@@ -5,7 +5,8 @@ import time
 class SimSerial(serial.Serial):
     commando_position="first"
     device=""
-    number_of_EOL=1
+    number_of_EOL=str
+    EOL=''
 
     simulation=True
     initargs=str()
@@ -14,15 +15,9 @@ class SimSerial(serial.Serial):
     posx=float(1.0)
     posy=float(1.0)
 
-
     def __init__(self,*args,**kwargs):
         self.initkwargs=kwargs
         self.initargs=args
-
-
-        """ Beide Moeglichkeiten um den Port zu oeffnen
-            #serial.Serial.__init__(self, *args, **kwargs)
-            #super(SimSerial,self).__init__(*args, **kwargs) """
 
     def toggle_simulation(self):
         if self.simulation:
@@ -33,7 +28,6 @@ class SimSerial(serial.Serial):
             self.simulation=True
             self.close()
             print("simulation on")
-
 
     def write(self,string):
         if self.simulation==True:
@@ -47,20 +41,17 @@ class SimSerial(serial.Serial):
                     pass
                     #print('No simulation function found.')
         else:
-            #serial.Serial.write(self,string)
             super(SimSerial,self).write(string)
 
     def readline(self):
         if self.simulation:
             return(str(self.buffer))
         else:
-            #return(serial.Serial.readline(self))
-            return(super(SimSerial,self).readline())# besser: aber noch ausprobieren
+            return(super(SimSerial,self).readline())
 
     def flushInput(self):
         if not self.simulation:
             serial.Serial.flushInput(self)
-            #super(SimSerial,self).flushOutput()
 
     def flushOutput(self):
         if not self.simulation:
@@ -74,21 +65,15 @@ class SimSerial(serial.Serial):
         else: return(len(self.buffer))
 
     def search_function_name(self,command):
-        spaces = []
-        position = 0
-        for x in command:
-            if x == ' ':
-                spaces.append(position)
-            position += 1
-        if len(spaces)>1 and self.commando_position=="last":
-            name='_'+command[spaces[len(spaces)-self.number_of_EOL-1]+1:spaces[len(spaces)-self.number_of_EOL]]
-        elif   len(spaces)>1 and self.commando_position=="first":
-            name='_'+command[0:spaces[0]]
-        elif spaces==[]:
-            name='_'+command
+        if self.EOL!='':
+            command=command.replace(' '+self.EOL,'')
+        command=command.split(' ')
+        if self.commando_position=='first':
+            name=command[0]
         else:
-            name='_'+command[0:spaces[0]]
+            name=command[-1]
         name=self.replace_special_characters(name)
+        name='_'+name
         return(name)
 
     def replace_special_characters(self,name):

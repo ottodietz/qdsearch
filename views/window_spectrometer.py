@@ -13,24 +13,20 @@ import random
 
 import control_spectrometer
 reload(control_spectrometer)
-from control_spectrometer import Spectro
 
 import Voltage
 reload(Voltage)
-from Voltage import Voltage
 
 import window_camera
 reload (window_camera)
-from window_camera import CameraGUI
-
 
 class SpectrometerGUI(HasTraits):
-    ivolt=Voltage('COM7', 115200, timeout=1)
-    spectro=Spectro('COM4', 9600, timeout=1)
+    ivolt=Voltage.Voltage('COM7', 115200, timeout=1)
+    spectro=control_spectrometer.Spectro('COM4', 9600, timeout=1)
     measurement_process=False
     acquisition_process=False
     refresh_active=False
-    camera_instance=Instance(CameraGUI,())
+    camera_instance=Instance(window_camera.CameraGUI,())
 
     plot = Instance(Plot)
 
@@ -66,6 +62,7 @@ class SpectrometerGUI(HasTraits):
     call_menu_camera = Action(name='camera menu', accelerator='Ctrl+p', action='call_camera_menu')
     call_menu_spectrometer = Action(name='spectrometer menu', accelerator='Ctrl+c', action='call_spectrometer_menu')
     menu=Menu(call_menu_spectrometer,call_menu_camera,name='Spectrometer')
+
 
     traits_view=View(HGroup(VGroup(HGroup(Item("input_goto",show_label=False),Item("goto",show_label=False),
                                         Item("scan_bereich",show_label=False),Item("search_maximum",show_label=False,enabled_when='acquisition_process==False'),enabled_when='measurement_process==False'),
@@ -211,8 +208,8 @@ class SpectrometerGUI(HasTraits):
         plot = Plot(plotdata)
         plot.plot(("x", "y"), type="line", color="blue")
         #plot.title="title"
-        plot.x_axis.title="wavelength [nm]"
-        plot.y_axis.title="intensity [V]"
+        plot.x_axis.title="Wavelength [nm]"
+        plot.y_axis.title="Intensity [V]"
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
         plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
         self.plot = plot

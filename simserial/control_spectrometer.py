@@ -1,4 +1,3 @@
-
 from enthought.traits.api import*
 from enthought.traits.ui.api import*
 from numpy import arange,linspace,sin
@@ -7,15 +6,14 @@ from enthought.chaco.tools.api import PanTool, ZoomTool
 from enthought.pyface.api import error,warning,information
 import thread
 
-
 from SimSerial import SimSerial
-
 
 class Spectro(SimSerial):
     # for simulation
     nm=float(0)
     nm_je_min=float(10.0)
     commando_position="last"
+    EOL='\r'
 
     def wavelength_controlled_nm(self,aim):
         aim=round(aim,3) # rundet auf die 3. Nachkommastelle

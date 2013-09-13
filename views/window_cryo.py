@@ -23,8 +23,8 @@ class CryoGUI(HasTraits):
 
     #Felder und Button f?r die relaitve Bewegung
     #einstellen der schrittweite
-    rmovex=CFloat(0.1)
-    rmovey=CFloat(0.1)
+    rmovex=CFloat(0.01)
+    rmovey=CFloat(0.01)
     rmove=Button()
     up=Button(label='^')
     down=Button(label='v')
@@ -85,7 +85,8 @@ class CryoGUI(HasTraits):
          )
 
     def __init__(self):
-        thread.start_new_thread(self.refresh_cryo_gui,())
+        pass
+        #thread.start_new_thread(self.refresh_cryo_gui,())
 
     def _identity_fired(self):
         self.output=self.cryo.identify()

@@ -8,7 +8,7 @@ from SimSerial import SimSerial
 
 class Cryo(SimSerial):
     commando_position="last"
-    number_of_EOL=1 # if they are two characters written together (without space) it is one EOL
+    EOL='\r'# if they are two characters written together (without space) it is one EOL
 
     def identify(self):
         self.flushInput()
@@ -36,12 +36,9 @@ class Cryo(SimSerial):
 
     # simulation relativ move
     def _r(self,string):
-        a=string.find(" ")
-        b=string.find(" ",a+1)
-        c=string.find(" ",b+1)
-        d=string.find(" ",c+1)
-        self.posx+=float(string[b:c])
-        self.posy+=float(string[c+1:d])
+        string=string.split(' ')
+        self.posx+=float(string[2])
+        self.posy+=float(string[3])
 
     # direct move
     def move(self,x,y):
@@ -49,12 +46,9 @@ class Cryo(SimSerial):
 
     # simulation direct move
     def _m(self,string):
-        a=string.find(" ")
-        b=string.find(" ",a+1)
-        c=string.find(" ",b+1)
-        d=string.find(" ",c+1)
-        self.posx=float(string[b:c])
-        self.posy=float(string[c+1:d+1])
+        string=string.split(' ')
+        self.posx=float(string[2])
+        self.posy=float(string[3])
 
     # rangemeasure, postive Limits
     def rm(self):
