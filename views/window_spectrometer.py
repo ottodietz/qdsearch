@@ -167,8 +167,9 @@ class SpectrometerGUI(HasTraits):
     def _search_maximum_fired(self):
             start_value=self.input_goto-self.scan_bereich/2.0
             end_value=self.input_goto+self.scan_bereich/2.0
-            if start_value <0:
+            if start_value <0:                
                 start_value=0
+                end_value=self.scan_bereich
             thread.start_new_thread(self.measure,(start_value,end_value,))
 
     def measure(self,start_value,end_value):
