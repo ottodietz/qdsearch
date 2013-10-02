@@ -23,14 +23,17 @@ class CryoGUI(HasTraits):
 
     #Felder und Button f?r die relaitve Bewegung
     #einstellen der schrittweite
-    rmovex=CFloat(0.01)
-    rmovey=CFloat(0.01)
-    rmove=Button()
+#    rmovex=CFloat(0.01)
+#    rmovey=CFloat(0.01)
+#    rmove=Button()
+    setstepsize=Button()
     up=Button(label='^')
     down=Button(label='v')
     right=Button(label='>')
     left=Button(label='<')
-    northwest=Button('^<')
+    str = unicode(u'\u2196')
+    print str
+    northwest=Button(str)
     southwest=Button(label='v<')
     northeast=Button(label='^>')
     southeast=Button(label='v>')
@@ -55,34 +58,37 @@ class CryoGUI(HasTraits):
 
     checkbox=Bool(True, label="Simulation")
 
-    x=0.1
-    y=0.1
+    x_step=Float(0.1)
+    y_step=Float(0.1)
 
     traits_view=View(
-                         VGroup(HGroup(Item("movex",resizable = True,label="x"),Item("movey",resizable = True,label="y"),Item("move",resizable=True,show_label=False)),
-                            HGroup(Item("upup", show_label=False, resizable = True)),
-                            HGroup(Item('northwest',show_label=False,resizable = True,),Item("up", show_label=False, resizable = True),Item('northeast',show_label=False,resizable = True,)),
-                            HGroup(Item("leftleft",  resizable = True,show_label=False,), Item("left",  resizable = True,show_label=False,), Item("position", show_label=False,resizable = True),Item("right", resizable = True, show_label=False,), Item("rightright", resizable = True, show_label=False)),
-                            HGroup(Item('southwest',show_label=False,resizable = True,),Item("down", show_label=False, resizable = True,),Item('southeast',show_label=False,resizable = True,)),
-                            HGroup(Item("downdown", show_label=False, resizable = True,)),
-                            HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
-                            HGroup(Item('stop',show_label=False,resizable=True),Item('status',show_label=False,resizable=True))),
-                            HGroup (Spring(height=20)),
-            Item("output",style="readonly"),
-            HGroup(Item("checkbox"),Spring(width=350)),
-            buttons = [OKButton, CancelButton,],
-                        menubar=MenuBar(menu),
-            resizable = True, width = 400, height = 400)
+      VGroup(
+       HGroup(Item("movex",resizable = True,label="x"),Item("movey",resizable = True,label="y"),Item("move",resizable=True,show_label=False)),
+       HGroup(Item("upup", show_label=False, resizable = True)),
+       HGroup(Item('northwest',show_label=False,resizable = True,),Item("up", show_label=False, resizable = True),Item('northeast',show_label=False,resizable = True,)),
+       HGroup(Item("leftleft",  resizable = True,show_label=False,), Item("left",  resizable = True,show_label=False,), Item("position", show_label=False,resizable = True),Item("right", resizable = True, show_label=False,), Item("rightright", resizable = True, show_label=False)),
+       HGroup(Item('southwest',show_label=False,resizable = True,),Item("down", show_label=False, resizable = True,),Item('southeast',show_label=False,resizable = True,)),
+       HGroup(Item("downdown", show_label=False, resizable = True,)),
 
-    view_menu=View(VGroup(HGroup(Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
-                    HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("rmove",resizable=True,show_label=False)),
-                    HGroup(Item('factor1',label='Step range factor')),
-                    HGroup(Item("identity", show_label=False,resizable = True))
-                                  ),
-                    buttons = [OKButton, CancelButton,],
-            resizable = True, width = 400, height = 200,
-            kind='livemodal'
-         )
+       HGroup(Item("x_step",label="Step size, x:"),Item("y_step",label="y:")),
+       HGroup(Item('stop',show_label=False,resizable=True),Item('status',show_label=False,resizable=True))),
+
+       HGroup(Spring(height=20)),
+       Item("output",style="readonly"),
+       HGroup(Item("checkbox"),Spring(width=350)),
+       buttons = [OKButton, CancelButton,],
+       menubar=MenuBar(menu),
+       resizable = True, width = 400, height = 400)
+
+    view_menu=View(
+        VGroup(
+         HGroup(Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
+         HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("setstepsize",resizable=True,label='set step size'),Item("rmove",resizable=True,label='relative move')),
+         HGroup(Item('factor1',label='Step range factor')),
+         HGroup(Item("identity", show_label=False,resizable = True))
+         ),
+        buttons = [OKButton, CancelButton,], resizable = True, width = 400, height = 200, kind='livemodal'
+       )
 
     def __init__(self):
         pass
@@ -102,46 +108,42 @@ class CryoGUI(HasTraits):
         self.output=self.cryo.rm()
 
     def _up_fired(self):
-        self.cryo.rmove(0,self.y)
+        self.cryo.rmove(0,self.y_step)
 
     def _down_fired(self):
-        self.cryo.rmove(0,-self.y)
+        self.cryo.rmove(0,-self.y_step)
 
     def _left_fired(self):
-        self.cryo.rmove(-self.x,0)
+        self.cryo.rmove(-self.x_step,0)
 
     def _right_fired(self):
-        self.cryo.rmove(self.x,0)
+        self.cryo.rmove(self.x_step,0)
 
     def _northwest_fired(self):
-        self.cryo.rmove(-self.x,self.y)
+        self.cryo.rmove(-self.x_step,self.y_step)
 
     def _northeast_fired(self):
-        self.cryo.rmove(self.x,self.y)
+        self.cryo.rmove(self.x_step,self.y_step)
 
     def _southwest_fired(self):
-        self.cryo.rmove(-self.x,-self.y)
+        self.cryo.rmove(-self.x_step,-self.y_step)
 
 
     def _southeast_fired(self):
-        self.cryo.rmove(self.x,-self.y)
+        self.cryo.rmove(self.x_step,-self.y_step)
 
 
     def _downdown_fired(self):
-        self.cryo.rmove(0,-self.y*self.factor1)
+        self.cryo.rmove(0,-self.y_step*self.factor1)
 
     def _leftleft_fired(self):
-          self.cryo.rmove(-self.x*self.factor1,0)
+          self.cryo.rmove(-self.x_step*self.factor1,0)
 
     def _rightright_fired(self):
-        self.cryo.rmove(self.x*self.factor1,0)
+        self.cryo.rmove(self.x_step*self.factor1,0)
 
     def _upup_fired(self):
-        self.cryo.rmove(0,self.y*self.factor1)
-
-    def _rmove_fired(self):
-        self.x=self.rmovex
-        self.y=self.rmovey
+        self.cryo.rmove(0,self.y_step*self.factor1)
 
     def _move_fired(self):
         self.cryo.move(self.movex,self.movey)
