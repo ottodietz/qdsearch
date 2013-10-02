@@ -27,20 +27,22 @@ class CryoGUI(HasTraits):
 #    rmovey=CFloat(0.01)
 #    rmove=Button()
     setstepsize=Button()
-    up=Button(label='^')
-    down=Button(label='v')
-    right=Button(label='>')
-    left=Button(label='<')
-    str = unicode(u'\u2196')
-    print str
-    northwest=Button(str)
-    southwest=Button(label='v<')
-    northeast=Button(label='^>')
-    southeast=Button(label='v>')
-    upup=Button(label='^^')
-    downdown=Button(label='vv')
-    leftleft=Button(label='<<')
-    rightright=Button(label='>>')
+
+    left=Button(label=u'\u2190')
+    up=Button(label=u'\u2191')
+    right=Button(label=u'\u2192')
+    down=Button(label=u'\u2193')
+
+    northwest=Button(label=u'\u2196')
+    northeast=Button(label=u'\u2197')
+    southeast=Button(label=u'\u2198')
+    southwest=Button(label=u'\u2199')
+
+    leftleft=Button(label=u'\u219E')
+    upup=Button(label=u'\u219F')
+    rightright=Button(label=u'\u21A0')
+    downdown=Button(label=u'\u21A1')
+
     factor1=CInt(10,desc='defines the factor between a normal relativ move and a wide relativ move')
 
 
@@ -70,7 +72,7 @@ class CryoGUI(HasTraits):
        HGroup(Item('southwest',show_label=False,resizable = True,),Item("down", show_label=False, resizable = True,),Item('southeast',show_label=False,resizable = True,)),
        HGroup(Item("downdown", show_label=False, resizable = True,)),
 
-       HGroup(Item("x_step",label="Step size, x:"),Item("y_step",label="y:")),
+       HGroup(Item("x_step",label="Step size x:"),Item("y_step",label="y:"),Item('factor1',label='big step factor:')),
        HGroup(Item('stop',show_label=False,resizable=True),Item('status',show_label=False,resizable=True))),
 
        HGroup(Spring(height=20)),
@@ -83,8 +85,7 @@ class CryoGUI(HasTraits):
     view_menu=View(
         VGroup(
          HGroup(Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
-         HGroup(Item("rmovex",label="x"),Item("rmovey",label="y"),Item("setstepsize",resizable=True,label='set step size'),Item("rmove",resizable=True,label='relative move')),
-         HGroup(Item('factor1',label='Step range factor')),
+         
          HGroup(Item("identity", show_label=False,resizable = True))
          ),
         buttons = [OKButton, CancelButton,], resizable = True, width = 400, height = 200, kind='livemodal'
