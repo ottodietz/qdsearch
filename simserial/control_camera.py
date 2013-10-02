@@ -32,6 +32,7 @@ class Camera():
         print "StartAcq:",self.atm.StartAcquisition()
         print "Wait:",self.atm.WaitForAcquisition()
         print "GetMostRecentImage",self.atm.GetMostRecentImage(byref(line),c_ulong(pixel))
+        print "idle is 20073"
         print 'cancel acq:', self.atm.AbortAcquisition()
         return(line)
 

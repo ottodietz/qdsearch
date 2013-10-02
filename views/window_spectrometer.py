@@ -60,34 +60,44 @@ class SpectrometerGUI(HasTraits):
     continuous_acquisition=Bool(False)
     waittime=CFloat(2,desc='time between two acquisitions')
     call_menu_camera = Action(name='camera menu', accelerator='Ctrl+p', action='call_camera_menu')
-    call_menu_spectrometer = Action(name='spectrometer menu', accelerator='Ctrl+c', action='call_spectrometer_menu')
-    menu=Menu(call_menu_spectrometer,call_menu_camera,name='Spectrometer')
+    menu=Menu(call_menu_camera,name='Camera')
 
 
-    traits_view=View(HGroup(VGroup(HGroup(Item("input_goto",show_label=False),Item("goto",show_label=False),
-                                        Item("scan_bereich",label="+/-",show_label=True,width=-20.0),Item("search_maximum",show_label=False,enabled_when='acquisition_process==False'),enabled_when='measurement_process==False'),
-                                     HGroup(Item("input_nm",show_label=False,enabled_when='measurement_process==False'),Item("nm",show_label=False,enabled_when='measurement_process==False'),
-                                            Item("nm_controlled",show_label=False,enabled_when='measurement_process==False'),Spring(),Item('abort',show_label=False)),
-                                     HGroup(Item("input_nmjemin",show_label=False),Item("nmjemin",show_label=False),enabled_when='measurement_process==False'),
-                                     HGroup(Item("position",show_label=False),Spring(),Item("output_nmjemin",show_label=False),enabled_when='measurement_process==False'),
-                                     Item('current_grating', editor=EnumEditor(name='grating_value'), label='Gratings',enabled_when='measurement_process==False'),
-                                         HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),Spring(),enabled_when='measurement_process==False'),
-                                     Item("output",style="readonly"),
-                                     HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"),enabled_when='measurement_process==False'),
-                                     HGroup(Item('camera_instance',show_label=False, style = 'custom'),enabled_when='acquisition_process==False'),
-									 HGroup(Item('acquisition_button',show_label=False),Item('abort_acquisition',show_label=False),Item('continuous_acquisition')),
-                                     ),
-                            Item("plot",editor=ComponentEditor(),show_label=False)),
-                            menubar=MenuBar(menu),
-                     width=750,height=500,buttons = [OKButton,], resizable = True)
-    view_menu=View(Item('continuous_acquisition'), Item('waittime',label='waitting time'),
-                        buttons = [ 'OK' ],resizable=True,kind='livemodal')
+    traits_view=View(
+            HGroup(
+             VGroup(
+              HGroup(Item("input_goto",show_label=False),Item("goto",show_label=False),
+               Item("scan_bereich",label="+/-",show_label=True,width=-20.0),
+               Item("search_maximum",show_label=False,enabled_when='acquisition_process==False'),enabled_when='measurement_process==False'),
+              HGroup(Item("input_nm",show_label=False,enabled_when='measurement_process==False'),
+               Item("nm",show_label=False,enabled_when='measurement_process==False'),
+               Item("nm_controlled",show_label=False,enabled_when='measurement_process==False'),Spring(),Item('abort',show_label=False)),
+              HGroup(
+                  Item("input_nmjemin",show_label=False),
+                  Item("nmjemin",show_label=False),enabled_when='measurement_process==False'),
+              HGroup(
+                  Item("position",show_label=False),Spring(),
+                  Item("output_nmjemin",show_label=False),enabled_when='measurement_process==False'),
+                  Item('current_grating', editor=EnumEditor(name='grating_value'), label='Gratings',enabled_when='measurement_process==False'),
+              HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),
+                     Spring(),enabled_when='measurement_process==False'),
+         Item("output",style="readonly"),
+         HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"),enabled_when='measurement_process==False'),
 
-    def call_spectrometer_menu(self):
-       self.configure_traits(view='view_menu')
+         HGroup(Item('camera_instance',show_label=False, style = 'custom'),enabled_when='acquisition_process==False'),
+         HGroup(Item('acquisition_button',show_label=False),Item('abort_acquisition',show_label=False),Item('continuous_acquisition')),
+         ),
+        Item("plot",editor=ComponentEditor(),show_label=False)), 
+       menubar=MenuBar(menu), width=750,height=600,buttons = [OKButton,], resizable = True)
+    
+#    view_menu=View(
+#            Item('camera_menu_instance',show_label=False, style = 'custom'),  
+#            Item('continuous_acquisition'), Item('waittime',label='waitting time'),
+#                        buttons = [ 'OK' ],resizable=True,kind='livemodal')
+
 
     def call_camera_menu(self):
-       self.camera_instance.configure_traits(view='view_menu')
+       self.camera_instance.configure_traits(view='menu_view')
 
 
     def __init__(self):
@@ -269,15 +279,17 @@ class SpectrometerGUI(HasTraits):
 
     def acquisition(self):
         self.acquisition_process=True
-        if not self.continuous_acquisition: #without if two acqusitions are started or an acqusition after waiting is started what is bad by abort the function.
-            self.plot_spectrum()
+        
+        # continous acquisition: do loop
         while(self.continuous_acquisition and self.acquisition_process):
-            self.plot_spectrum()
-            time.sleep(self.waittime)
+                self.plot_spectrum()
+
+        # single shot and continous acquisition is over: do a single shot
+        self.plot_spectrum()
         self.acquisition_process=False
 
     def _abort_acquisition_fired(self):
-            self.acquisition_process=False
+        self.acquisition_process=False
 
 if __name__=="__main__":
     main=SpectrometerGUI()

@@ -15,18 +15,19 @@ from pyface.api import error,warning,information
 
 class CameraGUIHandler(Handler):
     def close(self, info, isok):
-        # Return True to indicate that it is OK to close the window.#
-        if main.checkbox_camera:
+        if info.object.checkbox_camera:
             return True
         else:
-            main.cooler=False
-            if main.camera.gettemperature() >-1:
+            info.object.cooler=False
+            if info.object.camera.gettemperature() >-1:
                 return True
             else:
                 information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
 
+
 class CameraGUI(HasTraits):
     camera=Camera()
+    iCameraGUIHandler = CameraGUIHandler()
 
     checkbox_camera=Bool(True)
     cooler=Bool(False)
@@ -34,36 +35,20 @@ class CameraGUI(HasTraits):
     acquisition=Button()
     temperature=Button()
     status=Button()
-    settemperature=Button()
-    inputtemperature=Int()
-    outputtemperature=Str()
+    temperature=Range(low=-70,high=20,value=20)
 
     """menu"""
     readmode=Int(0)
     acquisitionmode=Int(1)
-    exposuretime=CFloat(0.1)
-    use=Button(label='use current values')
+    exposuretime=Range(low=0.0001,high=10,value=0.1)
     output=Str()
-
-
-    traits_view=View(VGroup(
-                        HGroup(Item('acquisition',show_label=False), Item('plot',show_label=False),Item('temperature',show_label=False),Item('outputtemperature',show_label=False,style='readonly')),
-                        HGroup(Item('status',show_label=False),Item('settemperature',show_label=False),Item('inputtemperature')),
-                        HGroup(Item('cooler'),
-                        HGroup(Item('checkbox_camera',label='Simulation camera')),
-                        HGroup(Item('output',show_label=False, style='readonly'))
-                        )),
-                        handler=CameraGUIHandler(),
-                        resizable = True, )
-
-    view_menu=View(VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'),
-                    Item('use'),),
-                        buttons = [ 'OK' ],resizable=True,kind='modal')
 
 
     def _acquisition_fired(self):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
+            while self.camera.init_active:
+                time.sleep(.5)
         else:
             self.line=self.camera.acquisition()
 
@@ -76,15 +61,16 @@ class CameraGUI(HasTraits):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
-            temp=self.camera.gettemperature()
-            self.outputtemperature='current temperature: '+str(temp)
+            self.temperature=self.camera.gettemperature()
 
     def _status_fired(self):
         self.camera.gettemperature_status()
         self.camera.gettemperature_range()
+        self.temperature = self.camera.gettemperature()
+
 
     def _settemperature_fired(self):
-        self.camera.settemperature(self.inputtemperature)
+        self.camera.settemperature(self.temperature)
 
     def _checkbox_camera_changed(self):
         if self.camera.init_active:
@@ -113,10 +99,45 @@ class CameraGUI(HasTraits):
         else:
             self.camera.cooler_off()
 
-    def _use_fired(self):
+    def _readmode_changed(self):
        self.camera.readmode=c_long(self.readmode)
+       print "readmode changed"
+
+    def _acquisitionmode_changed(self):
        self.camera.acquisitionmode=c_long(self.acquisitionmode)
+       print "readmode changed"
+
+    def _exposuretime_changed(self):
        self.camera.exposuretime=c_float(self.exposuretime)
+       print "readmode changed"
+
+    def call_menu(self):
+       self.configure_traits(view='menu_view')
+
+    menu_view=View(VGroup(
+                        HGroup(Item('acquisition',show_label=False), Item('plot',show_label=False)),
+                        HGroup(Item('temperature'),Item('status',show_label=False)),
+                        HGroup(Item('cooler'),Item('checkbox_camera',label='Simulation camera')),
+                        HGroup(Item('output',label='Camera output',
+                            style='readonly')),
+                        VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'))
+                        ),
+                        handler=iCameraGUIHandler,
+                        resizable = True )
+
+    menu_action = Action(name='camera menu', accelerator='Ctrl+p', action='call_menu')
+
+    menu=Menu(menu_action,name='Camera')
+
+
+    traits_view=View(VGroup(
+                        HGroup(Item('acquisition',label='Single',show_label=False),Item('plot',show_label=False)),
+                        Item('exposuretime'),
+                        HGroup(Item('checkbox_camera',label='Simulation camera')),
+                        HGroup(Item('output',label='Camera output', style='readonly'))
+                       ),
+                       handler=iCameraGUIHandler,
+                       resizable = True, menubar=MenuBar(menu) )
 
 
 if __name__=="__main__":
