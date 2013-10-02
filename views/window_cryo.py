@@ -1,7 +1,7 @@
-from enthought.traits.api import*
-from enthought.traits.ui.api import*
+from traits.api import*
+from traitsui.api import*
 from traitsui.menu import OKButton, CancelButton
-from enthought.pyface.api import confirm,ImageResource
+from pyface.api import confirm,ImageResource
 import time
 import thread
 

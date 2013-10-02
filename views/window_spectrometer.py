@@ -1,13 +1,13 @@
-from enthought.traits.api import *
-from enthought.traits.ui.api import *
+from traits.api import *
+from traitsui.api import *
 from traitsui.menu import OKButton, CancelButton
-from enthought.chaco.api import Plot, ArrayPlotData
+from chaco.api import Plot, ArrayPlotData
 from numpy import arange,linspace,sin
-from enthought.enable.component_editor import ComponentEditor
+from enable.component_editor import ComponentEditor
 import thread
 import time
-from enthought.chaco.tools.api import PanTool, ZoomTool
-from enthought.pyface.api import error,warning,information
+from chaco.tools.api import PanTool, ZoomTool
+from pyface.api import error,warning,information
 from ctypes import *
 import random
 
@@ -65,7 +65,7 @@ class SpectrometerGUI(HasTraits):
 
 
     traits_view=View(HGroup(VGroup(HGroup(Item("input_goto",show_label=False),Item("goto",show_label=False),
-                                        Item("scan_bereich",show_label=False),Item("search_maximum",show_label=False,enabled_when='acquisition_process==False'),enabled_when='measurement_process==False'),
+                                        Item("scan_bereich",label="+/-",show_label=True,width=-20.0),Item("search_maximum",show_label=False,enabled_when='acquisition_process==False'),enabled_when='measurement_process==False'),
                                      HGroup(Item("input_nm",show_label=False,enabled_when='measurement_process==False'),Item("nm",show_label=False,enabled_when='measurement_process==False'),
                                             Item("nm_controlled",show_label=False,enabled_when='measurement_process==False'),Spring(),Item('abort',show_label=False)),
                                      HGroup(Item("input_nmjemin",show_label=False),Item("nmjemin",show_label=False),enabled_when='measurement_process==False'),
@@ -165,8 +165,8 @@ class SpectrometerGUI(HasTraits):
                 self.spectro.exit_mirror_change('side')
 
     def _search_maximum_fired(self):
-            start_value=self.input_goto-self.scan_bereich/2.0
-            end_value=self.input_goto+self.scan_bereich/2.0
+            start_value=self.input_goto-self.scan_bereich
+            end_value=self.input_goto+self.scan_bereich
             if start_value <0:                
                 start_value=0
                 end_value=self.scan_bereich

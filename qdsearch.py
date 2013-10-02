@@ -2,17 +2,22 @@ from traits.api import *
 from traitsui.api import *
 from traitsui.menu import OKButton, CancelButton
 import thread
-from enthought.pyface.api import error,warning,information
+from pyface.api import error,warning,information
 import time
 from ctypes import *
 import pickle
 import numpy
 from enable.api import BaseTool
-from enthought.chaco.api import Plot, ArrayPlotData
-from enthought.enable.component_editor import ComponentEditor
-from enthought.chaco.tools.api import PanTool, ZoomTool
-from enthought.traits.ui.file_dialog  \
+
+from chaco.api import Plot, ArrayPlotData
+
+from enable.component_editor import ComponentEditor
+
+from chaco.tools.api import PanTool, ZoomTool
+
+from traitsui.file_dialog  \
     import open_file,save_file
+
 
 
 import window_cryo

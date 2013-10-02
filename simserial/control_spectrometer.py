@@ -1,9 +1,9 @@
-from enthought.traits.api import*
-from enthought.traits.ui.api import*
+from traits.api import*
+from traitsui.api import*
 from numpy import arange,linspace,sin
 import time
-from enthought.chaco.tools.api import PanTool, ZoomTool
-from enthought.pyface.api import error,warning,information
+from chaco.tools.api import PanTool, ZoomTool
+from pyface.api import error,warning,information
 import thread
 
 from SimSerial import SimSerial

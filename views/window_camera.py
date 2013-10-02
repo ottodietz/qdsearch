@@ -1,6 +1,6 @@
 
-from enthought.traits.api import*
-from enthought.traits.ui.api import*
+from traits.api import*
+from traitsui.api import*
 from traitsui.menu import OKButton, CancelButton
 import pylab
 import thread
@@ -11,7 +11,7 @@ import control_camera
 reload (control_camera)
 
 from control_camera import Camera
-from enthought.pyface.api import error,warning,information
+from pyface.api import error,warning,information
 
 class CameraGUIHandler(Handler):
     def close(self, info, isok):
