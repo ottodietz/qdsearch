@@ -116,28 +116,34 @@ class MainWindow(HasTraits):
     icryo=Instance(window_cryo.CryoGUI,())
     scanning=Group(
             Item('textfield',label='Step width by scanning',style='readonly'),
-            HGroup(Item('x1',label='x1 [mm]'),Item('x2', label='x2 [mm]'),
+            HGroup(Item('x1',label='x1 [mm]'),
+                   Item('x2', label='x2 [mm]'),
                    Item('width_step',label='width step (x) [mm]  '),Spring(),
-                   Item('scan_sample_step',show_label=False)),
-            HGroup(Item('y1',label='y1 [mm]'),Item('y2',label='y2 [mm]'),
+                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),enabled_when='False'),
+                   Item('scan_sample_step',label='Scan',show_label=False)
+                  ),
+            HGroup(Item('y1',label='y1 [mm]'),
+                   Item('y2',label='y2 [mm]'),
                    Item('height_step',label='height step (y) [mm] '),
-                   Item('counts',label='counts'),Item('threshold_counts',label='threshold')
-                   ),
+                   Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float)),
+                   Item('abort',show_label=False)
+                  ),
             enabled_when='finished==True')
-
-    
-    inst_group = Group(
-        Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
-        Item('ispectrometer', style = 'custom',show_label=False, label="spectrometer", enabled_when='finished==True'),
-        VGroup(
+# Item('x', ),
+    scan_sample_group =  VGroup(
          HGroup(
           Item('plot',editor=ComponentEditor(),show_label=False,height=100,width=200),
           VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,height=50,width=200),
                  Item('plot_compare',editor=ComponentEditor(),show_label=False,height=50,width=200)
                 )
           ),
-         HGroup(scanning,Item('abort',show_label=False)),
-        label='scan sample'),
+         HGroup(scanning),
+         label='scan sample')
+    
+    inst_group = Group(
+        Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
+        Item('ispectrometer', style = 'custom',show_label=False, label="spectrometer", enabled_when='finished==True'),
+        scan_sample_group, 
         layout='tabbed')
 
     traits_view = View(
