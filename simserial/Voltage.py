@@ -2,11 +2,15 @@ from SimSerial import SimSerial
 import time
 import random
 import math
+from thread import allocate_lock
 
 class Voltage(SimSerial):
     commando_position="first"
     EOL=''
     new_simulation=True
+    busy=False
+
+    lock = allocate_lock()
 
     voltage_simulation=float(2.511)
 
@@ -52,11 +56,25 @@ class Voltage(SimSerial):
         self.buffer='Voltage'+'  '+str(self.voltage_simulation)
 
     def measure(self):
+        i = 0
+
+        # do not measure if our thread is measuring
+        self.lock.acquire()
+        while self.busy:
+            i+=1
+            time.sleep(0.1)
+            if i > 100:
+                print "Warning Voltage.measure waited 10s for busy==False"
+                i = 0
+        self.busy=True
+        self.lock.release()
+
         if  self.simulation:
             measurement=random.randint(1,20)
             time.sleep(0.2)
         else:
             measurement=self.read_voltage()
+        self.busy=False
         return(measurement)
 
     def setvoltage(self,voltage):
@@ -66,7 +84,7 @@ class Voltage(SimSerial):
         time.sleep(0.1)
         for i in [0,1,2]:
             self.write(dutycycle[i])
-            time.sleep(0.1)
+        time.sleep(0.1)
         self.write("d")
 
     def _S(self,string):
