@@ -6,7 +6,7 @@ from chaco.tools.api import PanTool, ZoomTool
 from pyface.api import error,warning,information
 import thread
 
-from SimSerial import SimSerial
+from simserial import SimSerial
 
 class Spectro(SimSerial):
     # for simulation

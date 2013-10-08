@@ -7,10 +7,10 @@ import thread
 import time
 from ctypes import *
 
-import control_camera
+import controls.camera as control_camera
 reload (control_camera)
 
-from control_camera import Camera
+from controls.camera import Camera
 from pyface.api import error,warning,information
 
 class CameraGUIHandler(Handler):

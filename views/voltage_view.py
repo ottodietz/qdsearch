@@ -2,7 +2,7 @@ from traits.api import *
 from traitsui.api import *
 import time
 
-import Voltage
+import controls.voltage as Voltage
 reload(Voltage)
 
 class Volt(HasTraits):

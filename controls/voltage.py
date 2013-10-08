@@ -1,4 +1,4 @@
-from SimSerial import SimSerial
+from simserial import SimSerial
 import time
 import random
 import math

@@ -22,10 +22,10 @@ from traitsui.file_dialog  \
 
 
 
-import window_cryo
+import views.cryo as window_cryo
 reload( window_cryo)
 
-import window_spectrometer
+import views.spectrometer as window_spectrometer
 reload (window_spectrometer)
 
 """handle by closing window"""

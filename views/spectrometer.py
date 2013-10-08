@@ -11,13 +11,13 @@ from pyface.api import error,warning,information
 from ctypes import *
 import random
 
-import control_spectrometer
+import controls.spectrometer as control_spectrometer
 reload(control_spectrometer)
 
-import Voltage
+import controls.voltage as Voltage
 reload(Voltage)
 
-import window_camera
+import views.camera as window_camera
 reload (window_camera)
 
 class SpectrometerGUI(HasTraits):

@@ -5,9 +5,9 @@ from pyface.api import confirm,ImageResource
 import time
 import thread
 
-import control_cryo
+import controls.cryo as control_cryo
 reload (control_cryo)
-from control_cryo import Cryo
+from controls.cryo import Cryo
 
 
 class CryoGUI(HasTraits):

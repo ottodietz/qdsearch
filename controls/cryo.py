@@ -4,7 +4,7 @@ from traitsui.api import*
 import time
 
 
-from SimSerial import SimSerial
+from simserial import SimSerial
 
 class Cryo(SimSerial):
     commando_position="last"
