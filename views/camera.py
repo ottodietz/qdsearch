@@ -14,16 +14,32 @@ from controls.camera import Camera
 from pyface.api import error,warning,information
 
 class CameraGUIHandler(Handler):
-    def close(self, info, isok):
-        if info.object.checkbox_camera:
-            return True
-        else:
-            info.object.cooler=False
-            if info.object.camera.gettemperature() >-1:
-                return True
-            else:
-                information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
 
+    def close(self, info, isok):
+        # Return True to indicate that it is OK to close the window.
+        try:
+            if isinstance(info.object,CameraGUI):
+                #called via CameraGUI
+                camera = info.object
+            else:
+                # called via SpectrometerGUI
+                camera = info.object.icamera
+        except AttributeError:
+            print "Warning: Parent GUI has no camera instance called icamera"
+            print "GUI is not able to warm up the camera"
+            print "This might harm the camera!"
+            print info.object
+        else:
+            if camera.cooler == True:
+                camera.cooler = False
+                temp = camera.gettemperature()
+                information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
+                while temp < 0:
+                    print "Warming up camera, pleas wait ... T=",temp,' C'
+                    temp = camera.gettemperature()
+                    sleep(3)
+            print "Camera warm up finished"
+        return True
 
 class CameraGUI(HasTraits):
     camera=Camera()

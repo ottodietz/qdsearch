@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from traits.api import *
 from traitsui.api import *
 from traitsui.menu import OKButton, CancelButton
@@ -17,10 +20,7 @@ from enable.component_editor import ComponentEditor
 
 from chaco.tools.api import PanTool, ZoomTool
 
-from traitsui.file_dialog  \
-    import open_file,save_file
-
-
+from traitsui.file_dialog import open_file,save_file
 
 import views.cryo
 reload(views.cryo)
@@ -28,18 +28,7 @@ reload(views.cryo)
 import views.spectrometer
 reload (views.spectrometer)
 
-"""handle by closing window"""
-class MainWindowHandler(Handler):
-    def close(self, info, isok):
-        # Return True to indicate that it is OK to close the window.#
-        if main.ispectrometer.icamera.checkbox_camera:
-            return True
-        else:
-            main.ispectrometer.icamera.cooler=False
-            if main.ispectrometer.icamera.camera.gettemperature() >-1:
-                return True
-            else:
-                information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
+from views.camera import CameraGUIHandler
 
 """events on the plot"""
 class PlotTool(BaseTool):
@@ -63,19 +52,6 @@ class counts_thread(Thread):
 
 class MainWindow(HasTraits):
     VoltPerCount = 0.002 # 2mv/Count
-
-    def __init__(self,*args,**kwargs):
-        self.initkwargs=kwargs
-        self.initargs=args
-        super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
-        self.run_counts_thread()
-
-    def run_counts_thread(self):
-        self.counts_thread = counts_thread()
-        self.counts_thread.wants_abort = False
-        self.counts_thread.caller = self
-        self.counts_thread.VoltPerCount = self.VoltPerCount
-        self.counts_thread.start()
 
 
     """for creating the menu"""
@@ -113,23 +89,35 @@ class MainWindow(HasTraits):
     plot_current=Instance(Plot)
     plot_compare=Instance(Plot)
 
-    ispectrometer = Instance( views.spectrometer.SpectrometerGUI, () )
+    ispectrometer = Instance( views.spectrometer.SpectrometerGUI )
+
+    # Set CameraGUI for GUI Handler
+    def _ispectrometer_default(self):
+        ispectrometer = views.spectrometer.SpectrometerGUI()
+        self.icamera = ispectrometer.icamera
+        return ispectrometer
+
     icryo=Instance(views.cryo.CryoGUI,())
+    hide_during_scan = { 'enabled_when': 'finished==True'}
+    hide = { 'enabled_when': 'False'}
     scanning=Group(
             Item('textfield',label='Step width by scanning',style='readonly'),
             HGroup(Item('x1',label='x1 [mm]'),
                    Item('x2', label='x2 [mm]'),
                    Item('width_step',label='width step (x) [mm]  '),Spring(),
-                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),enabled_when='False'),
-                   Item('scan_sample_step',label='Scan',show_label=False)
+                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),
+                   Item('scan_sample_step',label='Scan',show_label=False),
+                   **hide_during_scan
                   ),
-            HGroup(Item('y1',label='y1 [mm]'),
+            HGroup(HGroup(
+                   Item('y1',label='y1 [mm]'),
                    Item('y2',label='y2 [mm]'),
                    Item('height_step',label='height step (y) [mm] '),
                    Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float)),
-                   Item('abort',show_label=False)
-                  ),
-            enabled_when='finished==True')
+                   **hide_during_scan
+                   ),
+                  Item('abort',show_label=False)
+                  ))
 # Item('x', ),
     scan_sample_group =  VGroup(
          HGroup(
@@ -152,13 +140,26 @@ class MainWindow(HasTraits):
      menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,views.spectrometer.SpectrometerGUI.camera_menu,scan_sample_menu),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
-    handler=MainWindowHandler(),
+    handler=CameraGUIHandler(),
     resizable = True
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
                         buttons = [OKButton, CancelButton,],
                         kind='livemodal')
+
+    def __init__(self,*args,**kwargs):
+        self.initkwargs=kwargs
+        self.initargs=args
+        super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
+        self.run_counts_thread()
+
+    def run_counts_thread(self):
+        self.counts_thread = counts_thread()
+        self.counts_thread.wants_abort = False
+        self.counts_thread.caller = self
+        self.counts_thread.VoltPerCount = self.VoltPerCount
+        self.counts_thread.start()
 
     def call_cryo_menu(self):
        self.icryo.configure_traits(view='view_menu')
@@ -283,7 +284,7 @@ class MainWindow(HasTraits):
         f.close()
 
     def reload_all(self):
-        print "reload modules"
+        print "reload modules view.cryo, view.spectrometer"
         reload(views.cryo)
         reload(views.spectrometer)
 
