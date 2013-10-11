@@ -11,8 +11,8 @@ from controls.cryo import Cryo
 
 
 class CryoGUI(HasTraits):
-    call_menu_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
-    menu =    Menu(call_menu_cryo,name='Cryo')
+    mi_cryo = Action(name='cryo menu', accelerator='Ctrl+c', action='call_cryo_menu')
+    menu =    Menu(mi_cryo,name='Cryo')
     cryo=Cryo('COM3', 9600, timeout=1)
     cryo_refresh=True
 

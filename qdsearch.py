@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from traits.api import *
 from traitsui.api import *
 from traitsui.menu import OKButton, CancelButton
@@ -17,29 +20,15 @@ from enable.component_editor import ComponentEditor
 
 from chaco.tools.api import PanTool, ZoomTool
 
-from traitsui.file_dialog  \
-    import open_file,save_file
+from traitsui.file_dialog import open_file,save_file
 
+import views.cryo
+reload(views.cryo)
 
+import views.spectrometer
+reload (views.spectrometer)
 
-import views.cryo as window_cryo
-reload( window_cryo)
-
-import views.spectrometer as window_spectrometer
-reload (window_spectrometer)
-
-"""handle by closing window"""
-class MainWindowHandler(Handler):
-    def close(self, info, isok):
-        # Return True to indicate that it is OK to close the window.#
-        if main.ispectrometer.camera_instance.checkbox_camera:
-            return True
-        else:
-            main.ispectrometer.camera_instance.cooler=False
-            if main.ispectrometer.camera_instance.camera.gettemperature() >-1:
-                return True
-            else:
-                information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
+from views.camera import CameraGUIHandler
 
 """events on the plot"""
 class PlotTool(BaseTool):
@@ -64,26 +53,14 @@ class counts_thread(Thread):
 class MainWindow(HasTraits):
     VoltPerCount = 0.002 # 2mv/Count
 
-    def __init__(self,*args,**kwargs):
-        self.initkwargs=kwargs
-        self.initargs=args
-        super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
-        self.run_counts_thread()
-
-    def run_counts_thread(self):
-        self.counts_thread = counts_thread()
-        self.counts_thread.wants_abort = False
-        self.counts_thread.caller = self
-        self.counts_thread.VoltPerCount = self.VoltPerCount
-        self.counts_thread.start()
-
 
     """for creating the menu"""
     call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
     save_to=Action(name='Save as',action='save_to')
     open_to=Action(name='open...',action='open_to')
-    menu1 = Menu(save_to,open_to, CloseAction,name='File')
-    menu2=Menu(call_menu_scan_sample,name='scan_sample')
+    reload_all=Action(name='reload modules',action='reload_all')
+    file_menu = Menu(save_to,open_to,reload_all, CloseAction,name='File')
+    scan_sample_menu=Menu(call_menu_scan_sample,name='scan_sample')
     file_name=File('measurement/spectra.pick')
 
     """for setting"""
@@ -112,23 +89,35 @@ class MainWindow(HasTraits):
     plot_current=Instance(Plot)
     plot_compare=Instance(Plot)
 
-    ispectrometer = Instance( window_spectrometer.SpectrometerGUI, () )
-    icryo=Instance(window_cryo.CryoGUI,())
+    ispectrometer = Instance( views.spectrometer.SpectrometerGUI )
+
+    # Set CameraGUI for GUI Handler
+    def _ispectrometer_default(self):
+        ispectrometer = views.spectrometer.SpectrometerGUI()
+        self.icamera = ispectrometer.icamera
+        return ispectrometer
+
+    icryo=Instance(views.cryo.CryoGUI,())
+    hide_during_scan = { 'enabled_when': 'finished==True'}
+    hide = { 'enabled_when': 'False'}
     scanning=Group(
             Item('textfield',label='Step width by scanning',style='readonly'),
             HGroup(Item('x1',label='x1 [mm]'),
                    Item('x2', label='x2 [mm]'),
                    Item('width_step',label='width step (x) [mm]  '),Spring(),
-                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),enabled_when='False'),
-                   Item('scan_sample_step',label='Scan',show_label=False)
+                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),
+                   Item('scan_sample_step',label='Scan',show_label=False),
+                   **hide_during_scan
                   ),
-            HGroup(Item('y1',label='y1 [mm]'),
+            HGroup(HGroup(
+                   Item('y1',label='y1 [mm]'),
                    Item('y2',label='y2 [mm]'),
                    Item('height_step',label='height step (y) [mm] '),
                    Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float)),
-                   Item('abort',show_label=False)
-                  ),
-            enabled_when='finished==True')
+                   **hide_during_scan
+                   ),
+                  Item('abort',show_label=False)
+                  ))
 # Item('x', ),
     scan_sample_group =  VGroup(
          HGroup(
@@ -139,19 +128,19 @@ class MainWindow(HasTraits):
           ),
          HGroup(scanning),
          label='scan sample')
-    
+
     inst_group = Group(
         Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
         Item('ispectrometer', style = 'custom',show_label=False, label="spectrometer", enabled_when='finished==True'),
-        scan_sample_group, 
+        scan_sample_group,
         layout='tabbed')
 
     traits_view = View(
         inst_group,
-     menubar=MenuBar(menu1,window_cryo.CryoGUI.menu,window_spectrometer.SpectrometerGUI.menu,menu2),
+     menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,views.spectrometer.SpectrometerGUI.camera_menu,scan_sample_menu),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
-    handler=MainWindowHandler(),
+    handler=CameraGUIHandler(),
     resizable = True
     )
 
@@ -159,12 +148,24 @@ class MainWindow(HasTraits):
                         buttons = [OKButton, CancelButton,],
                         kind='livemodal')
 
+    def __init__(self,*args,**kwargs):
+        self.initkwargs=kwargs
+        self.initargs=args
+        super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
+        self.run_counts_thread()
+
+    def run_counts_thread(self):
+        self.counts_thread = counts_thread()
+        self.counts_thread.wants_abort = False
+        self.counts_thread.caller = self
+        self.counts_thread.VoltPerCount = self.VoltPerCount
+        self.counts_thread.start()
+
     def call_cryo_menu(self):
        self.icryo.configure_traits(view='view_menu')
 
     def call_camera_menu(self):
-       import pdb;pdb.set_trace()
-       self.ispectrometer.camera_instance.configure_traits(view='view_menu')
+       self.ispectrometer.icamera.configure_traits(view='view_menu')
 
     def call_spectrometer_menu(self):
        self.ispectrometer.configure_traits(view='view_menu')
@@ -179,7 +180,7 @@ class MainWindow(HasTraits):
             thread.start_new_thread(self.scanning_step,())
 
     def scanning_step(self):
-        if self.ispectrometer.camera_instance.camera.init_active:
+        if self.ispectrometer.icamera.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             #self.icryo.cryo.cryo_refresh=False
@@ -262,8 +263,8 @@ class MainWindow(HasTraits):
         spectrum=[]
         self.ispectrometer.current_exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(0.5) # for slowing mirrors
-        if not self.ispectrometer.camera_instance.checkbox_camera:
-            c_spectrum=self.ispectrometer.camera_instance.camera.acquisition() # nimmt das spektrum auf
+        if not self.ispectrometer.icamera.checkbox_camera:
+            c_spectrum=self.ispectrometer.icamera.camera.acquisition() # nimmt das spektrum auf
         else:
             c_spectrum=(c_float * 5)(1, 2,5,6)
             time.sleep(1) # for slowing mirrors
@@ -281,6 +282,11 @@ class MainWindow(HasTraits):
         f = open('measurement/last_measurement.pick', "a")
         pickle.dump([x,y,spectrum],f)
         f.close()
+
+    def reload_all(self):
+        print "reload modules view.cryo, view.spectrometer"
+        reload(views.cryo)
+        reload(views.spectrometer)
 
     def plot_map(self,*optional):
         if len(optional)>1:
@@ -313,7 +319,7 @@ class MainWindow(HasTraits):
         value and the center wavelength gives the values xless/xmore. The order of the
         gratings are 600, 1200,1800. Note that these values are wavelength depened.
         900 nm was choosen because it was in the interesting range for the
-        measurement.""" 
+        measurement."""
 
         x_less=[40.97,16.96,6.91] # values for different gratings: 600,1200,1800
         x_more=[40.7,16.4,6.49]
@@ -434,11 +440,11 @@ if __name__ == '__main__':
         print"close cryo"
         main.icryo.cryo.close()
         main.icryo.cryo_refresh=False
-    if not main.ispectrometer.spectro.simulation:
+    if not main.ispectrometer.ispectro.simulation:
         print"close spectro"
-        main.ispectrometer.spectro.close()
+        main.ispectrometer.ispectro.close()
     if not main.ispectrometer.ivolt.simulation:
         print"close Voltage"
         main.ispectrometer.ivolt.close()
-    if not main.ispectrometer.camera_instance.checkbox_camera:
-        main.ispectrometer.camera_instance.camera.close()
+    if not main.ispectrometer.icamera.checkbox_camera:
+        main.ispectrometer.icamera.camera.close()

@@ -11,24 +11,25 @@ from pyface.api import error,warning,information
 from ctypes import *
 import random
 
-import controls.spectrometer as control_spectrometer
-reload(control_spectrometer)
+import controls.spectrometer
+reload(controls.spectrometer)
 
-import controls.voltage as Voltage
-reload(Voltage)
+import controls.voltage
+reload(controls.voltage)
 
-import views.camera as window_camera
-reload (window_camera)
+import views.camera
+reload (views.camera)
+
+from views.camera import CameraGUIHandler
 
 class SpectrometerGUI(HasTraits):
-    ivolt=Voltage.Voltage('COM9', 115200, timeout=1)
-    spectro=control_spectrometer.Spectro('COM4', 9600, timeout=1)
-    camera_instance=Instance(window_camera.CameraGUI,())
-    
+    ivolt=controls.voltage.Voltage('COM9', 115200, timeout=1)
+    ispectro=controls.spectrometer.Spectro('COM4', 9600, timeout=1)
+    icamera=Instance(views.camera.CameraGUI,()) # () here, or _icamera_default below
+
     measurement_process=False
     acquisition_process=False
     refresh_active=False
-    
 
     plot = Instance(Plot)
 
@@ -49,7 +50,7 @@ class SpectrometerGUI(HasTraits):
 
     input_nm=CFloat(0.0)
     input_nmjemin=CFloat(10.0)
-    checkbox_spectrometer=Bool(True, label="Simulation Spectrometer")
+    checkbox_ispectrometer=Bool(True, label="Simulation Spectrometer")
     checkbox_voltmeter=Bool(True,label="Simulation Voltmeter")
     input_goto=CFloat(0.0)
     scan_bereich=CFloat(3)
@@ -61,8 +62,8 @@ class SpectrometerGUI(HasTraits):
     """for menu"""
     continuous_acquisition=Bool(False)
     waittime=CFloat(2,desc='time between two acquisitions')
-    call_menu_camera = Action(name='camera menu', accelerator='Ctrl+p', action='call_camera_menu')
-    menu=Menu(call_menu_camera,name='Camera')
+    mi_camera = Action(name='camera menu', accelerator='Ctrl+p', action='call_camera_menu')
+    camera_menu=Menu(mi_camera,name='Camera')
 
 
     traits_view=View(
@@ -84,13 +85,14 @@ class SpectrometerGUI(HasTraits):
               HGroup(Item("current_exit_mirror",editor=EnumEditor(name='exit_mirror_value')),
                      Spring(),enabled_when='measurement_process==False'),
          Item("output",style="readonly"),
-         HGroup(Item("checkbox_spectrometer"), Item("checkbox_voltmeter"),enabled_when='measurement_process==False'),
+         HGroup(Item("checkbox_ispectrometer"), Item("checkbox_voltmeter"),enabled_when='measurement_process==False'),
 
-         HGroup(Item('camera_instance',show_label=False, style = 'custom'),enabled_when='acquisition_process==False'),
+         HGroup(Item('icamera',show_label=False, style = 'custom'),enabled_when='acquisition_process==False'),
          HGroup(Item('acquisition_button',show_label=False),Item('abort_acquisition',show_label=False),Item('continuous_acquisition')),
          ),
         Item("plot",editor=ComponentEditor(),show_label=False)), 
-       menubar=MenuBar(menu), width=750,height=600,buttons = [OKButton,], resizable = True)
+       menubar=MenuBar(camera_menu), width=750,height=600,buttons = [OKButton,], 
+       handler=CameraGUIHandler(),resizable = True)
     
 #    view_menu=View(
 #            Item('camera_menu_instance',show_label=False, style = 'custom'),  
@@ -99,7 +101,7 @@ class SpectrometerGUI(HasTraits):
 
 
     def call_camera_menu(self):
-       self.camera_instance.configure_traits(view='menu_view')
+       self.icamera.configure_traits(view='menu_view')
 
 
     def __init__(self):
@@ -109,6 +111,10 @@ class SpectrometerGUI(HasTraits):
         if len(self.exit_mirror_value)>0:
             self.current_exit_mirror=self.exit_mirror_value[0]
         self.refresh_active=False
+    
+#    def _icamera_default(self):
+#        print "init_camera"
+#        return views.camera.CameraGUI();
 
     def _goto_fired(self):
         if self.input_goto>1000:
@@ -119,8 +125,8 @@ class SpectrometerGUI(HasTraits):
             self.input_goto=0
         else:
                 self.input_nm=self.input_goto
-                self.spectro.wavelength_goto(self.input_goto)
-                self.spectro.waiting()
+                self.ispectro.wavelength_goto(self.input_goto)
+                self.ispectro.waiting()
 
 
     def _nm_fired(self):
@@ -132,8 +138,8 @@ class SpectrometerGUI(HasTraits):
             self.input_nm=0
         else:
                 self.input_goto=self.input_nm
-                self.spectro.wavelength_uncontrolled_nm(self.input_nm)
-                self.spectro.waiting()
+                self.ispectro.wavelength_uncontrolled_nm(self.input_nm)
+                self.ispectro.waiting()
 
 
 
@@ -146,35 +152,35 @@ class SpectrometerGUI(HasTraits):
             self.input_nm=0
         else:
             self.input_goto=self.input_nm
-            self.spectro.wavelength_controlled_nm(self.input_nm)
+            self.ispectro.wavelength_controlled_nm(self.input_nm)
 
 
     def _nmjemin_fired(self):
-            self.spectro.velocity(self.input_nmjemin)
+            self.ispectro.velocity(self.input_nmjemin)
 
 
     def _position_fired(self):
-            self.output=self.spectro.output_position()
+            self.output=self.ispectro.output_position()
 
 
     def _identify_fired(self):
-            self.output=self.spectro.ident()
+            self.output=self.ispectro.ident()
 
 
     def _output_nmjemin_fired(self):
-            self.output=self.spectro.output_velocity()
+            self.output=self.ispectro.output_velocity()
 
 
     def _current_grating_changed(self):
        if not self.refresh_active: # ueberprueft ob der Wert wegen einer aktualisierung geaendert worden ist, dann kein Befehl senden
-         self.spectro.grating_change(self.current_grating[1])
+         self.ispectro.grating_change(self.current_grating[1])
 
     def _current_exit_mirror_changed(self):
         if not self.refresh_active:
             if self.current_exit_mirror=='front (CCD)':
-                self.spectro.exit_mirror_change('front')
+                self.ispectro.exit_mirror_change('front')
             else:
-                self.spectro.exit_mirror_change('side')
+                self.ispectro.exit_mirror_change('side')
 
     def _search_maximum_fired(self):
             start_value=self.input_goto-self.scan_bereich
@@ -185,9 +191,9 @@ class SpectrometerGUI(HasTraits):
             thread.start_new_thread(self.measure,(start_value,end_value,))
 
     def measure(self,start_value,end_value):
-        self.spectro.wavelength_goto(start_value)
-        self.spectro.waiting()
-        self.spectro.wavelength_controlled_nm(end_value)
+        self.ispectro.wavelength_goto(start_value)
+        self.ispectro.waiting()
+        self.ispectro.wavelength_controlled_nm(end_value)
         self.measurement_process=True
         start=time.clock()
         self.measured_values=[]
@@ -196,8 +202,8 @@ class SpectrometerGUI(HasTraits):
         while self.measurement_process:
             self.measured_values.append(self.ivolt.measure())
             ende=time.clock()
-            time.sleep(1) # without the method is to fast for the spectrometer
-            self.wavelength.append(float(self.spectro.output_position()))
+            time.sleep(1) # without the method is to fast for the ispectrometer
+            self.wavelength.append(float(self.ispectro.output_position()))
             self.draw(self.wavelength,self.measured_values)
 
             """die beiden Abbruchbedingungen, wenn die Wellaenge fast gr??er als der end_value ist oder aber die letzen beiden eingelessenen Wellenl?ngen identisch sind"""
@@ -210,10 +216,10 @@ class SpectrometerGUI(HasTraits):
 
         maximum=max(self.measured_values) # sucht das groesste element der liste
         wavelength_maximum=self.measured_values.index(maximum) # sucht den ort in der Liste von der Zahl maximum
-        self.spectro.mono_stop()
+        self.ispectro.mono_stop()
         self.measurement_process=False
         print self.wavelength[wavelength_maximum]
-        self.spectro.wavelength_goto(self.wavelength[wavelength_maximum]) # geht an ort des Maximums zurueck
+        self.ispectro.wavelength_goto(self.wavelength[wavelength_maximum]) # geht an ort des Maximums zurueck
 
 
     def draw(self,x_achse,y_achse):
@@ -228,43 +234,43 @@ class SpectrometerGUI(HasTraits):
         self.plot = plot
 
 
-    def _checkbox_spectrometer_changed(self):
-        self.spectro.toggle_simulation()
-        if not self.checkbox_spectrometer:
-            self.spectrometer_gui_refresh()
+    def _checkbox_ispectrometer_changed(self):
+        self.ispectro.toggle_simulation()
+        if not self.checkbox_ispectrometer:
+            self.ispectrometer_gui_refresh()
 
     def _checkbox_voltmeter_changed(self):
         self.ivolt.toggle_simulation()
 
-    def spectrometer_gui_refresh(self):
+    def ispectrometer_gui_refresh(self):
         self.refresh_active=True
-        position=self.spectro.output_position()
+        position=self.ispectro.output_position()
         self.input_nm=position
         self.input_goto=position
-        self.input_nmjemin=self.spectro.output_velocity()
+        self.input_nmjemin=self.ispectro.output_velocity()
         self.read_gratings()
         self.read_exit_mirror()
         self.refresh_active=False
 
 
     def read_gratings(self):
-        (self.grating_value,aktuell)=self.spectro.output_grating() #aktuell als zweite output hinzuschreiben
+        (self.grating_value,aktuell)=self.ispectro.output_grating() #aktuell als zweite output hinzuschreiben
         self.current_grating=self.grating_value[aktuell-1] # -1 da Grating bei 1 anfaengt zu zaehlen und List bei 0
 
     def read_exit_mirror(self):
-        exit_mirror=self.spectro.output_exit_mirror()
+        exit_mirror=self.ispectro.output_exit_mirror()
         if exit_mirror=='front':
             self.current_exit_mirror=self.exit_mirror_value[0]
         else:
             self.current_exit_mirror=self.exit_mirror_value[1]
     def _abort_fired(self):
-        self.spectro.mono_stop()
+        self.ispectro.mono_stop()
         self.measurement_process=False
 
     def plot_spectrum(self):
         spectrum=[]
-        if not self.camera_instance.checkbox_camera:
-            c_spectrum=self.camera_instance.camera.acquisition() # nimmt das spektrum auf
+        if not self.icamera.checkbox_camera:
+            c_spectrum=self.icamera.camera.acquisition() # nimmt das spektrum auf
         else:
             points=random.sample(range(100),5)
             c_spectrum=(c_int * 5)(points[1],points[2],points[3],points[4],points[0])
@@ -296,9 +302,9 @@ class SpectrometerGUI(HasTraits):
 if __name__=="__main__":
     main=SpectrometerGUI()
     main.configure_traits()
-    if not main.spectro.simulation:
-        print"close spectrometer"
-        main.spectro.close()
+    if not main.ispectro.simulation:
+        print"close ispectrometer"
+        main.ispectro.close()
     if not main.ivolt.simulation:
-        print"close Voltage"
+        print"close controls.voltage"
         main.ivolt.close()
