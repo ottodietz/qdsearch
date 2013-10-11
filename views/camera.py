@@ -49,9 +49,8 @@ class CameraGUI(HasTraits):
     cooler=Bool(False)
     plot=Button()
     acquisition=Button()
-    temperature=Button()
     status=Button()
-    temperature=Range(low=-70,high=20,value=20)
+    settemperature=Range(low=-70,high=20,value=20)
 
     """menu"""
     readmode=Int(0)
@@ -59,8 +58,32 @@ class CameraGUI(HasTraits):
     exposuretime=Range(low=0.0001,high=10,value=0.1)
     output=Str()
 
+    view_menu=View(VGroup(
+                        HGroup(Item('acquisition',show_label=False), Item('plot',show_label=False)),
+                        HGroup(Item('settemperature'),Item('status',show_label=False)),
+                        HGroup(Item('cooler'),Item('checkbox_camera',label='Simulation camera')),
+                        HGroup(Item('output',label='Camera output',
+                            style='readonly')),
+                        VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'))
+                        ),
+                        resizable = True )
 
-    def _acquisition_fired(self):
+    menu_action = Action(name='camera menu', accelerator='Ctrl+p', action='call_menu')
+    mi_reload = Action(name='reload camera module', accelerator='Ctrl+r',
+            action='reload_camera')
+
+    menu=Menu(menu_action,mi_reload,name='Camera')
+
+    traits_view=View(VGroup(
+                        HGroup(Item('acquisition',label='Single',show_label=False),Item('plot',show_label=False)),
+                        Item('exposuretime'),
+                        HGroup(Item('checkbox_camera',label='Simulation camera')),
+                        HGroup(Item('output',label='Camera output', style='readonly'))
+                       ),
+                       handler=iCameraGUIHandler,
+                       resizable = True, menubar=MenuBar(menu) )
+
+    def _acquisition_changed(self):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
             while self.camera.init_active:
@@ -73,20 +96,17 @@ class CameraGUI(HasTraits):
         pylab.plot(self.line[:])
         pylab.show()
 
-    def _temperature_fired(self):
+    def _settemperature_changed(self):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
-            self.temperature=self.camera.gettemperature()
+            self.camera.settemperature(self.settemperature)
 
     def _status_fired(self):
         self.camera.gettemperature_status()
         self.camera.gettemperature_range()
         self.temperature = self.camera.gettemperature()
 
-
-    def _settemperature_fired(self):
-        self.camera.settemperature(self.temperature)
 
     def _checkbox_camera_changed(self):
         if self.camera.init_active:
@@ -97,12 +117,12 @@ class CameraGUI(HasTraits):
             if self.checkbox_camera:
                 self.cooler=False
                 if self.camera.gettemperature() >-1:
-                    thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera))
+                    thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
                 else:
                     information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
                     thread.start_new_thread(self.change_checkbox,())
             else:
-                thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera)) # if the simulation was runing it can be deactivate
+                thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,)) # if the simulation was runing it can be deactivate
 
 
     def change_checkbox(self):
@@ -121,39 +141,19 @@ class CameraGUI(HasTraits):
 
     def _acquisitionmode_changed(self):
        self.camera.acquisitionmode=c_long(self.acquisitionmode)
-       print "readmode changed"
+       print "acq mode changed"
 
     def _exposuretime_changed(self):
        self.camera.exposuretime=c_float(self.exposuretime)
-       print "readmode changed"
+       print "exp changed"
 
     def call_menu(self):
        self.configure_traits(view='view_menu')
 
-    view_menu=View(VGroup(
-                        HGroup(Item('acquisition',show_label=False), Item('plot',show_label=False)),
-                        HGroup(Item('temperature'),Item('status',show_label=False)),
-                        HGroup(Item('cooler'),Item('checkbox_camera',label='Simulation camera')),
-                        HGroup(Item('output',label='Camera output',
-                            style='readonly')),
-                        VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'))
-                        ),
-                        handler=iCameraGUIHandler,
-                        resizable = True )
+    def reload_camera(self):
+       print "reload"
+       reload(control_camera)
 
-    menu_action = Action(name='camera menu', accelerator='Ctrl+p', action='call_menu')
-
-    menu=Menu(menu_action,name='Camera')
-
-
-    traits_view=View(VGroup(
-                        HGroup(Item('acquisition',label='Single',show_label=False),Item('plot',show_label=False)),
-                        Item('exposuretime'),
-                        HGroup(Item('checkbox_camera',label='Simulation camera')),
-                        HGroup(Item('output',label='Camera output', style='readonly'))
-                       ),
-                       handler=iCameraGUIHandler,
-                       resizable = True, menubar=MenuBar(menu) )
 
 
 if __name__=="__main__":
