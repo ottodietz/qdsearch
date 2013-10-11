@@ -22,7 +22,7 @@ from traitsui.file_dialog  \
 
 
 
-import views.cryo 
+import views.cryo
 reload(views.cryo)
 
 import views.spectrometer
@@ -140,11 +140,11 @@ class MainWindow(HasTraits):
           ),
          HGroup(scanning),
          label='scan sample')
-    
+
     inst_group = Group(
         Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
         Item('ispectrometer', style = 'custom',show_label=False, label="spectrometer", enabled_when='finished==True'),
-        scan_sample_group, 
+        scan_sample_group,
         layout='tabbed')
 
     traits_view = View(
@@ -163,8 +163,8 @@ class MainWindow(HasTraits):
     def call_cryo_menu(self):
        self.icryo.configure_traits(view='view_menu')
 
-#    def call_camera_menu(self):
-#       self.ispectrometer.icamera.configure_traits(view='view_menu')
+    def call_camera_menu(self):
+       self.ispectrometer.icamera.configure_traits(view='view_menu')
 
     def call_spectrometer_menu(self):
        self.ispectrometer.configure_traits(view='view_menu')
@@ -318,7 +318,7 @@ class MainWindow(HasTraits):
         value and the center wavelength gives the values xless/xmore. The order of the
         gratings are 600, 1200,1800. Note that these values are wavelength depened.
         900 nm was choosen because it was in the interesting range for the
-        measurement.""" 
+        measurement."""
 
         x_less=[40.97,16.96,6.91] # values for different gratings: 600,1200,1800
         x_more=[40.7,16.4,6.49]
@@ -439,9 +439,9 @@ if __name__ == '__main__':
         print"close cryo"
         main.icryo.cryo.close()
         main.icryo.cryo_refresh=False
-    if not main.ispectrometer.spectro.simulation:
+    if not main.ispectrometer.ispectro.simulation:
         print"close spectro"
-        main.ispectrometer.spectro.close()
+        main.ispectrometer.ispectro.close()
     if not main.ispectrometer.ivolt.simulation:
         print"close Voltage"
         main.ispectrometer.ivolt.close()

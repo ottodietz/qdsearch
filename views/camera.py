@@ -112,9 +112,9 @@ class CameraGUI(HasTraits):
        print "readmode changed"
 
     def call_menu(self):
-       self.configure_traits(view='menu_view')
+       self.configure_traits(view='view_menu')
 
-    menu_view=View(VGroup(
+    view_menu=View(VGroup(
                         HGroup(Item('acquisition',show_label=False), Item('plot',show_label=False)),
                         HGroup(Item('temperature'),Item('status',show_label=False)),
                         HGroup(Item('cooler'),Item('checkbox_camera',label='Simulation camera')),
