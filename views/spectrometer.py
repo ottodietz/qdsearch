@@ -23,10 +23,12 @@ reload (window_camera)
 class SpectrometerGUI(HasTraits):
     ivolt=Voltage.Voltage('COM9', 115200, timeout=1)
     spectro=control_spectrometer.Spectro('COM4', 9600, timeout=1)
+    camera_instance=Instance(window_camera.CameraGUI,())
+    
     measurement_process=False
     acquisition_process=False
     refresh_active=False
-    camera_instance=Instance(window_camera.CameraGUI,())
+    
 
     plot = Instance(Plot)
 

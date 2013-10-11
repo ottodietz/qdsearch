@@ -163,6 +163,7 @@ class MainWindow(HasTraits):
        self.icryo.configure_traits(view='view_menu')
 
     def call_camera_menu(self):
+       import pdb;pdb.set_trace()
        self.ispectrometer.camera_instance.configure_traits(view='view_menu')
 
     def call_spectrometer_menu(self):
