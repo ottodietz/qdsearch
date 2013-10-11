@@ -102,7 +102,6 @@ class CameraGUI(HasTraits):
                     information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
                     thread.start_new_thread(self.change_checkbox,())
             else:
-                import pdb; pdb.set_trace()
                 thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,)) # if the simulation was runing it can be deactivate
 
 
