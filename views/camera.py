@@ -117,7 +117,7 @@ class CameraGUI(HasTraits):
             if self.checkbox_camera:
                 self.cooler=False
                 if self.camera.gettemperature() >-1:
-                    thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))
+                    thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))#last argument must be a n-tuple n=1 z.B. (True,) 
                 else:
                     information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
                     thread.start_new_thread(self.change_checkbox,())
