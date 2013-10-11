@@ -22,21 +22,21 @@ from traitsui.file_dialog  \
 
 
 
-import views.cryo as window_cryo
-reload( window_cryo)
+import views.cryo 
+reload(views.cryo)
 
-import views.spectrometer as window_spectrometer
-reload (window_spectrometer)
+import views.spectrometer
+reload (views.spectrometer)
 
 """handle by closing window"""
 class MainWindowHandler(Handler):
     def close(self, info, isok):
         # Return True to indicate that it is OK to close the window.#
-        if main.ispectrometer.camera_instance.checkbox_camera:
+        if main.ispectrometer.icamera.checkbox_camera:
             return True
         else:
-            main.ispectrometer.camera_instance.cooler=False
-            if main.ispectrometer.camera_instance.camera.gettemperature() >-1:
+            main.ispectrometer.icamera.cooler=False
+            if main.ispectrometer.icamera.camera.gettemperature() >-1:
                 return True
             else:
                 information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
@@ -82,8 +82,9 @@ class MainWindow(HasTraits):
     call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
     save_to=Action(name='Save as',action='save_to')
     open_to=Action(name='open...',action='open_to')
-    menu1 = Menu(save_to,open_to, CloseAction,name='File')
-    menu2=Menu(call_menu_scan_sample,name='scan_sample')
+    reload_all=Action(name='reload modules',action='reload_all')
+    file_menu = Menu(save_to,open_to,reload_all, CloseAction,name='File')
+    scan_sample_menu=Menu(call_menu_scan_sample,name='scan_sample')
     file_name=File('measurement/spectra.pick')
 
     """for setting"""
@@ -112,8 +113,8 @@ class MainWindow(HasTraits):
     plot_current=Instance(Plot)
     plot_compare=Instance(Plot)
 
-    ispectrometer = Instance( window_spectrometer.SpectrometerGUI, () )
-    icryo=Instance(window_cryo.CryoGUI,())
+    ispectrometer = Instance( views.spectrometer.SpectrometerGUI, () )
+    icryo=Instance(views.cryo.CryoGUI,())
     scanning=Group(
             Item('textfield',label='Step width by scanning',style='readonly'),
             HGroup(Item('x1',label='x1 [mm]'),
@@ -148,7 +149,7 @@ class MainWindow(HasTraits):
 
     traits_view = View(
         inst_group,
-     menubar=MenuBar(menu1,window_cryo.CryoGUI.menu,window_spectrometer.SpectrometerGUI.menu,menu2),
+     menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,views.spectrometer.SpectrometerGUI.camera_menu,scan_sample_menu),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
     handler=MainWindowHandler(),
@@ -162,8 +163,8 @@ class MainWindow(HasTraits):
     def call_cryo_menu(self):
        self.icryo.configure_traits(view='view_menu')
 
-    def call_camera_menu(self):
-       self.ispectrometer.camera_instance.configure_traits(view='view_menu')
+#    def call_camera_menu(self):
+#       self.ispectrometer.icamera.configure_traits(view='view_menu')
 
     def call_spectrometer_menu(self):
        self.ispectrometer.configure_traits(view='view_menu')
@@ -178,7 +179,7 @@ class MainWindow(HasTraits):
             thread.start_new_thread(self.scanning_step,())
 
     def scanning_step(self):
-        if self.ispectrometer.camera_instance.camera.init_active:
+        if self.ispectrometer.icamera.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
         else:
             #self.icryo.cryo.cryo_refresh=False
@@ -261,8 +262,8 @@ class MainWindow(HasTraits):
         spectrum=[]
         self.ispectrometer.current_exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(0.5) # for slowing mirrors
-        if not self.ispectrometer.camera_instance.checkbox_camera:
-            c_spectrum=self.ispectrometer.camera_instance.camera.acquisition() # nimmt das spektrum auf
+        if not self.ispectrometer.icamera.checkbox_camera:
+            c_spectrum=self.ispectrometer.icamera.camera.acquisition() # nimmt das spektrum auf
         else:
             c_spectrum=(c_float * 5)(1, 2,5,6)
             time.sleep(1) # for slowing mirrors
@@ -280,6 +281,11 @@ class MainWindow(HasTraits):
         f = open('measurement/last_measurement.pick', "a")
         pickle.dump([x,y,spectrum],f)
         f.close()
+
+    def reload_all(self):
+        print "reload modules"
+        reload(views.cryo)
+        reload(views.spectrometer)
 
     def plot_map(self,*optional):
         if len(optional)>1:
@@ -439,5 +445,5 @@ if __name__ == '__main__':
     if not main.ispectrometer.ivolt.simulation:
         print"close Voltage"
         main.ispectrometer.ivolt.close()
-    if not main.ispectrometer.camera_instance.checkbox_camera:
-        main.ispectrometer.camera_instance.camera.close()
+    if not main.ispectrometer.icamera.checkbox_camera:
+        main.ispectrometer.icamera.camera.close()
