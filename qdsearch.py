@@ -17,10 +17,7 @@ from enable.component_editor import ComponentEditor
 
 from chaco.tools.api import PanTool, ZoomTool
 
-from traitsui.file_dialog  \
-    import open_file,save_file
-
-
+from traitsui.file_dialog import open_file,save_file
 
 import views.cryo
 reload(views.cryo)
@@ -28,8 +25,17 @@ reload(views.cryo)
 import views.spectrometer
 reload (views.spectrometer)
 
+from views.camera import CameraGUIHandler
+
 """handle by closing window"""
 class MainWindowHandler(Handler):
+
+    def __init__(self,*args,**kwargs):
+        self.initkwargs=kwargs
+        self.initargs=args
+        super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
+ 
+    def __init__
     def close(self, info, isok):
         # Return True to indicate that it is OK to close the window.#
         if main.ispectrometer.icamera.checkbox_camera:
@@ -63,19 +69,6 @@ class counts_thread(Thread):
 
 class MainWindow(HasTraits):
     VoltPerCount = 0.002 # 2mv/Count
-
-    def __init__(self,*args,**kwargs):
-        self.initkwargs=kwargs
-        self.initargs=args
-        super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
-        self.run_counts_thread()
-
-    def run_counts_thread(self):
-        self.counts_thread = counts_thread()
-        self.counts_thread.wants_abort = False
-        self.counts_thread.caller = self
-        self.counts_thread.VoltPerCount = self.VoltPerCount
-        self.counts_thread.start()
 
 
     """for creating the menu"""
@@ -159,6 +152,19 @@ class MainWindow(HasTraits):
     setting_view=View(Item('toleranz'),Item('offset'),
                         buttons = [OKButton, CancelButton,],
                         kind='livemodal')
+
+    def __init__(self,*args,**kwargs):
+        self.initkwargs=kwargs
+        self.initargs=args
+        super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
+        self.run_counts_thread()
+
+    def run_counts_thread(self):
+        self.counts_thread = counts_thread()
+        self.counts_thread.wants_abort = False
+        self.counts_thread.caller = self
+        self.counts_thread.VoltPerCount = self.VoltPerCount
+        self.counts_thread.start()
 
     def call_cryo_menu(self):
        self.icryo.configure_traits(view='view_menu')
@@ -283,7 +289,7 @@ class MainWindow(HasTraits):
         f.close()
 
     def reload_all(self):
-        print "reload modules"
+        print "reload modules view.cryo, view.spectrometer"
         reload(views.cryo)
         reload(views.spectrometer)
 
