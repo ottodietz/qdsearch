@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from traits.api import *
 from traitsui.api import *
 from traitsui.menu import OKButton, CancelButton
@@ -26,26 +29,6 @@ import views.spectrometer
 reload (views.spectrometer)
 
 from views.camera import CameraGUIHandler
-
-"""handle by closing window"""
-class MainWindowHandler(Handler):
-
-    def __init__(self,*args,**kwargs):
-        self.initkwargs=kwargs
-        self.initargs=args
-        super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
- 
-    def __init__
-    def close(self, info, isok):
-        # Return True to indicate that it is OK to close the window.#
-        if main.ispectrometer.icamera.checkbox_camera:
-            return True
-        else:
-            main.ispectrometer.icamera.cooler=False
-            if main.ispectrometer.icamera.camera.gettemperature() >-1:
-                return True
-            else:
-                information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
 
 """events on the plot"""
 class PlotTool(BaseTool):
@@ -106,23 +89,35 @@ class MainWindow(HasTraits):
     plot_current=Instance(Plot)
     plot_compare=Instance(Plot)
 
-    ispectrometer = Instance( views.spectrometer.SpectrometerGUI, () )
+    ispectrometer = Instance( views.spectrometer.SpectrometerGUI )
+
+    # Set CameraGUI for GUI Handler
+    def _ispectrometer_default(self):
+        ispectrometer = views.spectrometer.SpectrometerGUI()
+        self.icamera = ispectrometer.icamera
+        return ispectrometer
+
     icryo=Instance(views.cryo.CryoGUI,())
+    hide_during_scan = { 'enabled_when': 'finished==True'}
+    hide = { 'enabled_when': 'False'}
     scanning=Group(
             Item('textfield',label='Step width by scanning',style='readonly'),
             HGroup(Item('x1',label='x1 [mm]'),
                    Item('x2', label='x2 [mm]'),
                    Item('width_step',label='width step (x) [mm]  '),Spring(),
-                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),enabled_when='False'),
-                   Item('scan_sample_step',label='Scan',show_label=False)
+                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),
+                   Item('scan_sample_step',label='Scan',show_label=False),
+                   **hide_during_scan
                   ),
-            HGroup(Item('y1',label='y1 [mm]'),
+            HGroup(HGroup(
+                   Item('y1',label='y1 [mm]'),
                    Item('y2',label='y2 [mm]'),
                    Item('height_step',label='height step (y) [mm] '),
                    Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float)),
-                   Item('abort',show_label=False)
-                  ),
-            enabled_when='finished==True')
+                   **hide_during_scan
+                   ),
+                  Item('abort',show_label=False)
+                  ))
 # Item('x', ),
     scan_sample_group =  VGroup(
          HGroup(
@@ -145,7 +140,7 @@ class MainWindow(HasTraits):
      menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,views.spectrometer.SpectrometerGUI.camera_menu,scan_sample_menu),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
-    handler=MainWindowHandler(),
+    handler=CameraGUIHandler(),
     resizable = True
     )
 

@@ -20,13 +20,16 @@ reload(controls.voltage)
 import views.camera
 reload (views.camera)
 
+from views.camera import CameraGUIHandler
+
 class SpectrometerGUI(HasTraits):
     ivolt=controls.voltage.Voltage('COM9', 115200, timeout=1)
     ispectro=controls.spectrometer.Spectro('COM4', 9600, timeout=1)
+    icamera=Instance(views.camera.CameraGUI,()) # () here, or _icamera_default below
+
     measurement_process=False
     acquisition_process=False
     refresh_active=False
-    icamera=Instance(views.camera.CameraGUI,()) # () here, or _icamera_default below
 
     plot = Instance(Plot)
 
@@ -88,7 +91,8 @@ class SpectrometerGUI(HasTraits):
          HGroup(Item('acquisition_button',show_label=False),Item('abort_acquisition',show_label=False),Item('continuous_acquisition')),
          ),
         Item("plot",editor=ComponentEditor(),show_label=False)), 
-       menubar=MenuBar(camera_menu), width=750,height=600,buttons = [OKButton,], resizable = True)
+       menubar=MenuBar(camera_menu), width=750,height=600,buttons = [OKButton,], 
+       handler=CameraGUIHandler(),resizable = True)
     
 #    view_menu=View(
 #            Item('camera_menu_instance',show_label=False, style = 'custom'),  

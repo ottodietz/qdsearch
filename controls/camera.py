@@ -1,4 +1,6 @@
 from ctypes import *
+import random
+import numpy as np
 import time
 
 
@@ -10,12 +12,13 @@ class Camera():
     readmode=int(0)
     acquisitionmode=int(1)
     exposuretime=c_float(0.1)
+    simulation=True
 
     def toggle_simulation(self,simulation):
         self.init_active=True
-        if simulation:
+        if self.simulation:
             self.close()
-        if not simulation:
+        if not self.simulation:
             self.atm=WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
             self.camera_active=True
             print "Init:", self.atm.Initialize(None)
@@ -28,6 +31,10 @@ class Camera():
 
     def acquisition(self):
         pixel=1024
+        if self.simulation:
+            line = [ random.randint(10,100) for i in np.arange(pixel) ]
+            print "simulating acquisition 2"
+            return line
         line  = (c_long * pixel)()
         print "StartAcq:",self.atm.StartAcquisition()
         print "Wait:",self.atm.WaitForAcquisition()
@@ -37,30 +44,49 @@ class Camera():
         return(line)
 
     def close(self):
-        print "ShutDown:", self.atm.ShutDown()
         self.camera_active=False
+        if self.simulation:
+            print "ShutDown: Simulation"
+            return True
+        print "ShutDown:", self.atm.ShutDown()
 
     def gettemperature(self):
         temperature=c_long()
-        print 'GetTemperature', self.atm.GetTemperature(byref(temperature))
+        if not self.simulation:
+            print 'GetTemperature', self.atm.GetTemperature(byref(temperature))
+        else:
+            print 'GetTemperature: simulate'
+            return random.randint(-70,20)
         return(temperature.value)
 
     def cooler_on(self):
+        if self.simulation:
+            print "Cooler on: simulation"
+            return True
         print 'Cooler on:',self.atm.CoolerON()
 
     def cooler_off(self):
+        if self.simulation:
+            print "Cooler off: simulation"
+            return True
         print 'Cooler off:',self.atm.CoolerOFF()
 
     def gettemperature_range(self):
         mintemp=c_long()
         maxtemp=c_long()
-        print 'Gettemperature_range:', self.atm.GetTemperatureRange(byref(mintemp),byref(maxtemp))
+        mintemp = -70
+        maxtemp = 20
+        if not self.simulation:
+            print 'Gettemperature_range:', self.atm.GetTemperatureRange(byref(mintemp),byref(maxtemp))
         print 'min temp' ,
         print mintemp
         print 'maxtemp' ,
         print maxtemp
 
     def settemperature(self,temperature):
+        if self.simulation:
+            print 'settemperature: simulation'
+            return True
         print 'settemperature', self.atm.SetTemperature(temperature)
 
     def gettemperature_status(self):
@@ -68,21 +94,14 @@ class Camera():
         targettemp=c_float()
         AmbientTemp=c_float()
         cooler_volt=c_float()
-        print'temperautre_status:', self.atm.GetTemperatureStatus(byref(sensortemp),byref(targettemp),byref(AmbientTemp),byref(cooler_volt))
+        if self.simulation:
+            sensortemp=float(random.randint(-70,20))
+            targettemp=-33.
+            AmbientTemp=18.5
+            cooler_volt=1.1
+        else:
+            print'temperautre_status:', self.atm.GetTemperatureStatus(byref(sensortemp),byref(targettemp),byref(AmbientTemp),byref(cooler_volt))
         print 'sensortemp:',
         print sensortemp
         print 'targettemp',
         print targettemp
-
-    def closing_camera(self):
-        print 'closing camera start'
-        temperature=self.gettemperature()
-        while temperature<-1:
-            self.low_temperature=True
-            time.sleep(30)
-            temperature=self.gettemperature()
-        self.low_temperature=False
-        self.close()
-
-
-
