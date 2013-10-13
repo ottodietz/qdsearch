@@ -9,7 +9,7 @@ from pyface.api import error,warning,information
 import time
 from ctypes import *
 import pickle
-import numpy
+import numpy as np
 from threading import Thread
 from enable.api import BaseTool
 from time import sleep
@@ -44,7 +44,6 @@ class PlotTool(BaseTool):
         [x,y]=self.component.map_data((event.x,event.y))
         main.plot_spectrum(x,y,'compare')
 
-
 class counts_thread(Thread):
     def run(self):
         while not self.wants_abort:
@@ -73,8 +72,8 @@ class MainWindow(HasTraits):
     x2=CFloat(2.15)
     y1=CFloat(2.1)
     y2=CFloat(2.2)
-    width_step=CFloat(0.025)
-    height_step=CFloat(0.025)
+    x_stepsize=CFloat(0.025)
+    y_stepsize=CFloat(0.025)
     threshold_counts=CFloat(2000)
     counts=CFloat(125)
     scan_sample=Button()
@@ -85,11 +84,13 @@ class MainWindow(HasTraits):
     y_koords=[]
     spectra=[]
     wavelength=CFloat(0)
-    plot=Instance(Plot)
-    plot_current=Instance(Plot)
-    plot_compare=Instance(Plot)
+    plot=Instance(Plot,())
+    plot_current=Instance(Plot,())
+    plot_compare=Instance(Plot,())
 
-    ispectrometer = Instance( views.spectrometer.SpectrometerGUI )
+    counts_thread = counts_thread()
+    ispectrometer = Instance( views.spectrometer.SpectrometerGUI ) # No ",()" as below, Instance is created in _ispectrometer_default
+    icryo         = Instance(views.cryo.CryoGUI,())
 
     # Set CameraGUI for GUI Handler
     def _ispectrometer_default(self):
@@ -97,36 +98,33 @@ class MainWindow(HasTraits):
         self.icamera = ispectrometer.icamera
         return ispectrometer
 
-    icryo=Instance(views.cryo.CryoGUI,())
     hide_during_scan = { 'enabled_when': 'finished==True'}
+    hide_no_scan = { 'enabled_when': 'finished==True'}
     hide = { 'enabled_when': 'False'}
-    scanning=Group(
+    scan_ctrl=VGroup(
             Item('textfield',label='Step width by scanning',style='readonly'),
             HGroup(Item('x1',label='x1 [mm]'),
                    Item('x2', label='x2 [mm]'),
-                   Item('width_step',label='width step (x) [mm]  '),Spring(),
-                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),
+                   Item('x_stepsize',label='width step (x) [mm]  '),
+                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),Spring(),
                    Item('scan_sample_step',label='Scan',show_label=False),
                    **hide_during_scan
                   ),
-            HGroup(HGroup(
-                   Item('y1',label='y1 [mm]'),
-                   Item('y2',label='y2 [mm]'),
-                   Item('height_step',label='height step (y) [mm] '),
-                   Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float)),
-                   **hide_during_scan
-                   ),
-                  Item('abort',show_label=False)
+            HGroup(Item('y1',label='y1 [mm]',**hide_during_scan),
+                   Item('y2',label='y2 [mm]',**hide_during_scan),
+                   Item('y_stepsize',label='height step (y) [mm] ',**hide_during_scan),
+                   Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide_during_scan),Spring(),
+                   Item('abort',show_label=False,**hide_no_scan)
                   ))
-# Item('x', ),
+
+    scan_plots=HGroup(
+          Item('plot',editor=ComponentEditor(),show_label=False),
+          VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,springy=False),
+                 Item('plot_compare',editor=ComponentEditor(),show_label=False),springy=False)
+          )
     scan_sample_group =  VGroup(
-         HGroup(
-          Item('plot',editor=ComponentEditor(),show_label=False,height=100,width=200),
-          VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,height=50,width=200),
-                 Item('plot_compare',editor=ComponentEditor(),show_label=False,height=50,width=200)
-                )
-          ),
-         HGroup(scanning),
+         scan_ctrl,
+         scan_plots,
          label='scan sample')
 
     inst_group = Group(
@@ -155,7 +153,6 @@ class MainWindow(HasTraits):
         self.run_counts_thread()
 
     def run_counts_thread(self):
-        self.counts_thread = counts_thread()
         self.counts_thread.wants_abort = False
         self.counts_thread.caller = self
         self.counts_thread.VoltPerCount = self.VoltPerCount
@@ -180,77 +177,53 @@ class MainWindow(HasTraits):
             thread.start_new_thread(self.scanning_step,())
 
     def scanning_step(self):
+
         if self.ispectrometer.icamera.camera.init_active:
-            information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
-        else:
-            #self.icryo.cryo.cryo_refresh=False
-            self.searching=True
-            self.finished=False
-            x1=self.x1
-            self.x_koords=[]
-            self.y_koords=[]
-            self.spectra=[]
-            y1=self.y1
-            x2=self.x2
-            y2=self.y2
-            if x1>x2:
-                temp=x1
-                x1=x2
-                x2=temp
-            if y1>y2:
-                temp=y1
-                y1=y2
-                y2=temp
-            x_start=x1
-            y_start=y1
-            x_target=x1
-            y_target=y2
-            f = open('measurement/last_measurement.pick', "w") # creates new file
-            f.close()
-            self.usedgrating=self.ispectrometer.current_grating
-            self.usednm=self.ispectrometer.input_nm
+            information(parent=None, title="please wait", 
+             message="The initialization of the camera is running. " + \
+             "Please wait until the initialization is finished.")
+            return False
 
-            if y_start<y_target:
-                sign=1
-            else:
-                sign=-1
+        #self.icryo.cryo.cryo_refresh=False
+        self.searching=True
+        self.finished=False
+        self.x_koords=[]
+        self.y_koords=[]
+        self.spectra=[]
 
-            self.icryo.cryo.move(x_start,y_start) #faehrt zum startpunkt
-            if self.ispectrometer.current_exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
-                 self.ispectrometer.current_exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
-            self.icryo.cryo.waiting() #wartet bis cryo dort angekommen
-            [x,y]=self.icryo.cryo.convert_output(self.icryo.cryo.position())
+        if self.x1>self.x2:
+            self.x2,self.x1 = self.x1,self.x2
+        
+        if self.y1>self.y2:
+            self.y1,self.y2=self.y2,self.y1
+        
+        f = open('measurement/last_measurement.pick', "w") # creates new file
+        f.close()
+        self.usedgrating=self.ispectrometer.current_grating
+        self.usednm=self.ispectrometer.input_nm
 
-            while not self.finished:
-                while ((y<y_target and sign==1) or (y>y_target and sign==-1)) and not self.finished:
-                    if self.threshold_counts < self.ispectrometer.ivolt.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
-                            self.take_spectrum()
-                    [x,y]=self.icryo.cryo.convert_output(self.icryo.cryo.position()) #die werte koennten aus zu letzt gespeicherten oder aber von take spectrum uebergeben werden
-                    self.plot_map([x],[y],x1,x2,y1,y2)
-                    if  (y<y_target and sign==1) or(y>y_target and sign==-1):
-                        self.icryo.cryo.move(x,y+sign*self.height_step) # faehrt stueck weiter um von QD weg zusein
-                        self.icryo.cryo.waiting()
+        if self.ispectrometer.current_exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+             self.ispectrometer.current_exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
 
-                """ the comparasion is with calculated values it would be better to take the actuall postion of the cryo"""
-                """by calculating they are internal rounding erros and than it run one time more than it should"""
-                if (x_target>=x2 and (y_target>=y2 or y_target<=y1)) or self.finished: #check if end coordinates are reached
-                    self.finished=True
-                else:
-                    """instead of calculating new values relative move could be used"""
-                    # calculates x value for next searching
-                    x_start=x_target
-                    x_target=x_target+self.width_step
-                    [x,y]=self.icryo.cryo.convert_output(self.icryo.cryo.position())
-                    self.icryo.cryo.move(x_target,y_target) #goes to new x coordinate
-                    self.icryo.cryo.waiting()
-                    [x,y]=self.icryo.cryo.convert_output(self.icryo.cryo.position())
+        self.icryo.cryo.waiting() #wartet bis cryo bereit
 
-                     # calculates y value for next searching
-                    temp=y_start
-                    y_start=y_target
-                    y_target=temp
-                    sign=sign*-1
-            print 'searching finish'
+        #TODO das hier gehört nach cryo
+        # [x,y] = self.icryo.cryo.get_numeric_position()
+        #x,y=self.icryo.cryo.convert_output(self.icryo.cryo.position())
+
+        x_pos,y_pos = self.calc_snake_xy_pos()
+
+        for i in range(len(x_pos)):
+            self.icryo.cryo.move(x_pos[i],y_pos[i])
+            self.icryo.cryo.waiting()
+            # get actuall position, maybe x_pos[i] != x
+            x,y=self.icryo.cryo.pos()
+            if self.threshold_counts < self.ispectrometer.ivolt.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
+                self.take_spectrum(x,y)
+            self.plot_map(x,y)
+
+        self.finished = True
+        print 'searching finish'
 
 
     def _abort_fired(self):
@@ -259,26 +232,25 @@ class MainWindow(HasTraits):
         self.icryo.cryo.stop() #stopt cryo
         print 'abort'
 
-    def take_spectrum(self):
-        spectrum=[]
+    def take_spectrum(self,x,y):
         self.ispectrometer.current_exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
-        time.sleep(0.5) # for slowing mirrors
-        if not self.ispectrometer.icamera.checkbox_camera:
-            c_spectrum=self.ispectrometer.icamera.camera.acquisition() # nimmt das spektrum auf
-        else:
-            c_spectrum=(c_float * 5)(1, 2,5,6)
-            time.sleep(1) # for slowing mirrors
+        time.sleep(1) # don't switch mirrors too fast!
+        c_spectrum=self.ispectrometer.icamera.camera.acquisition() # nimmt das spektrum auf
+        
+        spectrum=[]
         for i in range(len(c_spectrum)):
             spectrum.append(c_spectrum[i])
+
         self.ispectrometer.current_exit_mirror='side (APDs)' # klappt spiegel vom spectro auf ausgang um
-        [x,y]=self.icryo.cryo.convert_output(self.icryo.cryo.position()) #speichert die aktuellen koordinaten ab
+        
+        # warning: we don't check if we are still at the same position!
+        
         self.x_koords.append(x)
         self.y_koords.append(y)
         self.spectra.append(spectrum)
-        self.save_to_file(x,y,spectrum)
-        spectrum=[]
+        self.add_to_file(x,y,spectrum)
 
-    def save_to_file(self,x,y,spectrum):
+    def add_to_file(self,x,y,spectrum):
         f = open('measurement/last_measurement.pick', "a")
         pickle.dump([x,y,spectrum],f)
         f.close()
@@ -288,25 +260,19 @@ class MainWindow(HasTraits):
         reload(views.cryo)
         reload(views.spectrometer)
 
-    def plot_map(self,*optional):
-        if len(optional)>1:
-            plotdata = ArrayPlotData(x=self.x_koords, y=self.y_koords,x2=optional[0],y2=optional[1])
-        else:
-             plotdata = ArrayPlotData(x=self.x_koords, y=self.y_koords)
+    def plot_map(self,x,y):
+        plotdata = ArrayPlotData(x=self.x_koords, y=self.y_koords,x2=[x],y2=[y])
         plot = Plot(plotdata)
         plot.plot(("x", "y"), type="scatter", color="blue")
         plot.title = ""
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
         plot.tools.append(PanTool(plot, constrain_key="shift"))
         plot.tools.append(PlotTool(component=plot))
-        if len(optional)>1:
-            plot.plot(('x2','y2'),type='scatter',color='red')
-        if len(optional)>3:
-            plot.range2d.x_range.low=optional[2]
-            plot.range2d.x_range.high=optional[3]
-        if len(optional)>5:
-            plot.range2d.y_range.low=optional[4]
-            plot.range2d.y_range.high=optional[5]
+        plot.plot(('x2','y2'),type='scatter',color='red')
+        plot.range2d.x_range.low=self.x1
+        plot.range2d.x_range.high=self.x2
+        plot.range2d.y_range.low=self.y1
+        plot.range2d.y_range.high=self.y2
         plot.x_axis.title="x-Position on sample [mm]"
         plot.y_axis.title="y-Position on sample [mm]"
         self.plot=plot
@@ -337,7 +303,7 @@ class MainWindow(HasTraits):
             x_min=0
             x_max=number_y_values
         stepwise=(x_max-x_min)/float(number_y_values)
-        x_axis=numpy.arange(x_min+self.offset*stepwise,x_max+self.offset*stepwise,stepwise)
+        x_axis=np.arange(x_min+self.offset*stepwise,x_max+self.offset*stepwise,stepwise)
         return(x_axis)
 
     def plot_spectrum(self,x,y,field):
@@ -391,8 +357,8 @@ class MainWindow(HasTraits):
             self.y1= value[0][3]
             self.x2= value[0][4]
             self.y2= value[0][5]
-            self.width_step=value[0][6]
-            self.height_step=value[0][7]
+            self.x_stepsize=value[0][6]
+            self.y_stepsize=value[0][7]
             self.threshold_counts= value[0][8]
             for i in range(1,len(value)):
                 x.append(value[i][0])
@@ -406,7 +372,7 @@ class MainWindow(HasTraits):
         self.x_koords=x
         self.y_koords=y
         self.spectra=spectrum
-        self.plot_map()
+        self.plot_map(0,0)
 
     def save_to(self):
         file_name = save_file()
@@ -423,11 +389,37 @@ class MainWindow(HasTraits):
 
     def save_file(self):
         f = open(self.file_name, "w")
-        settings=[self.ispectrometer.input_goto,self.ispectrometer.current_grating,self.x1,self.x2,self.y1,self.y2, self.width_step, self.height_step, self.threshold_counts]
+        settings=[self.ispectrometer.input_goto,self.ispectrometer.current_grating,self.x1,self.x2,self.y1,self.y2, self.x_stepsize, self.y_stepsize, self.threshold_counts]
         pickle.dump(settings,f)
         for i in range(len(self.x_koords)):
             pickle.dump([self.x_koords[i],self.y_koords[i],self.spectra[i]],f)
         f.close()
+
+    def calc_snake_xy_pos(self):
+        dist_x = abs(self.x2-self.x1)
+        dist_y = abs(self.y2-self.y1)
+        a = np.linspace(self.x1,self.x2,dist_x/self.x_stepsize)
+        b = np.linspace(self.y1,self.y2,dist_x/self.y_stepsize)
+
+        a = a.round(5)
+        b = b.round(5)
+
+        stepsa = len(a)
+        stepsb = len(b)
+
+        # we go snake-lines, so in the first y-step x=1,2 and in the
+        # second y-step (the way back) x=2,1 . 
+        # Make a containing these two lines
+        # a = [1,2] -> [1,2,2,1]
+        a = np.array((a,np.flipud(a))).flatten()
+        # repeat entire array a. This creates too many lines.
+        a = np.tile  (a,stepsb)
+        # within one line, y doesn't change, so repeat every element in b
+        b = np.repeat(b,stepsa)
+        #  discard unecessary elements in a
+        a = np.resize(a,len(b))
+        return [a,b]
+
 
 
 
@@ -448,3 +440,5 @@ if __name__ == '__main__':
         main.ispectrometer.ivolt.close()
     if not main.ispectrometer.icamera.checkbox_camera:
         main.ispectrometer.icamera.camera.close()
+
+
