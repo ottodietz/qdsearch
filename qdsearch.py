@@ -41,6 +41,7 @@ class PlotTool(BaseTool):
         main.plot_spectrum(x,y,'current')
 
     def normal_right_down(self,event):
+        print "right mouse"
         [x,y]=self.component.map_data((event.x,event.y))
         main.plot_spectrum(x,y,'compare')
 
@@ -102,28 +103,28 @@ class MainWindow(HasTraits):
     hide_no_scan = { 'enabled_when': 'finished==True'}
     hide = { 'enabled_when': 'False'}
     scan_ctrl=VGroup(
-            Item('textfield',label='Step width by scanning',style='readonly'),
-            HGroup(Item('x1',label='x1 [mm]'),
-                   Item('x2', label='x2 [mm]'),
-                   Item('x_stepsize',label='width step (x) [mm]  '),
+            Item('textfield',label='Scan from / to / stepsize [mm]',style='readonly'),
+            HGroup(Item('x1',label='x'),
+                   Item('x2',show_label=False),
+                   Item('x_stepsize',show_label=False,label='width step (x) [mm]  '),
                    Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),Spring(),
                    Item('scan_sample_step',label='Scan',show_label=False),
                    **hide_during_scan
                   ),
-            HGroup(Item('y1',label='y1 [mm]',**hide_during_scan),
-                   Item('y2',label='y2 [mm]',**hide_during_scan),
-                   Item('y_stepsize',label='height step (y) [mm] ',**hide_during_scan),
+            HGroup(Item('y1',label='y',**hide_during_scan),
+                   Item('y2',show_label=False,label='y2 [mm]',**hide_during_scan),
+                   Item('y_stepsize',show_label=False,label='height step (y) [mm] ',**hide_during_scan),
                    Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide_during_scan),Spring(),
                    Item('abort',show_label=False,**hide_no_scan)
                   ))
 
     scan_plots=HGroup(
-          Item('plot',editor=ComponentEditor(),show_label=False),
-          VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False,springy=False),
-                 Item('plot_compare',editor=ComponentEditor(),show_label=False),springy=False)
+            VGroup(Item('plot',editor=ComponentEditor(),show_label=False),scan_ctrl),
+          VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False),
+                 Item('plot_compare',editor=ComponentEditor(),show_label=False)
+                )
           )
     scan_sample_group =  VGroup(
-         scan_ctrl,
          scan_plots,
          label='scan sample')
 
