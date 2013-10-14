@@ -7,7 +7,7 @@ contains:
 
 qdsearch.py - main program
 
-controls/simserial.py - Simulate Serial Devices with Python
+controls/simserial.py - simulate serial devices with python
 
 controls/ - controls for different devices 
 
