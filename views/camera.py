@@ -2,15 +2,16 @@
 from traits.api import*
 from traitsui.api import*
 from traitsui.menu import OKButton, CancelButton
-import pylab
+from chaco.api import Plot, ArrayPlotData
+from chaco.tools.api import PanTool, ZoomTool
+from enable.component_editor import ComponentEditor
 import thread
 import time
 from ctypes import *
 
-import controls.camera as control_camera
-reload (control_camera)
+import controls.camera
+reload (controls.camera)
 
-from controls.camera import Camera
 from pyface.api import error,warning,information
 
 class CameraGUIHandler(Handler):
@@ -42,59 +43,94 @@ class CameraGUIHandler(Handler):
         return True
 
 class CameraGUI(HasTraits):
-    camera=Camera()
+    camera=controls.camera.Camera()
     iCameraGUIHandler = CameraGUIHandler()
-
-    checkbox_camera=Bool(True)
+    acq_active = False
+    simulate_camera=Bool(True)
     cooler=Bool(False)
-    plot=Button()
-    acquisition=Button()
-    status=Button()
+    single=Button()
+    continous=Button()
     settemperature=Range(low=-70,high=20,value=20)
 
     """menu"""
     readmode=Int(0)
     acquisitionmode=Int(1)
-    exposuretime=Range(low=0.0001,high=10,value=0.1)
+    exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
     output=Str()
+    plot = Instance(Plot,())
 
-    view_menu=View(VGroup(
-                        HGroup(Item('acquisition',show_label=False), Item('plot',show_label=False)),
-                        HGroup(Item('settemperature'),Item('status',show_label=False)),
-                        HGroup(Item('cooler'),Item('checkbox_camera',label='Simulation camera')),
-                        HGroup(Item('output',label='Camera output',
-                            style='readonly')),
-                        VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'))
-                        ),
-                        resizable = True )
 
+#    view_menu=View(HGroup(VGroup(
+#                        HGroup(Item('single',show_label=False), Item('plot',show_label=False)),
+#                        Item('settemperature'),
+#                        HGroup(Item('cooler'),Item('simulate_camera',label='Simulation camera')),
+#                        HGroup(Item('output',label='Camera output',
+#                            style='readonly')),
+#                        VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'))
+#                        ),
+#                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
+#                        resizable = True )
+#
     menu_action = Action(name='camera menu', accelerator='Ctrl+p', action='call_menu')
     mi_reload = Action(name='reload camera module', accelerator='Ctrl+r',
             action='reload_camera')
 
     menu=Menu(menu_action,mi_reload,name='Camera')
 
-    traits_view=View(VGroup(
-                        HGroup(Item('acquisition',label='Single',show_label=False),Item('plot',show_label=False)),
-                        Item('exposuretime'),
-                        HGroup(Item('checkbox_camera',label='Simulation camera')),
-                        HGroup(Item('output',label='Camera output', style='readonly'))
+    readmodes = Enum('Full Vertical Binning','Image')
+            #SetReadMode(0)
+
+            #SetReadMode(4);
+            #SetImage(1,1,1,1024,1,256);
+
+    Vshiftspeed = Enum(1,2,3)
+    Hshiftspeed = Enum(1,2,3)
+#GetNumberHSSpeeds(0, 0, &a); //first A-D, request data speeds for (I = 0; I <
+#        a;I++)
+#GetHSSpeed(0, 0, I, &speed[I]);
+#SetHSSpeed(0, 0); /* Fastest speed */
+
+    continous_label = Str('Continous')
+
+
+    traits_view=View(HGroup(VGroup(
+                        HGroup(Item('single',label='Single',show_label=False),
+                               Item('continous',show_label=False,editor=ButtonEditor(label_value = 'continous_label'))),
+                        HGroup(Item('exposuretime'),Item('simulate_camera',label='simulate camera')),
+                        Item('readmodes'),
+                        Item('Vshiftspeed'),
+                        Item('Hshiftspeed')
                        ),
+                       Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
                        handler=iCameraGUIHandler,
                        resizable = True, menubar=MenuBar(menu) )
 
-    def _acquisition_changed(self):
+    def _single_fired(self):
+
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
             while self.camera.init_active:
                 time.sleep(.5)
         else:
             self.line=self.camera.acquisition()
+            self.plot_data()
 
 
-    def _plot_fired(self):
-        pylab.plot(self.line[:])
-        pylab.show()
+    def plot_data(self):
+        plotdata = ArrayPlotData(x=self.line[:])
+        plot = Plot(plotdata)
+        plot.plot(("x"),  color="blue")
+        plot.title = ""
+        plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
+        plot.tools.append(PanTool(plot, constrain_key="shift"))
+        #plot.tools.append(PlotTool(component=plot))
+        #plot.range2d.x_range.low=self.x1
+        #plot.range2d.x_range.high=self.x2
+        #plot.range2d.y_range.low=self.y1
+        #plot.range2d.y_range.high=self.y2
+        plot.x_axis.title="x-Position on sample [mm]"
+        plot.y_axis.title="y-Position on sample [mm]"
+        self.plot=plot
 
     def _settemperature_changed(self):
         if self.camera.init_active:
@@ -102,32 +138,36 @@ class CameraGUI(HasTraits):
         else:
             self.camera.settemperature(self.settemperature)
 
-    def _status_fired(self):
-        self.camera.gettemperature_status()
-        self.camera.gettemperature_range()
-        self.temperature = self.camera.gettemperature()
-
-
-    def _checkbox_camera_changed(self):
+    def _simulate_camera_changed(self):
         if self.camera.init_active:
-            information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
-            self.change_checkbox()
-        else:
-
-            if self.checkbox_camera:
+            information(parent=None, title="please wait", message="The"+\
+                    "initialization of the camera is running. "+\
+                    "Please wait until the initialization is finished.")
+            return False
+        if self.simulate_camera:
                 self.cooler=False
                 if self.camera.gettemperature() >-1:
-                    thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,))#last argument must be a n-tuple n=1 z.B. (True,) 
+                    thread.start_new_thread(self.camera.toggle_simulation,(self.simulate_camera,))#last argument must be a n-tuple n=1 z.B. (True,) 
                 else:
                     information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
                     thread.start_new_thread(self.change_checkbox,())
-            else:
-                thread.start_new_thread(self.camera.toggle_simulation,(self.checkbox_camera,)) # if the simulation was runing it can be deactivate
+        else:
+                thread.start_new_thread(self.camera.toggle_simulation,(self.simulate_camera,)) # if the simulation was runing it can be deactivate
 
+    def acq_thread(self):
+        self.continous_label = 'Stop'
+        while self.acq_active:
+            self._single_fired()
+        self.continous_label = 'Continous'
+
+    def _continous_fired(self):
+        self.acq_active = not self.acq_active
+        if self.acq_active: 
+            thread.start_new_thread(self.acq_thread,())
 
     def change_checkbox(self):
         time.sleep(.2)
-        self.checkbox_camera=False
+        self.simulate_camera=False
 
     def _cooler_changed(self):
         if self.cooler:
@@ -152,7 +192,7 @@ class CameraGUI(HasTraits):
 
     def reload_camera(self):
        print "reload"
-       reload(control_camera)
+       reload(controls.camera)
 
 
 

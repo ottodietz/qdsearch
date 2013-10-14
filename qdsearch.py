@@ -102,6 +102,7 @@ class MainWindow(HasTraits):
     hide_during_scan = { 'enabled_when': 'finished==True'}
     hide_no_scan = { 'enabled_when': 'finished==False'}
     hide = { 'enabled_when': 'False'}
+
     scan_ctrl=VGroup(
             Item('textfield',label='Scan from / to / stepsize [mm]',style='readonly'),
             HGroup(Item('x1',label='x'),
@@ -118,29 +119,30 @@ class MainWindow(HasTraits):
                    Item('abort',show_label=False,**hide_no_scan),
                   ))
 
-    scan_plots=HGroup(
-            VGroup(Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False),scan_ctrl),
+    scan_sample_group=HGroup(
+          VGroup(
+              Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False),
+              scan_ctrl
+              ),
           VGroup(Item('plot_current',editor=ComponentEditor(size=(100,200)),show_label=False),
                  Item('plot_compare',editor=ComponentEditor(size=(100,200)),show_label=False)
-                )
+                ),
+         label='scan sample'
           )
-    scan_sample_group =  VGroup(
-         scan_plots,
-         label='scan sample')
 
-    inst_group = Group(
+    tabs = Group(
         Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
         Item('ispectrometer', style = 'custom',show_label=False, label="spectrometer", enabled_when='finished==True'),
         scan_sample_group,
         layout='tabbed')
 
     traits_view = View(
-        inst_group,
+        tabs,
      menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,views.spectrometer.SpectrometerGUI.camera_menu,scan_sample_menu),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
     handler=CameraGUIHandler(),
-    resizable = True#,width=100, height=100
+    resizable = True
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
