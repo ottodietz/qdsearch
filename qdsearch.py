@@ -100,28 +100,28 @@ class MainWindow(HasTraits):
         return ispectrometer
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
-    hide_no_scan = { 'enabled_when': 'finished==True'}
+    hide_no_scan = { 'enabled_when': 'finished==False'}
     hide = { 'enabled_when': 'False'}
     scan_ctrl=VGroup(
             Item('textfield',label='Scan from / to / stepsize [mm]',style='readonly'),
             HGroup(Item('x1',label='x'),
                    Item('x2',show_label=False),
                    Item('x_stepsize',show_label=False,label='width step (x) [mm]  '),
-                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),Spring(),
-                   Item('scan_sample_step',label='Scan',show_label=False),
+                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),
+                   Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float)),
                    **hide_during_scan
                   ),
             HGroup(Item('y1',label='y',**hide_during_scan),
                    Item('y2',show_label=False,label='y2 [mm]',**hide_during_scan),
                    Item('y_stepsize',show_label=False,label='height step (y) [mm] ',**hide_during_scan),
-                   Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide_during_scan),Spring(),
-                   Item('abort',show_label=False,**hide_no_scan)
+                   Item('scan_sample_step',label='Scan',show_label=False,**hide_during_scan),
+                   Item('abort',show_label=False,**hide_no_scan),
                   ))
 
     scan_plots=HGroup(
-            VGroup(Item('plot',editor=ComponentEditor(),show_label=False),scan_ctrl),
-          VGroup(Item('plot_current',editor=ComponentEditor(),show_label=False),
-                 Item('plot_compare',editor=ComponentEditor(),show_label=False)
+            VGroup(Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False),scan_ctrl),
+          VGroup(Item('plot_current',editor=ComponentEditor(size=(100,200)),show_label=False),
+                 Item('plot_compare',editor=ComponentEditor(size=(100,200)),show_label=False)
                 )
           )
     scan_sample_group =  VGroup(
@@ -140,7 +140,7 @@ class MainWindow(HasTraits):
     title   = 'qdsearch',
     buttons = [ 'OK' ],
     handler=CameraGUIHandler(),
-    resizable = True
+    resizable = True#,width=100, height=100
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
@@ -186,7 +186,6 @@ class MainWindow(HasTraits):
             return False
 
         #self.icryo.cryo.cryo_refresh=False
-        self.searching=True
         self.finished=False
         self.x_koords=[]
         self.y_koords=[]
@@ -203,6 +202,7 @@ class MainWindow(HasTraits):
         self.usedgrating=self.ispectrometer.current_grating
         self.usednm=self.ispectrometer.input_nm
 
+
         if self.ispectrometer.current_exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
              self.ispectrometer.current_exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
 
@@ -215,6 +215,8 @@ class MainWindow(HasTraits):
         x_pos,y_pos = self.calc_snake_xy_pos()
 
         for i in range(len(x_pos)):
+            if self.finished:
+                break # abort condition
             self.icryo.cryo.move(x_pos[i],y_pos[i])
             self.icryo.cryo.waiting()
             # get actuall position, maybe x_pos[i] != x
@@ -229,7 +231,6 @@ class MainWindow(HasTraits):
 
     def _abort_fired(self):
         self.finished=True
-        self.searching=False
         self.icryo.cryo.stop() #stopt cryo
         print 'abort'
 
