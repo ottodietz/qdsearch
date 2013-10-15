@@ -14,7 +14,7 @@ class Camera():
     exposuretime=c_float(0.1)
     simulation=True
 
-    def toggle_simulation(self,caller):
+    def toggle_simulation(self):
         self.simulation = not self.simulation
         if not self.simulation and not self.camera_active:
             self.init_active=True
@@ -32,7 +32,7 @@ class Camera():
                 self.simulation=True
             finally:
                 self.init_active=False
-        caller = self.simulation
+        return self.simulation
 
 
     def acquisition(self):

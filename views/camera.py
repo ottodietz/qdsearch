@@ -1,4 +1,5 @@
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from traits.api import*
 from traitsui.api import*
 from traitsui.menu import OKButton, CancelButton
@@ -18,6 +19,8 @@ class CameraGUI(HasTraits):
     camera=controls.camera.Camera()
 
     acq_active = False
+    toggle_active = False
+
     simulate_camera=Bool(True)
     cooler=Bool(False)
     single=Button()
@@ -109,8 +112,16 @@ class CameraGUI(HasTraits):
         self.camera.settemperature(self.settemperature)
 
     def _simulate_camera_changed(self):
-        self.ensure_init()
-        self.camera.toggle_simulation()
+        # wenn es nicht schon läuft, schicke self.toggle_simulate() in den
+        # Hintergrund
+        if not self.toggle_active:
+            self.toggle_active = True
+            thread.start_new_thread(self.toggle_simulation,())
+
+    def toggle_simulation(self):
+        # camera.toggle_simulation() liefert simulieren = True/False zurück
+        self.simulate_camera = self.camera.toggle_simulation()
+        self.toggle_active = False
 
     def acq_thread(self):
         self.continous_label = 'Stop'
