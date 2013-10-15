@@ -28,7 +28,8 @@ reload(views.cryo)
 import views.spectrometer
 reload (views.spectrometer)
 
-from views.camera import CameraGUIHandler
+import views.camera 
+reload (views.camera)
 
 """events on the plot"""
 class PlotTool(BaseTool):
@@ -90,14 +91,15 @@ class MainWindow(HasTraits):
     plot_compare=Instance(Plot,())
 
     counts_thread = counts_thread()
-    ispectrometer = Instance( views.spectrometer.SpectrometerGUI ) # No ",()" as below, Instance is created in _ispectrometer_default
+    ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) # No ",()" as below, Instance is created in _ispectrometer_default
     icryo         = Instance(views.cryo.CryoGUI,())
+    icamera       = Instance(views.camera.CameraGUI,())
 
-    # Set CameraGUI for GUI Handler
-    def _ispectrometer_default(self):
-        ispectrometer = views.spectrometer.SpectrometerGUI()
-        self.icamera = ispectrometer.icamera
-        return ispectrometer
+    ## Set CameraGUI for GUI Handler
+    #def _ispectrometer_default(self):
+    #    ispectrometer = views.spectrometer.SpectrometerGUI()
+    #    self.icamera = icamera
+    #    return ispectrometer
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
     hide_no_scan = { 'enabled_when': 'finished==False'}
@@ -130,18 +132,24 @@ class MainWindow(HasTraits):
          label='scan sample'
           )
 
+    spectrometer_tab = VGroup(
+            Item('ispectrometer', style = 'custom',show_label=False),
+            Item('icamera',style = 'custom', show_label=False),
+            label='spectrometer'
+            ) 
+
     tabs = Group(
         Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
-        Item('ispectrometer', style = 'custom',show_label=False, label="spectrometer", enabled_when='finished==True'),
+        spectrometer_tab,
         scan_sample_group,
         layout='tabbed')
 
     traits_view = View(
         tabs,
-     menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,views.spectrometer.SpectrometerGUI.camera_menu,scan_sample_menu),
+     menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,scan_sample_menu),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
-    handler=CameraGUIHandler(),
+    handler=views.camera.CameraGUIHandler(),
     resizable = True
     )
 
@@ -164,9 +172,6 @@ class MainWindow(HasTraits):
     def call_cryo_menu(self):
        self.icryo.configure_traits(view='view_menu')
 
-    def call_camera_menu(self):
-       self.ispectrometer.icamera.configure_traits(view='view_menu')
-
     def call_spectrometer_menu(self):
        self.ispectrometer.configure_traits(view='view_menu')
 
@@ -181,7 +186,7 @@ class MainWindow(HasTraits):
 
     def scanning_step(self):
 
-        if self.ispectrometer.icamera.camera.init_active:
+        if self.icamera.camera.init_active:
             information(parent=None, title="please wait", 
              message="The initialization of the camera is running. " + \
              "Please wait until the initialization is finished.")
@@ -239,7 +244,7 @@ class MainWindow(HasTraits):
     def take_spectrum(self,x,y):
         self.ispectrometer.current_exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(1) # don't switch mirrors too fast!
-        c_spectrum=self.ispectrometer.icamera.camera.acquisition() # nimmt das spektrum auf
+        c_spectrum=self.icamera.camera.acquisition() # nimmt das spektrum auf
         
         spectrum=[]
         for i in range(len(c_spectrum)):
@@ -442,7 +447,7 @@ if __name__ == '__main__':
     if not main.ispectrometer.ivolt.simulation:
         print"close Voltage"
         main.ispectrometer.ivolt.close()
-    if not main.ispectrometer.icamera.checkbox_camera:
-        main.ispectrometer.icamera.camera.close()
+    if not main.icamera.simulate_camera:
+        main.icamera.camera.close()
 
 

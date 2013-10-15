@@ -14,37 +14,9 @@ reload (controls.camera)
 
 from pyface.api import error,warning,information
 
-class CameraGUIHandler(Handler):
-
-    def close(self, info, isok):
-        # Return True to indicate that it is OK to close the window.
-        try:
-            if isinstance(info.object,CameraGUI):
-                #called via CameraGUI
-                camera = info.object
-            else:
-                # called via SpectrometerGUI
-                camera = info.object.icamera
-        except AttributeError:
-            print "Warning: Parent GUI has no camera instance called icamera"
-            print "GUI is not able to warm up the camera"
-            print "This might harm the camera!"
-            print info.object
-        else:
-            if camera.cooler == True:
-                camera.cooler = False
-                temp = camera.gettemperature()
-                information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
-                while temp < 0:
-                    print "Warming up camera, pleas wait ... T=",temp,' C'
-                    temp = camera.gettemperature()
-                    sleep(3)
-            print "Camera warm up finished"
-        return True
-
 class CameraGUI(HasTraits):
     camera=controls.camera.Camera()
-    iCameraGUIHandler = CameraGUIHandler()
+
     acq_active = False
     simulate_camera=Bool(True)
     cooler=Bool(False)
@@ -102,16 +74,9 @@ class CameraGUI(HasTraits):
                         Item('Hshiftspeed')
                        ),
                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
-                       handler=iCameraGUIHandler,
                        resizable = True, menubar=MenuBar(menu) )
 
     def _single_fired(self):
-
-        if self.camera.init_active:
-            information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
-            while self.camera.init_active:
-                time.sleep(.5)
-        else:
             self.line=self.camera.acquisition()
             self.plot_data()
 
@@ -132,27 +97,20 @@ class CameraGUI(HasTraits):
         plot.y_axis.title="y-Position on sample [mm]"
         self.plot=plot
 
-    def _settemperature_changed(self):
+    def ensure_init(self): 
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
-        else:
-            self.camera.settemperature(self.settemperature)
+            while self.camera.init_active:
+                time.sleep(.5)
+ 
+
+    def _settemperature_changed(self):
+        self.ensure_init()
+        self.camera.settemperature(self.settemperature)
 
     def _simulate_camera_changed(self):
-        if self.camera.init_active:
-            information(parent=None, title="please wait", message="The"+\
-                    "initialization of the camera is running. "+\
-                    "Please wait until the initialization is finished.")
-            return False
-        if self.simulate_camera:
-                self.cooler=False
-                if self.camera.gettemperature() >-1:
-                    thread.start_new_thread(self.camera.toggle_simulation,(self.simulate_camera,))#last argument must be a n-tuple n=1 z.B. (True,) 
-                else:
-                    information(parent=None, title="please wait", message="Please wait until the temperature of the camera is above 0 degrees.")
-                    thread.start_new_thread(self.change_checkbox,())
-        else:
-                thread.start_new_thread(self.camera.toggle_simulation,(self.simulate_camera,)) # if the simulation was runing it can be deactivate
+        self.ensure_init()
+        self.camera.toggle_simulation()
 
     def acq_thread(self):
         self.continous_label = 'Stop'
@@ -193,10 +151,7 @@ class CameraGUI(HasTraits):
     def reload_camera(self):
        print "reload"
        reload(controls.camera)
-
-
-
 if __name__=="__main__":
     main=CameraGUI()
     main.configure_traits()
-
+    main.camera.close()

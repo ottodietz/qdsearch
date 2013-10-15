@@ -14,19 +14,25 @@ class Camera():
     exposuretime=c_float(0.1)
     simulation=True
 
-    def toggle_simulation(self,simulation):
-        self.init_active=True
-        if self.simulation:
-            self.close()
-        if not self.simulation:
-            self.atm=WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
-            self.camera_active=True
-            print "Init:", self.atm.Initialize(None)
-            print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
-            print "SetReadMode:",self.atm.SetReadMode(self.readmode) #FullverticalBinning
-            print "SetAcqMode:",self.atm.SetAcquisitionMode(self.acquisitionmode) # single shoot
-            print "SetExpTime:",self.atm.SetExposureTime(self.exposuretime) #Belichtungsdauer
-        self.init_active=False
+    def toggle_simulation(self,caller):
+        self.simulation = not self.simulation
+        if not self.simulation and not self.camera_active:
+            self.init_active=True
+            try: 
+                self.atm = WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
+                print "Init:", self.atm.Initialize(None)
+                print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
+                print "SetReadMode:",self.atm.SetReadMode(self.readmode) #FullverticalBinning
+                print "SetAcqMode:",self.atm.SetAcquisitionMode(self.acquisitionmode) # single shoot
+                print "SetExpTime:",self.atm.SetExposureTime(self.exposuretime) #Belichtungsdauer 
+                self.camera_active=True
+            except (NameError,) as e:
+                print "Camera init failed: ",e
+                self.camera_active=False
+                self.simulation=True
+            finally:
+                self.init_active=False
+        caller = self.simulation
 
 
     def acquisition(self):
@@ -44,11 +50,22 @@ class Camera():
         return(line)
 
     def close(self):
-        self.camera_active=False
-        if self.simulation:
-            print "ShutDown: Simulation"
-            return True
-        print "ShutDown:", self.atm.ShutDown()
+        if self.camera_active:
+            temp = self.gettemperature()
+            print "Camera at ", temp, ' C'
+            if temp < -20:
+                temp = self.settemperature(-20)
+                self.cooler_on()
+                while temp < -20:
+                    print "Warming up self, pleas wait ... T=",temp,' C'
+                    sleep(2)
+                    temp = self.getemperature()
+            print "Camera warm up finished"
+            self.cooler_off()
+            print "ShutDown:", self.atm.ShutDown()
+        else:
+            print "Camera: Simulate Shutdown"
+        self.camera_active = False
 
     def gettemperature(self):
         temperature=c_long()
@@ -105,3 +122,8 @@ class Camera():
         print sensortemp
         print 'targettemp',
         print targettemp
+
+if __name__ == "__main__":
+    c = Camera()
+    c.toggle_simulation(True)
+    c.close()
