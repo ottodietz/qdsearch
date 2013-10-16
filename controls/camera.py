@@ -125,5 +125,5 @@ class Camera():
 
 if __name__ == "__main__":
     c = Camera()
-    c.toggle_simulation(True)
+    c.toggle_simulation()
     c.close()
