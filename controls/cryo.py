@@ -20,11 +20,15 @@ class Cryo(SimSerial):
     def _identify(self,string):
         self.buffer="identify"
 
-    def position(self):
+    def pos(self):
         self.flushInput()
         self.write("p \r")
-        temp=self.readline()
-        return(temp)
+        string=self.readline()
+        string=string.replace('    ','')
+        string=string.split(' ')
+        x=float(string[2])
+        y=float(string[3])
+        return x,y
 
     #simulation position
     def _p(self,string):
@@ -71,26 +75,13 @@ class Cryo(SimSerial):
         self.flushInput()
         self.write('st \r')
         tmp=self.readline()
-        return(int(tmp[0]))
+        return  int(tmp[0])
 
     def _st(self,string):
         self.buffer='0'
 
     def stop(self):
         self.write('\x03 \r') #ctrl +c
-
-    def convert_output(self,string):
-        string=string.replace('    ','')
-        string=string.split(' ')
-##        a=string.find(" ")
-##        b=string.find(" ",a+1)
-##        c=string.find(" ",b+1)
-##        d=string.find(" ",c+1)
-##        x=float(string[b:c])
-##        y=float(string[c+1:d])
-        x=float(string[2])
-        y=float(string[3])
-        return(x,y)
 
     def waiting(self):
         running=True

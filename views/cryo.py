@@ -100,7 +100,7 @@ class CryoGUI(HasTraits):
 
 
     def _position_fired(self):
-        self.output=self.cryo.position()
+        self.output=str(self.cryo.pos())
 
     def _cal_fired(self):
         self.output=self.cryo.cal()
@@ -164,13 +164,12 @@ class CryoGUI(HasTraits):
     def _checkbox_changed(self):
         self.cryo.toggle_simulation()
         if not self.checkbox:
-            position=self.cryo.position()
-            [self.movex,self.movey]=self.cryo.convert_output(position)
+            self.movex,self.movey=self.cryo.pos()
 
     def refresh_cryo_gui(self):
         while self.cryo_refresh:
             try:
-                self.output=self.cryo.position()
+                self.output=str(self.cryo.pos())
             except:
                 pass
             time.sleep(2)

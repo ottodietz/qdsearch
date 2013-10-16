@@ -127,7 +127,7 @@ class Spectro(SimSerial):
         while (not finish):
             temp=self.readline()
             if temp.find("ok") !=-1:
-                print "found"
+                print "spectrometer ready"
                 finish=True
             time.sleep(1)
 
