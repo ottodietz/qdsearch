@@ -162,7 +162,10 @@ class CameraGUI(HasTraits):
     def reload_camera(self):
        print "reload"
        reload(controls.camera)
+
+    def close(self):
+        self.camera.close()
 if __name__=="__main__":
     main=CameraGUI()
     main.configure_traits()
-    main.camera.close()
+    main.close()

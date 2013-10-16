@@ -149,7 +149,6 @@ class MainWindow(HasTraits):
      menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,scan_sample_menu),
     title   = 'qdsearch',
     buttons = [ 'OK' ],
-    handler=views.camera.CameraGUIHandler(),
     resizable = True
     )
 
@@ -447,7 +446,6 @@ if __name__ == '__main__':
     if not main.ispectrometer.ivolt.simulation:
         print"close Voltage"
         main.ispectrometer.ivolt.close()
-    if not main.icamera.simulate_camera:
-        main.icamera.camera.close()
+    main.icamera.close()
 
 
