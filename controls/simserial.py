@@ -30,35 +30,46 @@ class SimSerial(serial.Serial):
             self.close()
             print("simulation on")
 
-    def write(self,string):
-        if self.simulation==True:
+    def write(self,string,*args,**kwargs):
+        #import pdb; pdb.set_trace()
+        if self.simulation:
             name=self.search_function_name(string)
             try:
+                    print ('Call sim function: ', name,string)
                     getattr(self,name)(string)
             except:
+                import sys
+                print sys.exc_info()
                 try:
+                    print ('Call sim function: ', name)
                     getattr(self,name)()
                 except:
-                    pass
-                    #print('No simulation function found.')
+                    print sys.exc_info()
+                    print('No simulation function found:',string,'->',name)
         else:
-            super(SimSerial,self).write(string)
+            super(SimSerial,self).write(string,*args,**kwargs)
 
     def readline(self):
         if self.simulation:
-            return(str(self.buffer))
+            splitbuf = self.buffer.splitlines()
+            ret = splitbuf[0]
+            print "ret", ret
+            if len(splitbuf) > 1:
+                self.buffer = self.EOL.join(splitbuf[1:])+self.EOL
+                print self.buffer
+            return ret
         else:
             return(super(SimSerial,self).readline())
 
     def flushInput(self):
         if not self.simulation:
-            serial.Serial.flushInput(self)
+            super(SimSerial,self).flushInput()
 
     def flushOutput(self):
         if not self.simulation:
-            serial.Serial.flushOutput(self)
+            super(SimSerial,self).flushOutput()
         else:
-            self.buffer=str
+            self.buffer=str()
 
     def inWaiting(self):
         if not self.simulation:
@@ -78,8 +89,8 @@ class SimSerial(serial.Serial):
         return(name)
 
     def replace_special_characters(self,name):
-        _sign=['?','!','+','-','<','>','/']
-        _replace=['QM','EM','plus','minus','less','greater','slash']
+        _sign=['?','!','+','-','<','>','/',' ','\r']
+        _replace=['QM','EM','plus','minus','less','greater','slash','','']
         for i in range(len(_sign)):
             name=name.replace(_sign[i],_replace[i])
         return(name)

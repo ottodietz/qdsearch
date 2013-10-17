@@ -100,18 +100,19 @@ class CameraGUI(HasTraits):
         plot.y_axis.title="y-Position on sample [mm]"
         self.plot=plot
 
-    def ensure_init(self): 
+    def ensure_init(self):
         if self.camera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
             while self.camera.init_active:
                 time.sleep(.5)
- 
+
 
     def _settemperature_changed(self):
         self.ensure_init()
         self.camera.settemperature(self.settemperature)
 
     def _simulate_camera_changed(self):
+        self.stop_acq_thread()
         # wenn es nicht schon läuft, schicke self.toggle_simulate() in den
         # Hintergrund
         if not self.toggle_active:
@@ -131,12 +132,8 @@ class CameraGUI(HasTraits):
 
     def _continous_fired(self):
         self.acq_active = not self.acq_active
-        if self.acq_active: 
+        if self.acq_active:
             thread.start_new_thread(self.acq_thread,())
-
-    def change_checkbox(self):
-        time.sleep(.2)
-        self.simulate_camera=False
 
     def _cooler_changed(self):
         if self.cooler:
@@ -163,8 +160,16 @@ class CameraGUI(HasTraits):
        print "reload"
        reload(controls.camera)
 
+    def stop_acq_thread(self):
+        if self.acq_active:
+            self.acq_active = False
+            while self.continous_label == 'Stop':
+                time.sleep(0.1)
+
     def close(self):
+        stop_acq_thread()
         self.camera.close()
+
 if __name__=="__main__":
     main=CameraGUI()
     main.configure_traits()

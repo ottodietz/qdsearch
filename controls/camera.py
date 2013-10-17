@@ -3,6 +3,7 @@ import random
 import numpy as np
 import time
 
+CAM_OKAY = 20002
 
 class Camera():
     totalCameras=c_long()
@@ -18,13 +19,15 @@ class Camera():
         self.simulation = not self.simulation
         if not self.simulation and not self.camera_active:
             self.init_active=True
-            try: 
+            try:
                 self.atm = WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
                 print "Init:", self.atm.Initialize(None)
                 print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
                 print "SetReadMode:",self.atm.SetReadMode(self.readmode) #FullverticalBinning
                 print "SetAcqMode:",self.atm.SetAcquisitionMode(self.acquisitionmode) # single shoot
-                print "SetExpTime:",self.atm.SetExposureTime(self.exposuretime) #Belichtungsdauer 
+                print "SetExpTime:",self.atm.SetExposureTime(self.exposuretime) #Belichtungsdauer
+                print "Cooler ON",self.cooler_on()
+                print "SetTemo to -10", self.settemperature(c_long(-10))
                 self.camera_active=True
             except (NameError,) as e:
                 print "Camera init failed: ",e
@@ -42,11 +45,19 @@ class Camera():
             print "simulating acquisition 2"
             return line
         line  = (c_long * pixel)()
-        print "StartAcq:",self.atm.StartAcquisition()
-        print "Wait:",self.atm.WaitForAcquisition()
-        print "GetMostRecentImage",self.atm.GetMostRecentImage(byref(line),c_ulong(pixel))
-        print "idle is 20073"
-        print 'cancel acq:', self.atm.AbortAcquisition()
+        action = []
+        error  = []
+        action.append("StartAcq:")
+        error.append(self.atm.StartAcquisition())
+        action.append("Wait:")
+        error.append(self.atm.WaitForAcquisition())
+        action.append("GetMostRecentImage")
+        error.append(self.atm.GetMostRecentImage(byref(line),c_ulong(pixel)))
+        if not np.all(np.array(error) == CAM_OKAY):
+            print action
+            print error
+        #action.append('cancel acq:')
+        #error.append(self.atm.AbortAcquisition())
         return(line)
 
     def close(self):
@@ -89,10 +100,8 @@ class Camera():
         print 'Cooler off:',self.atm.CoolerOFF()
 
     def gettemperature_range(self):
-        mintemp=c_long()
-        maxtemp=c_long()
-        mintemp = -70
-        maxtemp = 20
+        mintemp=c_long(-70)
+        maxtemp=c_long(20)
         if not self.simulation:
             print 'Gettemperature_range:', self.atm.GetTemperatureRange(byref(mintemp),byref(maxtemp))
         print 'min temp' ,

@@ -6,15 +6,34 @@ from chaco.tools.api import PanTool, ZoomTool
 from pyface.api import error,warning,information
 import thread
 
-from simserial import SimSerial
+import simserial
+reload(simserial)
 
-class Spectro(SimSerial):
+class Spectro(simserial.SimSerial):
     # for simulation
     nm=float(0)
     nm_je_min=float(10.0)
     commando_position="last"
     EOL='\r'
 
+    def _QMGRATING(self):
+        self.buffer='?GRATING  '+ '1' +'  ok \r'
+        print self.buffer
+
+    def _QMGRATINGS(self):
+        self.buffer='?GRATINGS\r'\
+          + '1 1800 g/mm BLZ=  750NM \r'\
+          + '2 1800 g/mm BLZ=  750NM \r'\
+          + '3 1800 g/mm BLZ=  750NM \r'\
+          + '4 1800 g/mm BLZ=  750NM \r'\
+          + '5 1800 g/mm BLZ=  750NM \r'\
+          + '6 1800 g/mm BLZ=  750NM \r'\
+          + '8 1800 g/mm BLZ=  750NM \r'\
+          + '8 1800 g/mm BLZ=  750NM \r'\
+          + '9 Not Installed\r'\
+          + 'ok\r'
+        print "QM_GRATINGS:",self.buffer
+##
     def wavelength_controlled_nm(self,aim):
         aim=round(aim,3) # rundet auf die 3. Nachkommastelle
         if aim <0 or aim >1500:
@@ -61,10 +80,7 @@ class Spectro(SimSerial):
 
     def wavelength_goto(self,aim):
         aim=round(aim,3)
-        if aim <0 or aim >1000:
-            warning(parent=None, title="warning", message="falsche Wert fuer die Wellenlaenge: sie muss zwischen 0 und 1000 nm liegen  ")
-        else:
-            self.write(str(aim)+" GOTO \r")
+        self.write(str(aim)+" GOTO \r")
 
     def _GOTO(self,string):
         self.buffer=string+" ok"
@@ -78,6 +94,7 @@ class Spectro(SimSerial):
             main.input_nm=500.0
         else:
             self.write(str(tempo)+ " NM/MIN \r")
+            print self.readline()
 
     def _NMslashMIN(self,string):
         self.buffer=string+" ok"
@@ -88,19 +105,25 @@ class Spectro(SimSerial):
         self.flushInput()
         self.write("?NM/MIN \r")
         tmp=self.readline()
-        return(self.convert_output(tmp))
+        a=tmp.split(" ")
+        print a[2]
+        return(float(a[2]))
 
     def _QMNMslashMIN(self,string):
-        self.buffer=' '+str(self.nm_je_min)+' '
+        self.buffer='  '+str(self.nm_je_min)+'  '
 
     def output_position(self):
         self.flushInput()
         self.write("?NM \r")
         tmp=self.readline()
-        return(self.convert_output(tmp))
+        a=tmp.split(" ")
+        print a[2]
+        return float(a[2])
 
     def _QMNM(self,string):
-        self.buffer=' '+str(self.nm)+' '
+        self.buffer='  '+str(self.nm)+'  '
+
+
 
     def grating_change(self,grat):
         print grat
@@ -111,14 +134,13 @@ class Spectro(SimSerial):
         self.write(mirror+" \r")
 
     def convert_output(self,tmp):
-        a=tmp.find(" ")
-        b=tmp.find(" ",a+2)
-        if a<0 or b<0:
-            error(parent=None, title="error", message= "fehler: falscher string sollte Konvertiert werden: "+ str(tmp))
+        #import pdb;pdb.set_trace()
+        a=tmp.split(" ")
+        if len(a)<3:
+            error(parent=None, title="error", message= "fehler: falscher string sollte Konvertiert werden: "+ str(a))
             return(tmp)
-        else:
-            output=tmp[a:b]
-            return(output)
+        print "Konvertiere:", a
+        return(float(a[2]))
 
     def waiting(self):
         """Ueberprueft ob Spektrometer ans aim gekommen ist"""
@@ -131,21 +153,31 @@ class Spectro(SimSerial):
                 finish=True
             time.sleep(1)
 
+    def get_until_okay(self,cmd):
+        self.flushInput()
+        self.write(cmd + ' ' + self.EOL )
+        result = []
+        temp = self.readline()
+        result.append(temp)
+
+        while temp.find("ok") == -1:
+            print temp
+            temp = self.readline()
+            result.append(temp)
+
+        if len(result) == 1:
+            return result[0]
+        return result
+
     def output_grating(self):
         grating=[]
-        self.write("?GRATINGS \r")
-        self.readline()
-
-        for i in range(9):
-            temp=self.readline()
-            if temp.find("Not Installed")==-1:
-                grating.append(temp)
-
-        """fragt das current grating ab"""
         self.flushInput()
-        self.write("?GRATING \r")
-        grating_current=self.readline()
-        grating_current=int(grating_current[10])
+        grating = self.get_until_okay("?GRATINGS")
+        print "Gratings:", grating
+        """fragt das current grating ab"""
+        grating_current = self.get_until_okay("?GRATING")
+        print "Grating_current:",grating_current
+        grating_current = int(grating_current.split('  ')[1])
         grating[grating_current-1]=grating[grating_current-1].replace("\x1a", " ") # -1 da Liste bei 0 anfaengt und Grating bei 1
         return(grating,grating_current)
 
@@ -154,6 +186,7 @@ class Spectro(SimSerial):
         self.write("EXIT-MIRROR \r")
         time.sleep(0.1)
         self.flushInput()
+
         self.write("?MIRROR \r")
         test=self.readline()
         if test.find("side")!=-1:

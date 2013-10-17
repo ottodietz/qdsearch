@@ -28,7 +28,7 @@ reload(views.cryo)
 import views.spectrometer
 reload (views.spectrometer)
 
-import views.camera 
+import views.camera
 reload (views.camera)
 
 """events on the plot"""
@@ -136,7 +136,7 @@ class MainWindow(HasTraits):
             Item('ispectrometer', style = 'custom',show_label=False),
             Item('icamera',style = 'custom', show_label=False),
             label='spectrometer'
-            ) 
+            )
 
     tabs = Group(
         Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
@@ -186,7 +186,7 @@ class MainWindow(HasTraits):
     def scanning_step(self):
 
         if self.icamera.camera.init_active:
-            information(parent=None, title="please wait", 
+            information(parent=None, title="please wait",
              message="The initialization of the camera is running. " + \
              "Please wait until the initialization is finished.")
             return False
@@ -199,10 +199,10 @@ class MainWindow(HasTraits):
 
         if self.x1>self.x2:
             self.x2,self.x1 = self.x1,self.x2
-        
+
         if self.y1>self.y2:
             self.y1,self.y2=self.y2,self.y1
-        
+
         f = open('measurement/last_measurement.pick', "w") # creates new file
         f.close()
         self.usedgrating=self.ispectrometer.current_grating
@@ -244,15 +244,15 @@ class MainWindow(HasTraits):
         self.ispectrometer.current_exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(1) # don't switch mirrors too fast!
         c_spectrum=self.icamera.camera.acquisition() # nimmt das spektrum auf
-        
+
         spectrum=[]
         for i in range(len(c_spectrum)):
             spectrum.append(c_spectrum[i])
 
         self.ispectrometer.current_exit_mirror='side (APDs)' # klappt spiegel vom spectro auf ausgang um
-        
+
         # warning: we don't check if we are still at the same position!
-        
+
         self.x_koords.append(x)
         self.y_koords.append(y)
         self.spectra.append(spectrum)
@@ -416,7 +416,7 @@ class MainWindow(HasTraits):
         stepsb = len(b)
 
         # we go snake-lines, so in the first y-step x=1,2 and in the
-        # second y-step (the way back) x=2,1 . 
+        # second y-step (the way back) x=2,1 .
         # Make a containing these two lines
         # a = [1,2] -> [1,2,2,1]
         a = np.array((a,np.flipud(a))).flatten()
@@ -436,6 +436,8 @@ if __name__ == '__main__':
     main.configure_traits()
     main.icryo.open=False
     main.counts_thread.wants_abort=True
+    sleep(0.5)
+
     if not main.icryo.cryo.simulation:
         print"close cryo"
         main.icryo.cryo.close()

@@ -16,6 +16,7 @@ import random
 
 import controls.spectrometer
 reload(controls.spectrometer)
+import controls.spectrometer
 
 import controls.voltage
 reload(controls.voltage)
@@ -33,6 +34,8 @@ class SpectrometerGUI(HasTraits):
     goto=Button()
     sweep=Button()
     search_maximum=Button(label="search maximum")
+
+    # 0.002 nm ist kleinster Schritt
     jogup = Button()
     jogdown = Button()
 
@@ -90,7 +93,7 @@ class SpectrometerGUI(HasTraits):
               Item('simulate_spectrometer',**hide),Item('simulate_voltmeter',**hide)
               ),
              Item("plot",editor=ComponentEditor(),show_label=False)
-            ), 
+            ),
             width=750,height=600,buttons = [OKButton,], resizable = True)
 
 
@@ -101,18 +104,12 @@ class SpectrometerGUI(HasTraits):
         if len(self.exit_mirror_value)>0:
             self.exit_mirror=self.exit_mirror_value[0]
         self.refresh_active=False
-    
+
 
     def _goto_fired(self):
-        if self.centerwvl>1000:
-            warning(parent=None, title="warning", message="zu gro?e input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
-            self.centerwvl=1000
-        elif self.centerwvl<0:
-            warning(parent=None, title="warning", message="zu kleine input fuer die wavelength: muss zwischen 0 und 1000 nm liegen  ")
-            self.centerwvl=0
-        else:
-                self.ispectro.wavelength_goto(self.centerwvl)
-                self.ispectro.waiting()
+        self.ispectrometer_gui_refresh()
+        self.ispectro.wavelength_goto(self.centerwvl)
+        self.ispectro.waiting()
 
 
     def _sweep_fired(self):
@@ -163,7 +160,7 @@ class SpectrometerGUI(HasTraits):
             else:
                 start_value=self.centerwvl-self.scan_bereich
                 end_value=self.centerwvl+self.scan_bereich
-                if start_value <0:                
+                if start_value <0:
                     start_value=0
                     end_value=self.scan_bereich
                 thread.start_new_thread(self.measure,(start_value,end_value,))
@@ -233,6 +230,7 @@ class SpectrometerGUI(HasTraits):
 
 
     def read_gratings(self):
+        #import pdb;pdb.set_trace()
         (self.grating_value,aktuell)=self.ispectro.output_grating() #aktuell als zweite output hinzuschreiben
         self.current_grating=self.grating_value[aktuell-1] # -1 da Grating bei 1 anfaengt zu zaehlen und List bei 0
 
