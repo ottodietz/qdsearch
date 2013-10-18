@@ -167,7 +167,7 @@ class CameraGUI(HasTraits):
                 time.sleep(0.1)
 
     def close(self):
-        stop_acq_thread()
+        self.stop_acq_thread()
         self.camera.close()
 
 if __name__=="__main__":

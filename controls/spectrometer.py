@@ -15,36 +15,14 @@ class Spectro(simserial.SimSerial):
     nm_je_min=float(10.0)
     commando_position="last"
     EOL='\r'
+    simSideMirror = True
 
-    def _QMGRATING(self):
-        self.buffer='?GRATING  '+ '1' +'  ok \r'
-        print self.buffer
-
-    def _QMGRATINGS(self):
-        self.buffer='?GRATINGS\r'\
-          + '1 1800 g/mm BLZ=  750NM \r'\
-          + '2 1800 g/mm BLZ=  750NM \r'\
-          + '3 1800 g/mm BLZ=  750NM \r'\
-          + '4 1800 g/mm BLZ=  750NM \r'\
-          + '5 1800 g/mm BLZ=  750NM \r'\
-          + '6 1800 g/mm BLZ=  750NM \r'\
-          + '8 1800 g/mm BLZ=  750NM \r'\
-          + '8 1800 g/mm BLZ=  750NM \r'\
-          + '9 Not Installed\r'\
-          + 'ok\r'
-        print "QM_GRATINGS:",self.buffer
-##
     def wavelength_controlled_nm(self,aim):
         aim=round(aim,3) # rundet auf die 3. Nachkommastelle
         if aim <0 or aim >1500:
             print ("falsche input: Wellenlaenge muss zwischen 0 und 1500 liegen ")
         else:
             self.write(str(aim)+" >NM \r")
-
-    def _greaterNM(self,string):
-        a=string.find(" ")
-        aim=float(string[0:a])
-        thread.start_new_thread(self.simulation_controlled_nm,(aim,))
 
     def simulation_controlled_nm(self,aim):
         self.change_wavelength=True
@@ -61,9 +39,7 @@ class Spectro(simserial.SimSerial):
 
     def mono_stop(self):
         self.write("MONO-STOP \r")
-
-    def _MONOminusSTOP(self):
-        self.change_wavelength=False
+        return self.readline()
 
     def wavelength_uncontrolled_nm(self,aim):
         aim=round(aim,3) # rundet auf die 3. Nachkommastelle
@@ -72,20 +48,9 @@ class Spectro(simserial.SimSerial):
         else:
             self.write(str(aim)+" NM \r")
 
-    def _NM(self,string):
-        self.buffer=string+" ok"
-        space=string.find(" ")
-        self.nm=float(string[0:space])
-
-
     def wavelength_goto(self,aim):
         aim=round(aim,3)
         self.write(str(aim)+" GOTO \r")
-
-    def _GOTO(self,string):
-        self.buffer=string+" ok"
-        a=string.find(" ")
-        self.nm=float(string[0:a])
 
     def velocity(self,tempo):
         tempo=round(tempo,3)
@@ -96,11 +61,6 @@ class Spectro(simserial.SimSerial):
             self.write(str(tempo)+ " NM/MIN \r")
             print self.readline()
 
-    def _NMslashMIN(self,string):
-        self.buffer=string+" ok"
-        a=string.find(" ")
-        self.nm_je_min=float(string[0:a])
-
     def output_velocity(self):
         self.flushInput()
         self.write("?NM/MIN \r")
@@ -108,9 +68,6 @@ class Spectro(simserial.SimSerial):
         a=tmp.split(" ")
         print a[2]
         return(float(a[2]))
-
-    def _QMNMslashMIN(self,string):
-        self.buffer='  '+str(self.nm_je_min)+'  '
 
     def output_position(self):
         self.flushInput()
@@ -120,18 +77,17 @@ class Spectro(simserial.SimSerial):
         print a[2]
         return float(a[2])
 
-    def _QMNM(self,string):
-        self.buffer='  '+str(self.nm)+'  '
-
-
-
     def grating_change(self,grat):
         print grat
         self.write(grat+" GRATING \r")
+        ## HIER NOCH EIN READLINE?
 
     def exit_mirror_change(self,mirror):
         self.write("EXIT-MIRROR \r")
+        self.readline()
         self.write(mirror+" \r")
+        self.readline()
+        ## HIER NOCH EIN READLINE?
 
     def convert_output(self,tmp):
         #import pdb;pdb.set_trace()
@@ -144,7 +100,6 @@ class Spectro(simserial.SimSerial):
 
     def waiting(self):
         """Ueberprueft ob Spektrometer ans aim gekommen ist"""
-        self.flushInput()
         finish=False
         while (not finish):
             temp=self.readline()
@@ -154,6 +109,7 @@ class Spectro(simserial.SimSerial):
             time.sleep(1)
 
     def get_until_okay(self,cmd):
+        #import pdb;pdb.set_trace()
         self.flushInput()
         self.write(cmd + ' ' + self.EOL )
         result = []
@@ -183,9 +139,11 @@ class Spectro(simserial.SimSerial):
 
     def output_exit_mirror(self):
         """liest das current stellung des Exit_mirrors aus und gibt sie zur?ck"""
+
+       #import pdb;pdb.set_trace()
         self.write("EXIT-MIRROR \r")
         time.sleep(0.1)
-        self.flushInput()
+        self.readline()
 
         self.write("?MIRROR \r")
         test=self.readline()
@@ -195,5 +153,63 @@ class Spectro(simserial.SimSerial):
             return("front")
         else:
              print "error by exit mirror"
+    #
+    # Simulation function
+    #
+
+    def _NMslashMIN(self,string):
+        self.sim_output(string+" ok")
+        a=string.find(" ")
+        self.nm_je_min=float(string[0:a])
 
 
+
+
+    def _QMGRATING(self):
+        self.sim_output('?GRATING  '+ '1' +'  ok')
+    
+    def _EXITminusMIRROR(self,string):
+        self.sim_output(string + ' ok')
+    
+    def _QMMIRROR(self):
+        if self.simSideMirror: 
+            self.sim_output("side")
+        else:
+            self.sim_output("front")
+        self.simSideMirror = not self.simSideMirror
+
+    def _side(self):
+        print "Flipping mirror to side exit" 
+
+    def _front(self):
+        print "Flipping mirror to front exit" 
+
+    def _QMGRATINGS(self):
+        self.sim_output('?GRATINGS\r'\
+          + '1 1801 g/mm BLZ=  750NM \r'\
+          + '2 Not Installed\r'\
+          + 'ok')
+
+    def _NM(self,string):
+        self.sim_output(string+" ok")
+        space=string.find(" ")
+        self.nm=float(string[0:space])
+
+    def _MONOminusSTOP(self):
+        self.change_wavelength=False
+
+    def _greaterNM(self,string):
+        aim=float(string.split(" ")[0])
+        thread.start_new_thread(self.simulation_controlled_nm,(aim,))
+
+    def _GOTO(self,string):
+        self.sim_output(string+" ok")
+        self.nm=float(string.split(" ")[0])
+
+
+    def _QMNMslashMIN(self,string):
+        self.sim_output('  '+str(self.nm_je_min)+'  ')
+
+ 
+    def _QMNM(self,string):
+        self.sim_output('  '+str(self.nm)+'  ')

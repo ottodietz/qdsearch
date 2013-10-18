@@ -34,42 +34,55 @@ class SimSerial(serial.Serial):
         #import pdb; pdb.set_trace()
         if self.simulation:
             name=self.search_function_name(string)
+            #import pdb;pdb.set_trace()
             try:
-                    print ('Call sim function: ', name,string)
-                    getattr(self,name)(string)
+                getattr(self,name)(string.rstrip())
             except:
-                import sys
-                print sys.exc_info()
                 try:
-                    print ('Call sim function: ', name)
                     getattr(self,name)()
                 except:
+                    import sys
                     print sys.exc_info()
-                    print('No simulation function found:',string,'->',name)
+                    self._DEFAULT(string)
+            print "buffer, due to write:", repr(self.buffer)
         else:
             super(SimSerial,self).write(string,*args,**kwargs)
+
+    def _DEFAULT(self,string):
+        print "No simulation function for " + repr(self.search_function_name(string)) + " implemented in " + str(self.__class__)
+
+    def sim_output(self,string):
+        self.buffer += string + self.EOL
+
 
     def readline(self):
         if self.simulation:
             splitbuf = self.buffer.splitlines()
-            ret = splitbuf[0]
-            print "ret", ret
-            if len(splitbuf) > 1:
-                self.buffer = self.EOL.join(splitbuf[1:])+self.EOL
-                print self.buffer
-            return ret
+
+            if len(splitbuf) > 0:   
+
+                ret = splitbuf[0]
+
+                if len(splitbuf) > 1:
+                    self.buffer = self.EOL.join(splitbuf[1:])+self.EOL
+                else: 
+                    self.buffer = ''
+                return ret
+
+            else:
+                print 'Warning: Readline on empty buffer'
         else:
             return(super(SimSerial,self).readline())
 
     def flushInput(self):
         if not self.simulation:
             super(SimSerial,self).flushInput()
+        else:
+            self.buffer=str()
 
     def flushOutput(self):
         if not self.simulation:
             super(SimSerial,self).flushOutput()
-        else:
-            self.buffer=str()
 
     def inWaiting(self):
         if not self.simulation:

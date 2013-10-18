@@ -16,7 +16,6 @@ import random
 
 import controls.spectrometer
 reload(controls.spectrometer)
-import controls.spectrometer
 
 import controls.voltage
 reload(controls.voltage)
@@ -98,6 +97,7 @@ class SpectrometerGUI(HasTraits):
 
 
     def __init__(self):
+        self.ispectrometer_gui_refresh()
         self.refresh_active=True
         if len(self.grating_value)>0:
             self.current_grating=self.grating_value[0]
@@ -107,7 +107,6 @@ class SpectrometerGUI(HasTraits):
 
 
     def _goto_fired(self):
-        self.ispectrometer_gui_refresh()
         self.ispectro.wavelength_goto(self.centerwvl)
         self.ispectro.waiting()
 
@@ -123,12 +122,18 @@ class SpectrometerGUI(HasTraits):
         self.ispectro.velocity(self.speed)
 
     def _jogup_fired(self):
-        self.centerwvl += 0.001
-        self._goto_fired()
+        try:
+            self.centerwvl += 0.002
+            self._goto_fired()
+        except:
+            print "Hint: Center wavelength out of bound" 
 
     def _jogdown_fired(self):
-        self.centerwvl -= 0.001
-        self._goto_fired()
+        try:
+            self.centerwvl -= 0.002
+            self._goto_fired()
+        except:
+            print "Hint: Center wavelength out of bound" 
 
 
     def _position_fired(self):
@@ -213,8 +218,7 @@ class SpectrometerGUI(HasTraits):
 
     def _simulate_spectrometer_changed(self):
         self.ispectro.toggle_simulation()
-        if not self.simulate_spectrometer:
-            self.ispectrometer_gui_refresh()
+        self.ispectrometer_gui_refresh()
 
     def _simulate_voltmeter_changed(self):
         self.ivolt.toggle_simulation()
