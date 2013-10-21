@@ -241,7 +241,8 @@ class MainWindow(HasTraits):
         print 'abort'
 
     def take_spectrum(self,x,y):
-        self.ispectrometer.current_exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
+        print "nehme spektrum, warte auf klappspiegel"
+        self.ispectrometer.exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(1) # don't switch mirrors too fast!
         c_spectrum=self.icamera.camera.acquisition() # nimmt das spektrum auf
 
@@ -249,7 +250,7 @@ class MainWindow(HasTraits):
         for i in range(len(c_spectrum)):
             spectrum.append(c_spectrum[i])
 
-        self.ispectrometer.current_exit_mirror='side (APDs)' # klappt spiegel vom spectro auf ausgang um
+        self.ispectrometer.exit_mirror='side (APDs)' # klappt spiegel vom spectro auf ausgang um
 
         # warning: we don't check if we are still at the same position!
 
