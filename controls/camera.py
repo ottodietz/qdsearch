@@ -27,7 +27,7 @@ class Camera():
                 print "SetAcqMode:",self.atm.SetAcquisitionMode(self.acquisitionmode) # single shoot
                 print "SetExpTime:",self.atm.SetExposureTime(self.exposuretime) #Belichtungsdauer
                 print "Cooler ON",self.cooler_on()
-                print "SetTemo to -10", self.settemperature(c_long(-10))
+                print "SetTemo to -70", self.settemperature(c_long(-70))
                 self.camera_active=True
             except (NameError,) as e:
                 print "Camera init failed: ",e
