@@ -56,7 +56,7 @@ class Spectro(simserial.SimSerial):
         tempo=round(tempo,3)
         if tempo<0.010 or tempo>666.666:
             warning(parent=None, title="warning", message="falscher Wert fuer die velocity: sie muss zwischen 0.010 und 666.666 nm/min liegen")
-            main.input_nm=500.0
+            #main.input_nm=500.0
         else:
             self.write(str(tempo)+ " NM/MIN \r")
             print self.readline()
