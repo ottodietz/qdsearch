@@ -381,7 +381,7 @@ class MainWindow(HasTraits):
         self.x_koords=x
         self.y_koords=y
         self.spectra=spectrum
-        self.plot_map(0,0)
+        self.plot_map(x[0], x[0])
 
     def save_to(self):
         file_name = save_file()
