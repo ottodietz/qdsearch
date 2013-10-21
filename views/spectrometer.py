@@ -16,7 +16,6 @@ import random
 
 import controls.spectrometer
 reload(controls.spectrometer)
-import controls.spectrometer
 
 import controls.voltage
 reload(controls.voltage)
