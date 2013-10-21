@@ -436,7 +436,7 @@ if __name__ == '__main__':
     main.configure_traits()
     main.icryo.open=False
     main.counts_thread.wants_abort=True
-    sleep(0.5)
+    sleep(1.0)
 
     if not main.icryo.cryo.simulation:
         print"close cryo"

@@ -46,7 +46,7 @@ class SimSerial(serial.Serial):
                     self._DEFAULT(string)
             print "buffer, due to write:", repr(self.buffer)
         else:
-            super(SimSerial,self).write(string,*args,**kwargs)
+            serial.Serial.write(self,string,*args,**kwargs)
 
     def _DEFAULT(self,string):
         print "No simulation function for " + repr(self.search_function_name(string)) + " implemented in " + str(self.__class__)
@@ -59,30 +59,31 @@ class SimSerial(serial.Serial):
         if self.simulation:
             splitbuf = self.buffer.splitlines()
 
-            if len(splitbuf) > 0:   
+            if len(splitbuf) > 0:
 
                 ret = splitbuf[0]
 
                 if len(splitbuf) > 1:
                     self.buffer = self.EOL.join(splitbuf[1:])+self.EOL
-                else: 
+                else:
                     self.buffer = ''
                 return ret
 
             else:
                 print 'Warning: Readline on empty buffer'
         else:
-            return(super(SimSerial,self).readline())
+            return(serial.Serial.readline(self))
 
     def flushInput(self):
         if not self.simulation:
-            super(SimSerial,self).flushInput()
+            #import pdb;pdb.set_trace()
+            serial.Serial.flushInput(self)
         else:
             self.buffer=str()
 
     def flushOutput(self):
         if not self.simulation:
-            super(SimSerial,self).flushOutput()
+            serial.Serial.flushOutput(self)
 
     def inWaiting(self):
         if not self.simulation:
