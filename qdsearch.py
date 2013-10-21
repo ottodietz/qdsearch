@@ -209,8 +209,8 @@ class MainWindow(HasTraits):
         self.usednm=self.ispectrometer.centerwvl
 
 
-        if self.ispectrometer.current_exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
-             self.ispectrometer.current_exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
+        if self.ispectrometer.exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+             self.ispectrometer.exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
 
         self.icryo.cryo.waiting() #wartet bis cryo bereit
 
