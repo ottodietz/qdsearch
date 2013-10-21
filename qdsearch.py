@@ -5,9 +5,9 @@ from traits.api import *
 from traitsui.api import *
 from traitsui.menu import OKButton, CancelButton
 import thread
-from pyface.api import error,warning,information
+from pyface.api import information
 import time
-from ctypes import *
+#from ctypes import *
 import pickle
 import numpy as np
 from threading import Thread
@@ -206,7 +206,7 @@ class MainWindow(HasTraits):
         f = open('measurement/last_measurement.pick', "w") # creates new file
         f.close()
         self.usedgrating=self.ispectrometer.current_grating
-        self.usednm=self.ispectrometer.input_nm
+        self.usednm=self.ispectrometer.centerwvl
 
 
         if self.ispectrometer.current_exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
@@ -407,7 +407,7 @@ class MainWindow(HasTraits):
         dist_x = abs(self.x2-self.x1)
         dist_y = abs(self.y2-self.y1)
         a = np.linspace(self.x1,self.x2,dist_x/self.x_stepsize)
-        b = np.linspace(self.y1,self.y2,dist_x/self.y_stepsize)
+        b = np.linspace(self.y1,self.y2,dist_y/self.y_stepsize) # hier war dist_y
 
         a = a.round(5)
         b = b.round(5)
