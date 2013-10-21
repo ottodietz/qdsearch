@@ -353,12 +353,16 @@ class MainWindow(HasTraits):
         while reading:
             try:
                 value.append(pickle.load(f))
-            except:
+		print "unpickled one line"
+            except EOFError:
                 reading=False
         f.close()
         x=[]
         y=[]
         spectrum=[]
+	if len(value) == 0:
+		print "Error opening file!"
+		return False
         if len(value[0])>7: # if is for for compatibility to previous version (before the settings are saved, too), can be delted later
             self.usednm=value[0][0]
             self.usedgrating=value[0][1]
