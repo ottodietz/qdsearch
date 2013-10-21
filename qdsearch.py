@@ -353,13 +353,18 @@ class MainWindow(HasTraits):
         while reading:
             try:
                 value.append(pickle.load(f))
-            except:
+                print "read line"
+            except EOFError:
                 reading=False
         f.close()
+        if len(value) == 0:
+            print "Error: Didn't read any lines from file!"
+            return False
         x=[]
         y=[]
         spectrum=[]
         if len(value[0])>7: # if is for for compatibility to previous version (before the settings are saved, too), can be delted later
+            print "Value:",value[0]
             self.usednm=value[0][0]
             self.usedgrating=value[0][1]
             self.x1=value[0][2]
@@ -374,6 +379,8 @@ class MainWindow(HasTraits):
                 y.append(value[i][1])
                 spectrum.append(value[i][2])
         else:
+
+            print "Value:",value[0]
             for i in range(1,len(value)):
                 x.append(value[i][0])
                 y.append(value[i][1])
