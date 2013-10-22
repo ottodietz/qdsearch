@@ -13,7 +13,7 @@ class InOutDisplay(HasTraits):
 	DOWN=Button(label=u'\u2193')
 	graph = Button(label="Plot this")
 	plot = Instance(Plot)
-	Input = Int()
+	Input = Str()
 	Output = Int(128)
 	Maximum = Int()
 	findMax = Button(label="Find Maximum")
@@ -40,20 +40,16 @@ class InOutDisplay(HasTraits):
 		else:
 			print "end of range"
 	def _findMax_fired(self):
-		self.Maximum = int(self.values[0])
-		posx = Int(0)
-		for i in range(0,1022):
-			if self.Maximum < self.values[i+1]:
-				self.Maximum = int(self.values[i+1])
-				posx = self.pixel[i+1]
-		self.Input = self.Maximum
-#	def __init__(self):
-#		super(InOutDisplay, self).__init__()
-
+		max_val = max(self.values)
+		max_idx = self.values.argmax()
+		print max_idx
+		print max_idx*(50./512.)-50.
+		max_pos = max_idx*(50./512.)-50.
+		self.Input = str(max_val)
 		x = self.pixel
 		y = self.values
-		mx = [posx,posx]
-		my = [-1,1]
+		mx = [max_pos,max_pos]
+		my = [-0.5,1]
 		plotdata = ArrayPlotData(x=x, y=y, mx=mx, my=my)
 		plot = Plot(plotdata)
 		plot.plot(("x","y"),type="line",color="blue")
