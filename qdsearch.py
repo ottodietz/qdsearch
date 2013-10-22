@@ -96,7 +96,7 @@ class MainWindow(HasTraits):
     icryo         = Instance(views.cryo.CryoGUI,())
     icamera       = Instance(views.camera.CameraGUI)
 
-    
+
     def _icamera_default(self):
         return views.camera.CameraGUI(icryo=self.icryo)
 
@@ -212,7 +212,7 @@ class MainWindow(HasTraits):
 
         f = open('measurement/last_measurement.pick', "w") # creates new file
         f.close()
-        
+
 
         if self.ispectrometer.exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
              self.ispectrometer.exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
@@ -300,7 +300,8 @@ class MainWindow(HasTraits):
     def create_wavelength_for_plotting(self):
         wavelength=[]
         pixel=1024
-        grooves=int(self.ispectrometer.current_grating.split(' ')[1])
+        grooves=self.ispectrometer.current_grating.split(' ')
+        grooves=int([x for x in grooves if x][1])
         for i in range(pixel+1):
             wavelength.append(i)
         width=26*10**-3
@@ -381,7 +382,7 @@ class MainWindow(HasTraits):
 
     def save_file(self):
         f = open(self.file_name, "wb")
-        
+
         data = {
             'cryo': {'x1':self.x1,
                      'x2':self.x2,
@@ -391,7 +392,7 @@ class MainWindow(HasTraits):
                      'y_stepsize':self.y_stepsize
                     },
 
-            'spectrometer': { 'centerwvl': self.ispectrometer.centerwvl, 
+            'spectrometer': { 'centerwvl': self.ispectrometer.centerwvl,
                               'grating': self.ispectrometer.current_grating,
                               'slot_width_in': self.ispectrometer.slot_width_in,
                               'slot_width_out': self.ispectrometer.slot_width_out
@@ -407,7 +408,7 @@ class MainWindow(HasTraits):
                     'Vshiftspeed ':self.icamera.Vshiftspeed,
                     'Hshiftspeed ':self.icamera.Hshiftspeed
                     },
-            
+
             'values': {
                     'x':self.x_koords,
                     'y':self.y_koords,
@@ -424,7 +425,7 @@ class MainWindow(HasTraits):
             if key in data[device]:
                 temp = data[device].pop(key)
                 return temp
-            else: 
+            else:
                 error = 'no key ',key,' in device ',device
         else:
             error = 'no device ',device, ' in data'
@@ -445,7 +446,7 @@ class MainWindow(HasTraits):
         self.x_stepsize = self.pop(data,'cryo','x_stepsize')
         self.y_stepsize = self.pop(data,'cryo','y_stepsize')
 
-        self.ispectrometer.centerwvl = self.pop(data,'spectrometer','centerwvl') 
+        self.ispectrometer.centerwvl = self.pop(data,'spectrometer','centerwvl')
         self.ispectrometer.current_grating = self.pop(data,'spectrometer','grating')
         self.ispectrometer.slot_width_in = self.pop(data,'spectrometer','slot_width_in')
         self.ispectrometer.slot_width_out = self.pop(data,'spectrometer','slot_width_out')
@@ -457,7 +458,7 @@ class MainWindow(HasTraits):
         self.icamera.acquisitionmode = self.pop(data,'camera','acquisitionmode')
         self.icamera.Vshiftspeed = self.pop(data,'camera','Vshiftspeed ')
         self.icamera.Hshiftspeed = self.pop(data,'camera','Hshiftspeed ')
-                    
+
         self.x_koords = self.pop(data,'values','x')
         self.y_koords = self.pop(data,'values','y')
         self.spectra = self.pop(data,'values','spectra')
@@ -467,7 +468,7 @@ class MainWindow(HasTraits):
         # raise load warning
         self.pop(data,'none','none')
         self.pop(data,'values','none')
-        
+
         for device in data:
             for key in data[device]:
                 print 'Did not load values from file:', device,key
