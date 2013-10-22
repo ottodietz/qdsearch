@@ -212,9 +212,7 @@ class MainWindow(HasTraits):
 
         f = open('measurement/last_measurement.pick', "w") # creates new file
         f.close()
-        self.usedgrating=self.ispectrometer.current_grating
-        self.usednm=self.ispectrometer.centerwvl
-
+        
 
         if self.ispectrometer.exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
              self.ispectrometer.exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
@@ -302,11 +300,11 @@ class MainWindow(HasTraits):
     def create_wavelength_for_plotting(self):
         wavelength=[]
         pixel=1024
-        grooves=int(self.usedgrating.split(' ')[1])
+        grooves=int(self.ispectrometer.current_grating.split(' ')[1])
         for i in range(pixel+1):
             wavelength.append(i)
         width=26*10**-3
-        wavelength[pixel/2]=self.usednm
+        wavelength[pixel/2]=self.ispectrometer.centerwvl
         for i in range(pixel/2):
             wavelength[pixel/2-i-1]=wavelength[pixel/2-i]-width*self.calculate_dispersion(wavelength[pixel/2-i],grooves)
             wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
@@ -439,9 +437,6 @@ class MainWindow(HasTraits):
         f = open(self.file_name, "rb")
         data = pickle.load(f)
         f.close()
-        # TODO bereinigen self.usednm=value[0][0]
-        #  self.usedgrating=value[0][1]
-
 
         self.x1 = self.pop(data,'cryo','x1')
         self.x2 = self.pop(data,'cryo','x2')
