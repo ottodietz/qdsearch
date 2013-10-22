@@ -7,7 +7,6 @@ from traitsui.menu import OKButton, CancelButton
 import thread
 from pyface.api import information
 import time
-#from ctypes import *
 import pickle
 import numpy as np
 from threading import Thread
@@ -94,7 +93,7 @@ class MainWindow(HasTraits):
     ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) # No ",()" as below, Instance is created in _ispectrometer_default
     icryo         = Instance(views.cryo.CryoGUI,())
     icamera       = Instance(views.camera.CameraGUI,())
-
+    
     ## Set CameraGUI for GUI Handler
     #def _ispectrometer_default(self):
     #    ispectrometer = views.spectrometer.SpectrometerGUI()
@@ -345,6 +344,82 @@ class MainWindow(HasTraits):
                     self.icryo.cryo.move(self.x_koords[i],self.y_koords[i])
                     break
 
+    def calc_snake_xy_pos(self):
+        dist_x = abs(self.x2-self.x1)
+        dist_y = abs(self.y2-self.y1)
+        a = np.linspace(self.x1,self.x2,dist_x/self.x_stepsize)
+        b = np.linspace(self.y1,self.y2,dist_y/self.y_stepsize) # hier war dist_y
+
+        a = a.round(5)
+        b = b.round(5)
+
+        stepsa = len(a)
+        stepsb = len(b)
+
+        # we go snake-lines, so in the first y-step x=1,2 and in the
+        # second y-step (the way back) x=2,1 .
+        # Make a containing these two lines
+        # a = [1,2] -> [1,2,2,1]
+        a = np.array((a,np.flipud(a))).flatten()
+        # repeat entire array a. This creates too many lines.
+        a = np.tile  (a,stepsb)
+        # within one line, y doesn't change, so repeat every element in b
+        b = np.repeat(b,stepsa)
+        #  discard unecessary elements in a
+        a = np.resize(a,len(b))
+        return [a,b]
+
+    def save_to(self):
+        file_name = save_file()
+        print file_name
+        if file_name != '':
+            self.file_name = file_name
+        self.save_file()
+
+    def open_to(self):
+        file_name = open_file()
+        if file_name != '':
+            self.file_name = file_name
+        self.load()
+
+    def save_file(self):
+        f = open(self.file_name, "w")
+        
+        data = {
+            'cryo': { 'x1':self.x1,
+                     'x2':self.x2,
+                     'y1':self.y1,
+                     'y2':self.y2,
+                     'x_stepsize':self.x_stepsize,
+                     'y_stepsize':self.y_stepsize
+                    },
+
+            'spectrometer': { 'centerwvl': self.ispectrometer.centerwvl, 
+                             'grating': self.ispectrometer.current_grating,
+                             'slotInWidth': 0.0,
+                             'slotOutWidth': 0.0
+                            },
+            'voltage': {
+                    'threshold': self.threshold_counts
+                    },
+
+            'camera': {
+                    'exposuretime':self.icamera.exposuretime,
+                    'readmode':self.icamera.readmode,
+                    'acquisitionmode':self.icamera.acquisitionmode,
+                    'Vshiftspeed ':self.icamera.Vshiftspeed,
+                    'Hshiftspeed ':self.icamera.Hshiftspeed
+                    },
+            
+            'values': {
+                    'x':self.x_koords,
+                    'y':self.y_koords,
+                    'spectra': self.spectra
+                }
+            }
+
+        pickle.dump(data,f)
+        f.close()
 
     def load(self):
         f = open(self.file_name, "r")
@@ -392,52 +467,6 @@ class MainWindow(HasTraits):
         self.y_koords=y
         self.spectra=spectrum
         self.plot_map(x[0], x[0])
-
-    def save_to(self):
-        file_name = save_file()
-        print file_name
-        if file_name != '':
-            self.file_name = file_name
-        self.save_file()
-
-    def open_to(self):
-        file_name = open_file()
-        if file_name != '':
-            self.file_name = file_name
-        self.load()
-
-    def save_file(self):
-        f = open(self.file_name, "w")
-        settings=[self.ispectrometer.input_goto,self.ispectrometer.current_grating,self.x1,self.x2,self.y1,self.y2, self.x_stepsize, self.y_stepsize, self.threshold_counts]
-        pickle.dump(settings,f)
-        for i in range(len(self.x_koords)):
-            pickle.dump([self.x_koords[i],self.y_koords[i],self.spectra[i]],f)
-        f.close()
-
-    def calc_snake_xy_pos(self):
-        dist_x = abs(self.x2-self.x1)
-        dist_y = abs(self.y2-self.y1)
-        a = np.linspace(self.x1,self.x2,dist_x/self.x_stepsize)
-        b = np.linspace(self.y1,self.y2,dist_y/self.y_stepsize) # hier war dist_y
-
-        a = a.round(5)
-        b = b.round(5)
-
-        stepsa = len(a)
-        stepsb = len(b)
-
-        # we go snake-lines, so in the first y-step x=1,2 and in the
-        # second y-step (the way back) x=2,1 .
-        # Make a containing these two lines
-        # a = [1,2] -> [1,2,2,1]
-        a = np.array((a,np.flipud(a))).flatten()
-        # repeat entire array a. This creates too many lines.
-        a = np.tile  (a,stepsb)
-        # within one line, y doesn't change, so repeat every element in b
-        b = np.repeat(b,stepsa)
-        #  discard unecessary elements in a
-        a = np.resize(a,len(b))
-        return [a,b]
 
 
 

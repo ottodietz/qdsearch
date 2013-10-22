@@ -31,6 +31,9 @@ class CameraGUI(HasTraits):
     readmode=Int(0)
     acquisitionmode=Int(1)
     exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
+    Vshiftspeed = Enum(1,2,3)
+    Hshiftspeed = Enum(1,2,3)
+
     output=Str()
     plot = Instance(Plot,())
 
@@ -58,8 +61,6 @@ class CameraGUI(HasTraits):
             #SetReadMode(4);
             #SetImage(1,1,1,1024,1,256);
 
-    Vshiftspeed = Enum(1,2,3)
-    Hshiftspeed = Enum(1,2,3)
 #GetNumberHSSpeeds(0, 0, &a); //first A-D, request data speeds for (I = 0; I <
 #        a;I++)
 #GetHSSpeed(0, 0, I, &speed[I]);
