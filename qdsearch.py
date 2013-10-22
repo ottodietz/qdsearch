@@ -7,6 +7,8 @@ from traitsui.menu import OKButton, CancelButton
 import thread
 from pyface.api import information
 import time
+import math
+#from ctypes import *
 import pickle
 import numpy as np
 from threading import Thread
@@ -292,34 +294,27 @@ class MainWindow(HasTraits):
         plot.y_axis.title="y-Position on sample [mm]"
         self.plot=plot
 
-    def create_wavelength_for_plotting(self,number_y_values):
-        """ this function calculates the measured wavelength because the camera
-        can not differentiate between the different wavelength, the calculation is done
-        with measured values thereby the maximum and minum wavelength of the camera for
-        a center wavelenght of 900 nm was measured. The different between the max/min
-        value and the center wavelength gives the values xless/xmore. The order of the
-        gratings are 600, 1200,1800. Note that these values are wavelength depened.
-        900 nm was choosen because it was in the interesting range for the
-        measurement."""
+    def calculate_dispersion(self,wavelength,grooves):
+        m=1 #grating order
+        x=8.548 #spectro value: half angle
+        f=486 # focal length
+        phi=math.degrees(math.asin((m*wavelength*grooves/(2*10**6*math.cos(math.radians(x))))))
+        dispersion=math.cos(math.radians(x+phi))*10**6/(grooves*f*m)
+        return dispersion
 
-        x_less=[40.97,16.96,6.91] # values for different gratings: 600,1200,1800
-        x_more=[40.7,16.4,6.49]
-        if self.usedgrating.find(' 600')!=-1:
-            i=0
-        elif self.usedgrating.find(' 1200')!=-1:
-            i=1
-        elif self.usedgrating.find(' 1800')!=-1:
-            i=2
-        try:
-            x_min=self.usednm-x_less[i]
-            x_max=self.usednm+x_more[i]
+    def create_wavelength_for_plotting(self):
+        wavelength=[]
+        pixel=1024
+        grooves=int(self.usedgrating.split(' ')[1])
+        for i in range(pixel+1):
+            wavelength.append(i)
+        width=26*10**-3
+        wavelength[pixel/2]=self.usednm
+        for i in range(pixel/2):
+            wavelength[pixel/2-i-1]=wavelength[pixel/2-i]-width*self.calculate_dispersion(wavelength[pixel/2-i],grooves)
+            wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
+        return wavelength
 
-        except:
-            x_min=0
-            x_max=number_y_values
-        stepwise=(x_max-x_min)/float(number_y_values)
-        x_axis=np.arange(x_min+self.offset*stepwise,x_max+self.offset*stepwise,stepwise)
-        return(x_axis)
 
     def plot_spectrum(self,x,y,field):
         for i in range(len(self.x_koords)):
@@ -327,7 +322,7 @@ class MainWindow(HasTraits):
             y_gap=abs(y-self.y_koords[i])
             if x_gap <self.toleranz and y_gap<self.toleranz:
                 spectrum=self.spectra[i]
-                wavelength=self.create_wavelength_for_plotting(len(spectrum))
+                wavelength=self.create_wavelength_for_plotting()
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum)
                 plot = Plot(plotdata)
                 plot.plot(("x", "y"), type="line", color="blue")
