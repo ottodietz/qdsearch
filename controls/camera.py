@@ -38,12 +38,14 @@ class Camera():
         return self.simulation
 
 
-    def acquisition(self):
+    def acquisition(self):#,sim_posx=None,sim_posy=None):
         pixel=1024
+
         if self.simulation:
             line = [ random.randint(10,100) for i in np.arange(pixel) ]
             print "simulating acquisition 2"
             return line
+
         line  = (c_long * pixel)()
         action = []
         error  = []

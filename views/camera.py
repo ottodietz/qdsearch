@@ -80,8 +80,8 @@ class CameraGUI(HasTraits):
                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
                        resizable = True, menubar=MenuBar(menu) )
 
-    def _single_fired(self):
-            self.line=self.camera.acquisition()
+    def _single_fired(self,sim_posx=None,sim_posy=None):
+            self.line=self.camera.acquisition(sim_posx=sim_posx,sim_posy=sim_posy)
             self.plot_data()
 
 

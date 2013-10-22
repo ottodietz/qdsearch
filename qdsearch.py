@@ -96,9 +96,8 @@ class MainWindow(HasTraits):
     
     ## Set CameraGUI for GUI Handler
     #def _ispectrometer_default(self):
-    #    ispectrometer = views.spectrometer.SpectrometerGUI()
-    #    self.icamera = icamera
-    #    return ispectrometer
+    #    ispectrometer = views.spectrometer.SpectrometerGUI(camera = self.icamera)
+    #    return ispectrometer 
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
     hide_no_scan = { 'enabled_when': 'finished==False'}
@@ -137,10 +136,18 @@ class MainWindow(HasTraits):
             label='spectrometer'
             )
 
+    focus_tab = VGroup(
+            Item('icamera',style = 'custom', show_label=False),
+            Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
+            label='Focus'
+            )
+
+
     tabs = Group(
         Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
         spectrometer_tab,
         scan_sample_group,
+        focus_tab,
         layout='tabbed')
 
     traits_view = View(
@@ -383,10 +390,10 @@ class MainWindow(HasTraits):
         self.load()
 
     def save_file(self):
-        f = open(self.file_name, "w")
+        f = open(self.file_name, "wb")
         
         data = {
-            'cryo': { 'x1':self.x1,
+            'cryo': {'x1':self.x1,
                      'x2':self.x2,
                      'y1':self.y1,
                      'y2':self.y2,
@@ -395,9 +402,9 @@ class MainWindow(HasTraits):
                     },
 
             'spectrometer': { 'centerwvl': self.ispectrometer.centerwvl, 
-                             'grating': self.ispectrometer.current_grating,
-                             'slotInWidth': 0.0,
-                             'slotOutWidth': 0.0
+                              'grating': self.ispectrometer.current_grating,
+                              'slot_width_in': self.ispectrometer.slot_width_in,
+                              'slot_width_out': self.ispectrometer.slot_width_out
                             },
             'voltage': {
                     'threshold': self.threshold_counts
@@ -421,55 +428,62 @@ class MainWindow(HasTraits):
         pickle.dump(data,f)
         f.close()
 
-    def load(self):
-        f = open(self.file_name, "r")
-        reading=True
-        value=[]
-        while reading:
-            try:
-                value.append(pickle.load(f))
-                print "unpickled one line"
-            except EOFError:
-                reading=False
-        f.close()
-        if len(value) == 0:
-            print "Error: Didn't read any lines from file!"
-            return False
-        x=[]
-        y=[]
-        spectrum=[]
-	if len(value) == 0:
-		print "Error opening file!"
-		return False
-        if len(value[0])>7: # if is for for compatibility to previous version (before the settings are saved, too), can be delted later
-            print "Value:",value[0]
-            self.usednm=value[0][0]
-            self.usedgrating=value[0][1]
-            self.x1=value[0][2]
-            self.y1= value[0][3]
-            self.x2= value[0][4]
-            self.y2= value[0][5]
-            self.x_stepsize=value[0][6]
-            self.y_stepsize=value[0][7]
-            self.threshold_counts= value[0][8]
-            for i in range(1,len(value)):
-                x.append(value[i][0])
-                y.append(value[i][1])
-                spectrum.append(value[i][2])
+    def pop(self,data,device,key):
+
+        if device in data:
+            if key in data[device]:
+                temp = data[device].pop(key)
+                return temp
+            else: 
+                error = 'no key ',key,' in device ',device
         else:
-
-            print "Value:",value[0]
-            for i in range(1,len(value)):
-                x.append(value[i][0])
-                y.append(value[i][1])
-                spectrum.append(value[i][2])
-        self.x_koords=x
-        self.y_koords=y
-        self.spectra=spectrum
-        self.plot_map(x[0], x[0])
+            error = 'no device ',device, ' in data'
+        print error
+        return None
 
 
 
+    def load(self):
+        f = open(self.file_name, "rb")
+        data = pickle.load(f)
+        f.close()
+        # TODO bereinigen self.usednm=value[0][0]
+        #  self.usedgrating=value[0][1]
+
+
+        self.x1 = self.pop(data,'cryo','x1')
+        self.x2 = self.pop(data,'cryo','x2')
+        self.y1 = self.pop(data,'cryo','y1')
+        self.y2 = self.pop(data,'cryo','y2')
+        self.x_stepsize = self.pop(data,'cryo','x_stepsize')
+        self.y_stepsize = self.pop(data,'cryo','y_stepsize')
+
+        self.ispectrometer.centerwvl = self.pop(data,'spectrometer','centerwvl') 
+        self.ispectrometer.current_grating = self.pop(data,'spectrometer','grating')
+        self.ispectrometer.slot_width_in = self.pop(data,'spectrometer','slot_width_in')
+        self.ispectrometer.slot_width_out = self.pop(data,'spectrometer','slot_width_out')
+
+        self.threshold_counts = self.pop(data,'voltage','threshold')
+
+        self.icamera.exposuretime = self.pop(data,'camera','exposuretime')
+        self.icamera.readmode = self.pop(data,'camera','readmode')
+        self.icamera.acquisitionmode = self.pop(data,'camera','acquisitionmode')
+        self.icamera.Vshiftspeed = self.pop(data,'camera','Vshiftspeed ')
+        self.icamera.Hshiftspeed = self.pop(data,'camera','Hshiftspeed ')
+                    
+        self.x_koords = self.pop(data,'values','x')
+        self.y_koords = self.pop(data,'values','y')
+        self.spectra = self.pop(data,'values','spectra')
+
+        self.plot_map(self.x_koords[0], self.y_koords[0])
+
+        # raise load warning
+        self.pop(data,'none','none')
+        self.pop(data,'values','none')
+        
+        for device in data:
+            for key in data[device]:
+                print 'Did not load values from file:', device,key
 
 main = MainWindow()
 if __name__ == '__main__':
