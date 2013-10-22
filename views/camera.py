@@ -12,6 +12,7 @@ from ctypes import *
 
 import controls.camera
 reload (controls.camera)
+import views.cryo
 
 from pyface.api import error,warning,information
 
@@ -26,6 +27,8 @@ class CameraGUI(HasTraits):
     single=Button()
     continous=Button()
     settemperature=Range(low=-70,high=20,value=20)
+
+    icryo = Instance(views.cryo.CryoGUI)
 
     """menu"""
     readmode=Int(0)
@@ -80,8 +83,8 @@ class CameraGUI(HasTraits):
                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
                        resizable = True, menubar=MenuBar(menu) )
 
-    def _single_fired(self,sim_posx=None,sim_posy=None):
-            self.line=self.camera.acquisition(sim_posx=sim_posx,sim_posy=sim_posy)
+    def _single_fired(self):
+            self.line=self.camera.acquisition()
             self.plot_data()
 
 
@@ -158,8 +161,8 @@ class CameraGUI(HasTraits):
        self.configure_traits(view='view_menu')
 
     def reload_camera(self):
-       print "reload"
-       reload(controls.camera)
+        import pdb; pdb.set_trace()
+
 
     def stop_acq_thread(self):
         if self.acq_active:
@@ -172,6 +175,7 @@ class CameraGUI(HasTraits):
         self.camera.close()
 
 if __name__=="__main__":
-    main=CameraGUI()
+    icryo = views.cryo.CryoGUI()
+    main=CameraGUI(icryo = icryo)
     main.configure_traits()
     main.close()

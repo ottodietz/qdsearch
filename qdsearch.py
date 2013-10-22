@@ -94,12 +94,11 @@ class MainWindow(HasTraits):
     counts_thread = counts_thread()
     ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) # No ",()" as below, Instance is created in _ispectrometer_default
     icryo         = Instance(views.cryo.CryoGUI,())
-    icamera       = Instance(views.camera.CameraGUI,())
+    icamera       = Instance(views.camera.CameraGUI)
+
     
-    ## Set CameraGUI for GUI Handler
-    #def _ispectrometer_default(self):
-    #    ispectrometer = views.spectrometer.SpectrometerGUI(camera = self.icamera)
-    #    return ispectrometer 
+    def _icamera_default(self):
+        return views.camera.CameraGUI(icryo=self.icryo)
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
     hide_no_scan = { 'enabled_when': 'finished==False'}
@@ -273,9 +272,7 @@ class MainWindow(HasTraits):
         f.close()
 
     def reload_all(self):
-        print "reload modules view.cryo, view.spectrometer"
-        reload(views.cryo)
-        reload(views.spectrometer)
+        import pdb;pdb.set_trace()
 
     def plot_map(self,x,y):
         plotdata = ArrayPlotData(x=self.x_koords, y=self.y_koords,x2=[x],y2=[y])
