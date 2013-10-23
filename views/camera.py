@@ -26,11 +26,12 @@ class CameraGUI(HasTraits):
     cooler=Bool(False)
     single=Button()
     continous=Button()
-    autofocus=Button(label="AF")
+    autofocus=Button(label="AF X/Y")
+    zautofocus=Button(label="AF Z")
     settemperature=Range(low=-70,high=20,value=20)
 
-    x_step = Float(0.1)
-    y_step = Float(0.1)
+    x_step = Float(0.00001)
+    y_step = Float(0.00001)
     icryo = Instance(views.cryo.CryoGUI)
 
     """menu"""
@@ -50,7 +51,7 @@ class CameraGUI(HasTraits):
 #                        HGroup(Item('cooler'),Item('simulate_camera',label='Simulation camera')),
 #                        HGroup(Item('output',label='Camera output',
 #                            style='readonly')),
-#                        VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'))
+#                        VGroup(Item:('readmode'),Item('acquisitionmode'),Item('exposuretime'))
 #                        ),
 #                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
 #                        resizable = True )
@@ -78,7 +79,8 @@ class CameraGUI(HasTraits):
     traits_view=View(HGroup(VGroup(
                         HGroup(Item('single',label='Single',show_label=False),
                                Item('continous',show_label=False,editor=ButtonEditor(label_value
-= 'continous_label')),Item('autofocus',show_label=False)),
+= 'continous_label')),Item('autofocus',show_label=False),Item('zautofocus',
+show_label=False),
                         HGroup(Item('exposuretime'),Item('simulate_camera',label='simulate camera')),
                         Item('readmodes'),
                         Item('Vshiftspeed'),
@@ -93,6 +95,11 @@ class CameraGUI(HasTraits):
             except: 
                 self.line=self.camera.acquisition()
             self.plot_data()
+
+    def _zautofocus_fired(self):
+        
+
+
 
     def _autofocus_fired(self):
         xtest = False
