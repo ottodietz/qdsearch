@@ -2,6 +2,8 @@ from ctypes import *
 import random
 import numpy as np
 import time
+from math import *
+from scipy.special import jn
 
 CAM_OKAY = 20002
 
@@ -43,7 +45,7 @@ class Camera():
 
         if self.simulation:
             line = [ random.randint(10,100) for i in np.arange(pixel) ]
-            print "simulating acquisition 2"
+#           print "simulating acquisition 2"
             return line
 
         line  = (c_long * pixel)()

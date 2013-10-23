@@ -9,6 +9,8 @@ from enable.component_editor import ComponentEditor
 import thread
 import time
 from ctypes import *
+from scipy.special import jn
+from math import *
 
 import controls.camera
 reload (controls.camera)
