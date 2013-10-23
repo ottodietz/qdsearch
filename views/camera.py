@@ -9,8 +9,6 @@ from enable.component_editor import ComponentEditor
 import thread
 import time
 from ctypes import *
-from scipy.special import jn
-from math import *
 
 import controls.camera
 reload (controls.camera)
@@ -28,8 +26,11 @@ class CameraGUI(HasTraits):
     cooler=Bool(False)
     single=Button()
     continous=Button()
+    autofocus=Button(label="AF")
     settemperature=Range(low=-70,high=20,value=20)
 
+    x_step = Float(0.1)
+    y_step = Float(0.1)
     icryo = Instance(views.cryo.CryoGUI)
 
     """menu"""
@@ -76,7 +77,8 @@ class CameraGUI(HasTraits):
 
     traits_view=View(HGroup(VGroup(
                         HGroup(Item('single',label='Single',show_label=False),
-                               Item('continous',show_label=False,editor=ButtonEditor(label_value = 'continous_label'))),
+                               Item('continous',show_label=False,editor=ButtonEditor(label_value
+= 'continous_label')),Item('autofocus',show_label=False)),
                         HGroup(Item('exposuretime'),Item('simulate_camera',label='simulate camera')),
                         Item('readmodes'),
                         Item('Vshiftspeed'),
@@ -91,6 +93,89 @@ class CameraGUI(HasTraits):
             except: 
                 self.line=self.camera.acquisition()
             self.plot_data()
+
+    def _autofocus_fired(self):
+        xtest = False
+        ytest = False
+        try:
+            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+        except:
+            self.line=self.camera.acquisition()
+
+        while xtest == False: #Test in die x-Richtung, suchen bis Counts runter
+            a = max(self.line)
+            self.icryo.cryo.rmove(self.x_step,0)
+            try:
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+            except:
+                self.line=self.camera.acquisition()
+            self.plot_data()
+            b = max(self.line)
+            if b < a:
+                self.icryo.cryo.rmove(-self.x_step,0)
+                try: #damit er wieder das aktuelle max hat
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+                except:
+                    self.line=self.camera.acquisition()
+                xtest = True
+
+        xtest=False
+
+        while xtest == False: #Test in die -x-Richtung, suchen bis Counts runter
+            a = max(self.line)
+            self.icryo.cryo.rmove(-self.x_step,0)
+            try:
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+            except:
+                self.line=self.camera.acquisition()
+            self.plot_data()
+            b = max(self.line)
+            if b < a:
+                self.icryo.cryo.rmove(self.x_step,0)
+                try:
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+                except:
+                    self.line=self.camera.acquisition()
+                xtest = True
+
+        while ytest == False: #Test in die y-Richtung, suchen Counts runter
+           a = max(self.line)
+           self.icryo.cryo.rmove(0,self.y_step)
+           try:
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+           except:
+                self.line=self.camera.acquisition()
+           self.plot_data()
+           b = max(self.line)
+           if b < a:
+                self.icryo.cryo.rmove(0,-self.y_step)
+                try:
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+                except:
+                    self.line=self.camera.acquisition()
+                ytest = True
+
+        ytest = False
+
+        while ytest == False: #Test in die -y-Richtung, suchen Counts runter
+           a = max(self.line)
+           self.icryo.cryo.rmove(0,-self.y_step)
+           try:
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+           except:
+                self.line=self.camera.acquisition()
+           self.plot_data()
+           b = max(self.line)
+           if b < a:
+                self.icryo.cryo.rmove(0,self.y_step)
+                try:
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+                except:
+                    self.line=self.camera.acquisition()
+                ytest = True
+
+        self.plot_data()
+        print "AF fertig!"
 
 
     def plot_data(self):

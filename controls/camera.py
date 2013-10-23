@@ -44,7 +44,7 @@ class Camera():
         pixel=1024
 
         if self.simulation:
-            line = [ random.randint(10,100) for i in np.arange(pixel) ]
+            line = [ 100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(pixel) ]
 #           print "simulating acquisition 2"
             return line
 
