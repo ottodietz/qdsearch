@@ -86,7 +86,10 @@ class CameraGUI(HasTraits):
                        resizable = True, menubar=MenuBar(menu) )
 
     def _single_fired(self):
-            self.line=self.camera.acquisition()
+            try:
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
+            except: 
+                self.line=self.camera.acquisition()
             self.plot_data()
 
 
@@ -177,7 +180,6 @@ class CameraGUI(HasTraits):
         self.camera.close()
 
 if __name__=="__main__":
-    icryo = views.cryo.CryoGUI()
-    main=CameraGUI(icryo = icryo)
+    main=CameraGUI(icryo = views.cryo.CryoGUI())
     main.configure_traits()
     main.close()
