@@ -32,6 +32,9 @@ reload (views.spectrometer)
 import views.camera
 reload (views.camera)
 
+import views.voltage
+reload (views.voltage)
+
 """events on the plot"""
 class PlotTool(BaseTool):
     def normal_left_dclick(self, event):
@@ -92,13 +95,15 @@ class MainWindow(HasTraits):
     plot_compare=Instance(Plot,())
 
     counts_thread = counts_thread()
-    ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) # No ",()" as below, Instance is created in _ispectrometer_default
+    ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) 
     icryo         = Instance(views.cryo.CryoGUI,())
-    icamera       = Instance(views.camera.CameraGUI)
+    ivoltage      = Instance(views.voltage.VoltageGUI,())
+
+    icamera       = Instance(views.camera.CameraGUI)# No ",()" as below, Instance is created in _default
 
 
     def _icamera_default(self):
-        return views.camera.CameraGUI(icryo=self.icryo)
+        return views.camera.CameraGUI(icryo=self.icryo, ivoltage=self.ivoltage)
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
     hide_no_scan = { 'enabled_when': 'finished==False'}
@@ -140,6 +145,7 @@ class MainWindow(HasTraits):
     focus_tab = VGroup(
             Item('icamera',style = 'custom', show_label=False),
             Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
+            Item('ivoltage', style='custom',show_label=False,label="voltage"),
             label='Focus'
             )
 

@@ -13,6 +13,7 @@ from ctypes import *
 import controls.camera
 reload (controls.camera)
 import views.cryo
+import views.voltage
 
 from pyface.api import error,warning,information
 
@@ -30,9 +31,10 @@ class CameraGUI(HasTraits):
     zautofocus=Button(label="AF Z")
     settemperature=Range(low=-70,high=20,value=20)
 
-    x_step = Float(0.00001)
-    y_step = Float(0.00001)
+    x_step = Float(0.1)
+    y_step = Float(0.1)
     icryo = Instance(views.cryo.CryoGUI)
+    ivoltage = Instance(views.voltage.VoltageGUI)
 
     """menu"""
     readmode=Int(0)
@@ -80,7 +82,7 @@ class CameraGUI(HasTraits):
                         HGroup(Item('single',label='Single',show_label=False),
                                Item('continous',show_label=False,editor=ButtonEditor(label_value
 = 'continous_label')),Item('autofocus',show_label=False),Item('zautofocus',
-show_label=False),
+show_label=False)),
                         HGroup(Item('exposuretime'),Item('simulate_camera',label='simulate camera')),
                         Item('readmodes'),
                         Item('Vshiftspeed'),
@@ -88,15 +90,15 @@ show_label=False),
                        ),
                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
                        resizable = True, menubar=MenuBar(menu) )
-
+# import pdb; pdb.set_trace()
     def _single_fired(self):
-            try:
-                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
-            except: 
-                self.line=self.camera.acquisition()
-            self.plot_data()
+        try:
+            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.simulate_voltage)
+        except: 
+            self.line=self.camera.acquisition()
+        self.plot_data()
 
-    def _zautofocus_fired(self):
+#    def _zautofocus_fired(self):
         
 
 
@@ -272,6 +274,6 @@ show_label=False),
         self.camera.close()
 
 if __name__=="__main__":
-    main=CameraGUI(icryo = views.cryo.CryoGUI())
+    main=CameraGUI(icryo = views.cryo.CryoGUI(), ivoltage = view.voltage.VoltageGUI())
     main.configure_traits()
     main.close()

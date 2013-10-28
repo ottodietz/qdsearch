@@ -13,6 +13,9 @@ class Voltage(SimSerial):
     lock = allocate_lock()
 
     voltage_simulation=float(2.511)
+    
+    def toggle_simulation(self):
+        
 
     def blink(self):
         self.write("B")
@@ -31,7 +34,6 @@ class Voltage(SimSerial):
         #ende = time.clock()
         #print "the function read runs %1.2f s" % (ende - start)
         return(float(voltage))
-        print voltage
 
     def read_voltage_new(self):
         #start = time.clock()
