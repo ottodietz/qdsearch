@@ -17,6 +17,7 @@ class Volt(HasTraits):
     Setzero = Button(label="set zero")
     Input=Button(label="Input")
     read=Button(label="read")
+    read2=Button(label="read2")
     output=Str(label="applied Voltage")
     test=Button(label="elapsed time 1")
     test2=Button(label="elapsed time 2")
@@ -26,25 +27,33 @@ class Volt(HasTraits):
     view = View(HGroup(Item('Voltage', show_label=False), VGroup(Item("UP",
 show_label=False),Item("DOWN", show_label=False))),Item('setvoltage',show_label=False),
             HGroup(Item('Setzero', show_label=True ),Item("Blinken", show_label=False)),
-            HGroup(Item("Input",show_label=False), Item('read',show_label=False)),
+            HGroup(Item("Input",show_label=False),
+Item('read',show_label=False),Item('read2',show_label=False)),
             HGroup( Item("output", show_label=True, style="readonly")),
             HGroup(Item('test',show_label=True),Item('test2',show_label=True)),
             Item('checkbox', show_label=True),
              resizable = True)
 
     def _setvoltage_fired(self):
+        if not (0. <= self.Voltage <= 255.):
+            self.Voltage = 0
+            self.output = str(0)
         if self.checkbox == False:
             self.ivolt.setvoltage(self.Voltage)
         else:
             self.output = str(self.Voltage)
 
     def _UP_fired(self):
-        if self.Voltage < 255:
+        if (0. <= self.Voltage < 255.):
             self.Voltage +=1
+        else:
+            self.Voltage = 0
 
     def _DOWN_fired(self):
-        if self.Voltage > 0:
+        if (0. < self.Voltage <= 255.):
             self.Voltage -=1
+        else:
+            self.Voltage = 0
 
     def _Setzero_fired(self):
         if self.checkbox == False:
@@ -59,8 +68,11 @@ show_label=False),Item("DOWN", show_label=False))),Item('setvoltage',show_label=
         else:
             self.output=str(self.ivolt.read_voltage())
 
-    def _lesen2_fired(self):
-        self.output=str(self.ivolt.read_voltage_new())
+    def _read2_fired(self):
+        if self.checkbox == True:
+            self.output=str(self.Voltage)
+        else:
+            self.output=str(self.ivolt.read_voltage_new())
 
     def _Blinken_fired(self):
         self.ivolt.blink()
