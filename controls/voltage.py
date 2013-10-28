@@ -14,8 +14,6 @@ class Voltage(SimSerial):
 
     voltage_simulation=float(2.511)
     
-    def toggle_simulation(self):
-        
 
     def blink(self):
         self.write("B")

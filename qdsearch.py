@@ -97,13 +97,18 @@ class MainWindow(HasTraits):
     counts_thread = counts_thread()
     ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) 
     icryo         = Instance(views.cryo.CryoGUI,())
-    ivoltage      = Instance(views.voltage.VoltageGUI,())
+    ivoltage      = Instance(views.voltage.VoltageGUI)
 
     icamera       = Instance(views.camera.CameraGUI)# No ",()" as below, Instance is created in _default
 
 
     def _icamera_default(self):
         return views.camera.CameraGUI(icryo=self.icryo, ivoltage=self.ivoltage)
+#### kann das hier noch raus? oder für später wichtig?
+#    def _ivoltage_default(self):
+ #       temp = views.voltage.VoltageGUI()
+  #      temp.setvoltage(0)
+   #     return temp
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
     hide_no_scan = { 'enabled_when': 'finished==False'}
@@ -481,7 +486,7 @@ class MainWindow(HasTraits):
 
 main = MainWindow()
 if __name__ == '__main__':
-    main.configure_traits()
+    main.configure_traits(scrollable = True)
     main.icryo.open=False
     main.counts_thread.wants_abort=True
     sleep(1.0)
