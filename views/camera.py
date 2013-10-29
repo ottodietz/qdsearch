@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from traits.api import*
 from traitsui.api import*
+from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
 from chaco.api import Plot, ArrayPlotData
 from chaco.tools.api import PanTool, ZoomTool
@@ -11,7 +12,7 @@ import time
 from ctypes import *
 
 import controls.camera
-reload (controls.camera)
+# refresh (controls.camera)
 import views.cryo
 import views.voltage
 
@@ -93,8 +94,12 @@ show_label=False)),
 
     def _single_fired(self):
         try:
+            print("im try")
+            import pdb; pdb.set_trace()
+            print self.ivoltage.voltage_simulation
             self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
         except: 
+            print("im except")
             self.line=self.camera.acquisition()
         self.plot_data()
 
@@ -109,6 +114,7 @@ show_label=False)),
         print("Im Fokus bei der Spannung %03d" % maxid)
         self.ivoltage.setvoltage(maxid)
         self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+        self.plot_data()
 
     def _autofocus_fired(self):
         xtest = False

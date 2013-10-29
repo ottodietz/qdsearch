@@ -20,15 +20,20 @@ class SimSerial(serial.Serial):
         self.initargs=args
 
     def toggle_simulation(self):
+        """ toggle simulation of serial device. Returns new state of simulation """
         if self.simulation:
             self.simulation=False
-            print("simulation off")
-            serial.Serial.__init__(self, *self.initargs, **self.initkwargs)
-            #super(SimSerial,self).__init__(*self.initargs,**self.initkwargs)
+            try:
+                serial.Serial.__init__(self, *self.initargs, **self.initkwargs)
+                print("simulation off")
+            except:
+                self.simulation=True
+                print("couldn't switch simulation off")
         else:
             self.simulation=True
             self.close()
             print("simulation on")
+        return self.simulation
 
     def write(self,string,*args,**kwargs):
         #import pdb; pdb.set_trace()
@@ -53,6 +58,13 @@ class SimSerial(serial.Serial):
 
     def sim_output(self,string):
         self.buffer += string + self.EOL
+
+    def read(self,number=1):
+        if self.simulation:
+            # gebe die ersten number zeichen aus buffer zurück
+            print "WARNING: SimSerial.read() not implemented!"
+        else:
+            return(serial.Serial.read(self,number))
 
 
     def readline(self):

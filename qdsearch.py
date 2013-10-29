@@ -3,6 +3,7 @@
 
 from traits.api import *
 from traitsui.api import *
+from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
 import thread
 from pyface.api import information
@@ -24,16 +25,16 @@ from chaco.tools.api import PanTool, ZoomTool
 from traitsui.file_dialog import open_file,save_file
 
 import views.cryo
-reload(views.cryo)
+# refresh(views.cryo)
 
 import views.spectrometer
-reload (views.spectrometer)
+# refresh (views.spectrometer)
 
 import views.camera
-reload (views.camera)
+# refresh (views.camera)
 
 import views.voltage
-reload (views.voltage)
+# refresh (views.voltage)
 
 """events on the plot"""
 class PlotTool(BaseTool):
@@ -93,22 +94,29 @@ class MainWindow(HasTraits):
     plot=Instance(Plot,())
     plot_current=Instance(Plot,())
     plot_compare=Instance(Plot,())
+    testB = Button(label="test test")
 
     counts_thread = counts_thread()
     ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) 
     icryo         = Instance(views.cryo.CryoGUI,())
-    ivoltage      = Instance(views.voltage.VoltageGUI)
+    ivoltage      = Instance(views.voltage.VoltageGUI,())
 
     icamera       = Instance(views.camera.CameraGUI)# No ",()" as below, Instance is created in _default
 
 
     def _icamera_default(self):
+        print "CAMERA INIT"
         return views.camera.CameraGUI(icryo=self.icryo, ivoltage=self.ivoltage)
-#### kann das hier noch raus? oder für später wichtig?
-#    def _ivoltage_default(self):
- #       temp = views.voltage.VoltageGUI()
-  #      temp.setvoltage(0)
-   #     return temp
+    def _ivoltage_default(self):
+        print "VOLTAGE INIT"
+        temp = views.voltage.VoltageGUI()
+        try:
+            temp.ivoltage.blink()
+        except:
+            import sys
+            print sys.exc_info()
+        return temp
+
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
     hide_no_scan = { 'enabled_when': 'finished==False'}
@@ -151,6 +159,7 @@ class MainWindow(HasTraits):
             Item('icamera',style = 'custom', show_label=False),
             Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
             Item('ivoltage', style='custom',show_label=False,label="voltage"),
+#            Item('testB',style="custom",show_label=True),
             label='Focus'
             )
 

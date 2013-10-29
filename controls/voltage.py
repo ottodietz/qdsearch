@@ -7,14 +7,13 @@ from thread import allocate_lock
 class Voltage(SimSerial):
     commando_position="first"
     EOL=''
-    new_simulation=True
+    simulation=True
     busy=False
 
     lock = allocate_lock()
 
-    voltage_simulation=float(2.511)
+    voltage_simulation=float(128)
     
-
     def blink(self):
         self.write("B")
 
@@ -54,6 +53,7 @@ class Voltage(SimSerial):
 
     def _V(self):
         self.buffer='Voltage'+'  '+str(self.voltage_simulation)
+        #random.randint(1,20)
 
     def measure(self):
         i = 0
@@ -69,16 +69,19 @@ class Voltage(SimSerial):
         self.busy=True
         self.lock.release()
 
-        if  self.simulation:
-            measurement=random.randint(1,20)
-            time.sleep(0.2)
-        else:
-            measurement=self.read_voltage()
+#        if  self.simulation:
+#            measurement=random.randint(1,20)
+#            time.sleep(0.2)
+#        else:
+
+        measurement=self.read_voltage()
         self.busy=False
         return(measurement)
 
     def setvoltage(self,voltage):
+        print("setze die voltage_simulation auf voltage")
         self.voltage_simulation=voltage
+        print self.voltage_simulation
         dutycycle = "%03d"% int(voltage*255/5.) # problem ist das simserial keine vielen einzelne stringsverarbeitet...
         self.write("S");
         time.sleep(0.1)
