@@ -52,8 +52,7 @@ class Voltage(SimSerial):
 
 
     def _V(self):
-        self.buffer='Voltage'+'  '+str(self.voltage_simulation)
-        #random.randint(1,20)
+        self.buffer='Voltage'+'  '+str(random.randint(1,20))
 
     def measure(self):
         i = 0

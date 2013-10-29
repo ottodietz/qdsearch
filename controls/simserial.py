@@ -33,6 +33,8 @@ class SimSerial(serial.Serial):
             self.simulation=True
             self.close()
             print("simulation on")
+        print "toggle returns"
+        print self.simulation
         return self.simulation
 
     def write(self,string,*args,**kwargs):
@@ -61,8 +63,16 @@ class SimSerial(serial.Serial):
 
     def read(self,number=1):
         if self.simulation:
-            # gebe die ersten number zeichen aus buffer zurück
+            # gebe die ersten number zeichen aus buffer zurueck
             print "WARNING: SimSerial.read() not implemented!"
+            buftemp = self.buffer.split(' ')
+            for i in range(10):
+                try:
+                    temp  = float(buftemp[i])
+                    break
+                except:
+                    print "read simulation buffer"
+            return temp
         else:
             return(serial.Serial.read(self,number))
 
