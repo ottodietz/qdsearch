@@ -1,9 +1,9 @@
 import serial
 import time
-
+import re
 
 class SimSerial(serial.Serial):
-    commando_position="first"
+    CMD = None
     device=""
     number_of_EOL=str
     EOL=''
@@ -20,17 +20,23 @@ class SimSerial(serial.Serial):
         self.initargs=args
 
     def toggle_simulation(self):
+        """ toggle simulation of serial device. Returns new state of simulation """
+        temp = True
         if self.simulation:
-            self.simulation=False
-            print("simulation off")
-            serial.Serial.__init__(self, *self.initargs, **self.initkwargs)
-            #super(SimSerial,self).__init__(*self.initargs,**self.initkwargs)
+            temp=False
+            try:
+                serial.Serial.__init__(self, *self.initargs, **self.initkwargs)
+                print("simulation off")
+            except:
+                temp=True
+                print("couldn't switch simulation off")
         else:
-            self.simulation=True
+            temp=True
             self.close()
             print("simulation on")
+        return temp
 
-    def write(self,string,*args,**kwargs):
+    def write(self,string,inter_char_delay=None,*args,**kwargs):
         #import pdb; pdb.set_trace()
         if self.simulation:
             name=self.search_function_name(string)
@@ -46,13 +52,28 @@ class SimSerial(serial.Serial):
                     self._DEFAULT(string)
             print "buffer, due to write:", repr(self.buffer)
         else:
-            serial.Serial.write(self,string,*args,**kwargs)
+            if inter_char_delay:
+                for char in string:
+                    serial.Serial.write(self,char,*args,**kwargs)
+                    time.sleep(inter_char_delay)
+                print "ACHTUNG SimSerial.write nicht getestet"
+            else: 
+                serial.Serial.write(self,string,*args,**kwargs)
 
     def _DEFAULT(self,string):
         print "No simulation function for " + repr(self.search_function_name(string)) + " implemented in " + str(self.__class__)
 
     def sim_output(self,string):
         self.buffer += string + self.EOL
+
+    def read(self,number=1):
+        if self.simulation:
+            # gebe die ersten number zeichen aus buffer zurueck
+            print "WARNING: SimSerial.read() not implemented!"
+            temp = re.search('[0-9]+',self.buffer).group(0)
+            return temp
+        else:
+            return(serial.Serial.read(self,number))
 
 
     def readline(self):
@@ -91,15 +112,21 @@ class SimSerial(serial.Serial):
         else: return(len(self.buffer))
 
     def search_function_name(self,command):
-        if self.EOL!='':
-            command=command.replace(' '+self.EOL,'')
-        command=command.split(' ')
-        if self.commando_position=='first':
-            name=command[0]
-        else:
-            name=command[-1]
-        name=self.replace_special_characters(name)
+#        if self.EOL!='':
+#            command=command.replace(' '+self.EOL,'')
+#        command=command.split(' ')
+#        if self.commando_position=='first':
+#            name=command[0]
+#        else:
+#            name=command[-1]
+        name= re.search(self.CMD,command).group(0) 
+        name = self.replace_special_characters(name)
         name='_'+name
+        return(name)
+    
+    def search_function_parameters(self,command):
+        name =re.search(self.PARMS,command).group(0)
+        name.self.replace_special_characters(name)
         return(name)
 
     def replace_special_characters(self,name):

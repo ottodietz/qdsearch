@@ -7,7 +7,8 @@ import time
 from simserial import SimSerial
 
 class Cryo(SimSerial):
-    commando_position="last"
+    CMD = ''
+    PARMS = ''
     EOL='\r'# if they are two characters written together (without space) it is one EOL
 
     def identify(self):

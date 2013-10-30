@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from traits.api import*
 from traitsui.api import*
+from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
 from chaco.api import Plot, ArrayPlotData
 from chaco.tools.api import PanTool, ZoomTool
@@ -9,12 +10,11 @@ from enable.component_editor import ComponentEditor
 import thread
 import time
 from ctypes import *
-from scipy.special import jn
-from math import *
 
 import controls.camera
-reload (controls.camera)
+# refresh (controls.camera)
 import views.cryo
+import views.voltage
 
 from pyface.api import error,warning,information
 
@@ -28,9 +28,14 @@ class CameraGUI(HasTraits):
     cooler=Bool(False)
     single=Button()
     continous=Button()
+    autofocus=Button(label="AF X/Y")
+    zautofocus=Button(label="AF Z")
     settemperature=Range(low=-70,high=20,value=20)
 
+    x_step = Float(0.1)
+    y_step = Float(0.1)
     icryo = Instance(views.cryo.CryoGUI)
+    ivoltage = Instance(views.voltage.VoltageGUI)
 
     """menu"""
     readmode=Int(0)
@@ -49,7 +54,7 @@ class CameraGUI(HasTraits):
 #                        HGroup(Item('cooler'),Item('simulate_camera',label='Simulation camera')),
 #                        HGroup(Item('output',label='Camera output',
 #                            style='readonly')),
-#                        VGroup(Item('readmode'),Item('acquisitionmode'),Item('exposuretime'))
+#                        VGroup(Item:('readmode'),Item('acquisitionmode'),Item('exposuretime'))
 #                        ),
 #                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
 #                        resizable = True )
@@ -76,21 +81,123 @@ class CameraGUI(HasTraits):
 
     traits_view=View(HGroup(VGroup(
                         HGroup(Item('single',label='Single',show_label=False),
-                               Item('continous',show_label=False,editor=ButtonEditor(label_value = 'continous_label'))),
+                               Item('continous',show_label=False,editor=ButtonEditor(label_value
+= 'continous_label')),Item('autofocus',show_label=False),Item('zautofocus',
+show_label=False)),
                         HGroup(Item('exposuretime'),Item('simulate_camera',label='simulate camera')),
                         Item('readmodes'),
                         Item('Vshiftspeed'),
                         Item('Hshiftspeed')
                        ),
-                       Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
+                       Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False)),
                        resizable = True, menubar=MenuBar(menu) )
 
     def _single_fired(self):
+        try:
+            print("im try")
+            import pdb; pdb.set_trace()
+            print self.ivoltage.voltage_simulation
+            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+        except: 
+            print("im except")
+            self.line=self.camera.acquisition()
+        self.plot_data()
+
+    def _zautofocus_fired(self):
+        maxid = -1 #Wert der Spannung bei Maximalen Counts, setze auf -1
+        maxcount = 0 #Maximale Counts, setze auf 0
+        for i in range(256):
+            self.ivoltage.setvoltage(i)
+            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)   
+            if maxcount < max(self.line):
+                maxid = i
+        print("Im Fokus bei der Spannung %03d" % maxid)
+        self.ivoltage.setvoltage(maxid)
+        self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+        self.plot_data()
+
+    def _autofocus_fired(self):
+        xtest = False
+        ytest = False
+        try:
+            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+        except:
+            self.line=self.camera.acquisition()
+
+        while xtest == False: #Test in die x-Richtung, suchen bis Counts runter
+            a = max(self.line)
+            self.icryo.cryo.rmove(self.x_step,0)
             try:
-                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos())
-            except: 
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+            except:
                 self.line=self.camera.acquisition()
             self.plot_data()
+            b = max(self.line)
+            if b < a:
+                self.icryo.cryo.rmove(-self.x_step,0)
+                try: #damit er wieder das aktuelle max hat
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                except:
+                    self.line=self.camera.acquisition()
+                xtest = True
+
+        xtest=False
+
+        while xtest == False: #Test in die -x-Richtung, suchen bis Counts runter
+            a = max(self.line)
+            self.icryo.cryo.rmove(-self.x_step,0)
+            try:
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+            except:
+                self.line=self.camera.acquisition()
+            self.plot_data()
+            b = max(self.line)
+            if b < a:
+                self.icryo.cryo.rmove(self.x_step,0)
+                try:
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                except:
+                    self.line=self.camera.acquisition()
+                xtest = True
+
+        while ytest == False: #Test in die y-Richtung, suchen Counts runter
+           a = max(self.line)
+           self.icryo.cryo.rmove(0,self.y_step)
+           try:
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+           except:
+                self.line=self.camera.acquisition()
+           self.plot_data()
+           b = max(self.line)
+           if b < a:
+                self.icryo.cryo.rmove(0,-self.y_step)
+                try:
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                except:
+                    self.line=self.camera.acquisition()
+                ytest = True
+
+        ytest = False
+
+        while ytest == False: #Test in die -y-Richtung, suchen Counts runter
+           a = max(self.line)
+           self.icryo.cryo.rmove(0,-self.y_step)
+           try:
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+           except:
+                self.line=self.camera.acquisition()
+           self.plot_data()
+           b = max(self.line)
+           if b < a:
+                self.icryo.cryo.rmove(0,self.y_step)
+                try:
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                except:
+                    self.line=self.camera.acquisition()
+                ytest = True
+
+        self.plot_data()
+        print "AF fertig!"
 
 
     def plot_data(self):
@@ -180,6 +287,6 @@ class CameraGUI(HasTraits):
         self.camera.close()
 
 if __name__=="__main__":
-    main=CameraGUI(icryo = views.cryo.CryoGUI())
+    main=CameraGUI(icryo = views.cryo.CryoGUI(), ivoltage = views.voltage.VoltageGUI())
     main.configure_traits()
     main.close()

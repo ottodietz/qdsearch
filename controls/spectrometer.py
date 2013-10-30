@@ -13,7 +13,8 @@ class Spectro(simserial.SimSerial):
     # for simulation
     nm=float(0)
     nm_je_min=float(10.0)
-    commando_position="last"
+    CMD = '[a-zA-Z]+'    
+    PARMS = '[0-9.]+'
     EOL='\r'
     simSideMirror = True
 

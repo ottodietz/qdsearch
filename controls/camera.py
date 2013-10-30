@@ -40,12 +40,12 @@ class Camera():
         return self.simulation
 
 
-    def acquisition(self, sim_pos=(0,0)):#,sim_posx=None,sim_posy=None):
+    def acquisition(self, sim_pos=(0,0),sim_volt=(0)):#,sim_posx=None,sim_posy=None):
         pixel=1024
 
         if self.simulation:
-            line = [ random.randint(10,100) for i in np.arange(pixel) ]
-#           print "simulating acquisition 2"
+#            import pdb; pdb.set_trace()
+            line = [ 2*sin(2.*pi/510.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(pixel) ]
             return line
 
         line  = (c_long * pixel)()
