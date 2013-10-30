@@ -44,7 +44,6 @@ class VoltageGUI(HasTraits):
 
     def _Voltage_changed(self):
         self.ivoltage.setvoltage(self.Voltage)
-
     def _UP_fired(self):
         if (0 <= self.Voltage < 255):
             self.Voltage +=1
@@ -76,10 +75,12 @@ class VoltageGUI(HasTraits):
         self.ivoltage.blink()
 
     def _simulation_changed(self):
- #       import pdb; pdb.set_trace()i
- #       toggle_activ = True
- #       if
-        self.simulation= self.ivoltage.toggle_simulation()
+#        import pdb; pdb.set_trace()
+        if not self.toggle_activ:
+            self.toggle_activ = not self.toggle_activ
+            self.simulation= self.ivoltage.toggle_simulation()
+        else:
+            self.toggle_activ = not self.toggle_activ
 
     def _test_fired(self):
         start = time.clock()
@@ -114,5 +115,4 @@ if __name__ == '__main__':
     main=VoltageGUI()
     main.configure_traits()
     if main.ivoltage.simulation==0:
-            print"close Voltage"
-            main.ivoltage.close()
+

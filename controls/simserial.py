@@ -21,21 +21,22 @@ class SimSerial(serial.Serial):
 
     def toggle_simulation(self):
         """ toggle simulation of serial device. Returns new state of simulation """
+        temp = Bool()
         if self.simulation:
-            self.simulation=False
+            temp=False
             try:
                 serial.Serial.__init__(self, *self.initargs, **self.initkwargs)
                 print("simulation off")
             except:
-                self.simulation=True
+                temp=True
                 print("couldn't switch simulation off")
         else:
-            self.simulation=True
+            temp=True
             self.close()
             print("simulation on")
         print "toggle returns"
-        print self.simulation
-        return self.simulation
+        print temp
+        return temp
 
     def write(self,string,*args,**kwargs):
         #import pdb; pdb.set_trace()
