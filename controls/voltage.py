@@ -7,6 +7,8 @@ from thread import allocate_lock
 class Voltage(SimSerial):
     commando_position="first"
     EOL=''
+    CMD=''
+    PARMS=''
     simulation=True
     busy=False
 
@@ -39,13 +41,13 @@ class Voltage(SimSerial):
         self.write('V')
         time.sleep(0.2)
         number=self.inWaiting()
-        temp=self.read(number)
-        a=temp.find('Voltage')
-        if a!=-1:
-            voltage=temp[a+9:a+14]
-        else:
-            voltage=0
-            print 'can not read voltage correctly'
+        voltage=self.read(number)
+#        a=temp.find('Voltage')
+#        if a!=-1:
+#            voltage=temp[a+9:a+14]
+#        else:
+#            voltage=0
+#            print 'can not read voltage correctly'
         #ende = time.clock()
         #print "the function read 2 runs %1.2f s" % (ende - start)
         return(float(voltage))
@@ -53,6 +55,14 @@ class Voltage(SimSerial):
 
     def _V(self):
         self.buffer='Voltage'+'  '+str(random.randint(1,20))
+        buftemp = self.buffer.split(' ')
+        for i in range(10):
+            try:
+                temp = float(buftemp[i])
+                break
+            except:
+                print "read simulation buffer"
+        return(float(temp))
 
     def measure(self):
         i = 0
@@ -78,16 +88,9 @@ class Voltage(SimSerial):
         return(measurement)
 
     def setvoltage(self,voltage):
-        print("setze die voltage_simulation auf voltage")
         self.voltage_simulation=voltage
-        print self.voltage_simulation
-        dutycycle = "%03d"% int(voltage*255/5.) # problem ist das simserial keine vielen einzelne stringsverarbeitet...
-        self.write("S");
-        time.sleep(0.1)
-        for i in [0,1,2]:
-            self.write(dutycycle[i])
-        time.sleep(0.1)
-        self.write("d")
+        Sxxxd = "S%03dd"% int(voltage*255/5.)
+        self.write(Sxxxd,inter_char_delay=0.1);
 
     def _S(self,string):
-        print self.voltage_simulation
+        print "die gesetzte Spannung liegt bei %03d Volt" % float(self.voltage_simulation)

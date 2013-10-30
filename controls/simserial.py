@@ -1,9 +1,9 @@
 import serial
 import time
-
+import re
 
 class SimSerial(serial.Serial):
-    commando_position="first"
+    CMD = None
     device=""
     number_of_EOL=str
     EOL=''
@@ -21,7 +21,7 @@ class SimSerial(serial.Serial):
 
     def toggle_simulation(self):
         """ toggle simulation of serial device. Returns new state of simulation """
-        temp = Bool()
+        temp = True
         if self.simulation:
             temp=False
             try:
@@ -34,11 +34,10 @@ class SimSerial(serial.Serial):
             temp=True
             self.close()
             print("simulation on")
-        print "toggle returns"
-        print temp
+        print "simserial toggle returns",temp
         return temp
 
-    def write(self,string,*args,**kwargs):
+    def write(self,string,inter_char_delay=None,*args,**kwargs):
         #import pdb; pdb.set_trace()
         if self.simulation:
             name=self.search_function_name(string)
@@ -54,7 +53,13 @@ class SimSerial(serial.Serial):
                     self._DEFAULT(string)
             print "buffer, due to write:", repr(self.buffer)
         else:
-            serial.Serial.write(self,string,*args,**kwargs)
+            if inter_char_delay:
+                for char in string:
+                    serial.Serial.write(self,char,*args,**kwargs)
+                    time.sleep(inter_char_delay)
+                print "ACHTUNG SimSerial.write nicht getestet"
+            else: 
+                serial.Serial.write(self,string,*args,**kwargs)
 
     def _DEFAULT(self,string):
         print "No simulation function for " + repr(self.search_function_name(string)) + " implemented in " + str(self.__class__)
@@ -114,15 +119,21 @@ class SimSerial(serial.Serial):
         else: return(len(self.buffer))
 
     def search_function_name(self,command):
-        if self.EOL!='':
-            command=command.replace(' '+self.EOL,'')
-        command=command.split(' ')
-        if self.commando_position=='first':
-            name=command[0]
-        else:
-            name=command[-1]
+#        if self.EOL!='':
+#            command=command.replace(' '+self.EOL,'')
+#        command=command.split(' ')
+#        if self.commando_position=='first':
+#            name=command[0]
+#        else:
+#            name=command[-1]
+        name= re.search(self.CMD,command) 
         name=self.replace_special_characters(name)
         name='_'+name
+        return(name)
+    
+    def search_function_parameters(self,command):
+        name =re.search(self.PARMS,command)
+        name.self.replace_special_characters(name)
         return(name)
 
     def replace_special_characters(self,name):

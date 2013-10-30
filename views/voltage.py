@@ -1,8 +1,11 @@
 from traits.api import *
 from traitsui.api import *
 import time
+from time import sleep
 
 import controls.voltage 
+import thread
+
 
 class VoltageGUI(HasTraits):
 
@@ -17,11 +20,11 @@ class VoltageGUI(HasTraits):
     Input=Button(label="Input")
     read=Button(label="read")
     read2=Button(label="read2")
-    output=Str(label="applied Voltage")
+    output = Button(label="Voltage measured on Output")
     test=Button(label="elapsed time 1")
     test2=Button(label="elapsed time 2")
     simulation=Bool(True, label="Simulation")
-    toggle_activ = False
+    toggle_active = False
 
     view = View(HGroup(
                     Item('Voltage', show_label=False), 
@@ -34,8 +37,8 @@ class VoltageGUI(HasTraits):
                 HGroup(
                     Item('read',show_label=False),
                     Item('read2',show_label=False)),
-                HGroup( 
-                    Item("output", show_label=True, style="readonly")),
+                HGroup(
+                    Item('output',show_label=True, style='readonly')),
                 HGroup(
                     Item('test',show_label=True),
                     Item('test2',show_label=True)),
@@ -45,42 +48,38 @@ class VoltageGUI(HasTraits):
     def _Voltage_changed(self):
         self.ivoltage.setvoltage(self.Voltage)
     def _UP_fired(self):
-        if (0 <= self.Voltage < 255):
-            self.Voltage +=1
-        else:
-            self.Voltage = 255
+#        if (0 <= self.Voltage < 255):
+        self.Voltage +=1
+#        else:
+#            self.Voltage = 255
 
     def _DOWN_fired(self):
-        if (0 < self.Voltage <= 255):
-            self.Voltage -=1
-        else:
-            self.Voltage = 0
+#        if (0 < self.Voltage <= 255):
+        self.Voltage -=1
+#        else:
+#            self.Voltage = 0
 
     def _Setzero_fired(self):
         self.Voltage = 0
 
     def _read_fired(self):
-        if self.simulation == True:
-            self.output=str(self.Voltage)
-        else:
-            self.output=str(self.ivoltage.read_voltage())
+        self.output=str(self.ivoltage.read_voltage())
 
     def _read2_fired(self):
-        if self.simulation == True:
-            self.output=str(self.Voltage)
-        else:
-            self.output=str(self.ivoltage.read_voltage_new())
+        self.output=str(self.ivoltage.read_voltage_new())
 
     def _Blinken_fired(self):
         self.ivoltage.blink()
 
     def _simulation_changed(self):
-#        import pdb; pdb.set_trace()
-        if not self.toggle_activ:
-            self.toggle_activ = not self.toggle_activ
-            self.simulation= self.ivoltage.toggle_simulation()
-        else:
-            self.toggle_activ = not self.toggle_activ
+        thread.start_new_thread(self.toggle_simulation,())
+
+    def toggle_simulation(self):
+        # camera.toggle_simulation() liefert simulieren = True/False zurueck
+        if not self.toggle_active:
+            self.toggle_active = True
+            self.simulation = self.ivoltage.toggle_simulation()
+            self.toggle_active = False
 
     def _test_fired(self):
         start = time.clock()
@@ -115,4 +114,6 @@ if __name__ == '__main__':
     main=VoltageGUI()
     main.configure_traits()
     if main.ivoltage.simulation==0:
+        print"close Voltage"
+        main.ivolt.close()
 
