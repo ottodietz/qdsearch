@@ -5,16 +5,13 @@ import math
 from thread import allocate_lock
 
 class Voltage(SimSerial):
-    commando_position="first"
     EOL=''
-    CMD=''
-    PARMS=''
+    CMD='^[A-Z]'
+    PARMS='[^a-zA-Z]+'
     simulation=True
     busy=False
 
     lock = allocate_lock()
-
-    voltage_simulation=float(128)
     
     def blink(self):
         self.write("B")
@@ -88,9 +85,9 @@ class Voltage(SimSerial):
         return(measurement)
 
     def setvoltage(self,voltage):
-        self.voltage_simulation=voltage
         Sxxxd = "S%03dd"% int(voltage*255/5.)
         self.write(Sxxxd,inter_char_delay=0.1);
+        return voltage
 
-    def _S(self,string):
-        print "die gesetzte Spannung liegt bei %03d Volt" % float(self.voltage_simulation)
+    def _S(self,voltage):
+        print "die gesetzte Spannung liegt bei x Volt"

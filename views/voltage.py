@@ -11,7 +11,7 @@ class VoltageGUI(HasTraits):
 
     ivoltage=controls.voltage.Voltage('COM4', 115200, timeout=0.05)
 
-    Voltage = Range(low=0,high=255,value=128,editor=RangeEditor(evaluate=int,auto_set=False,mode='text'))
+    Voltage = Range(low=0.,high=5.,value=2.5,editor=RangeEditor(evaluate=float,auto_set=False,mode='text'))
     UP = Button()
     DOWN = Button()
     Blinken=Button()
@@ -20,7 +20,7 @@ class VoltageGUI(HasTraits):
     Input=Button(label="Input")
     read=Button(label="read")
     read2=Button(label="read2")
-    output = Button(label="Voltage measured on Output")
+    output = Str()
     test=Button(label="elapsed time 1")
     test2=Button(label="elapsed time 2")
     simulation=Bool(True, label="Simulation")
@@ -47,17 +47,18 @@ class VoltageGUI(HasTraits):
 
     def _Voltage_changed(self):
         self.ivoltage.setvoltage(self.Voltage)
+
     def _UP_fired(self):
-#        if (0 <= self.Voltage < 255):
-        self.Voltage +=1
-#        else:
-#            self.Voltage = 255
+        try:
+            self.Voltage +=0.1
+        except:
+            self.Voltage = 5
 
     def _DOWN_fired(self):
-#        if (0 < self.Voltage <= 255):
-        self.Voltage -=1
-#        else:
-#            self.Voltage = 0
+        try:
+            self.Voltage -=0.1
+        except:
+            self.Voltage = 0
 
     def _Setzero_fired(self):
         self.Voltage = 0

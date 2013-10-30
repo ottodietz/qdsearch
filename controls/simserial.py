@@ -34,7 +34,6 @@ class SimSerial(serial.Serial):
             temp=True
             self.close()
             print("simulation on")
-        print "simserial toggle returns",temp
         return temp
 
     def write(self,string,inter_char_delay=None,*args,**kwargs):
@@ -71,13 +70,7 @@ class SimSerial(serial.Serial):
         if self.simulation:
             # gebe die ersten number zeichen aus buffer zurueck
             print "WARNING: SimSerial.read() not implemented!"
-            buftemp = self.buffer.split(' ')
-            for i in range(10):
-                try:
-                    temp  = float(buftemp[i])
-                    break
-                except:
-                    print "read simulation buffer"
+            temp = re.search('[0-9]+',self.buffer).group(0)
             return temp
         else:
             return(serial.Serial.read(self,number))
@@ -126,13 +119,13 @@ class SimSerial(serial.Serial):
 #            name=command[0]
 #        else:
 #            name=command[-1]
-        name= re.search(self.CMD,command) 
-        name=self.replace_special_characters(name)
+        name= re.search(self.CMD,command).group(0) 
+        name = self.replace_special_characters(name)
         name='_'+name
         return(name)
     
     def search_function_parameters(self,command):
-        name =re.search(self.PARMS,command)
+        name =re.search(self.PARMS,command).group(0)
         name.self.replace_special_characters(name)
         return(name)
 
