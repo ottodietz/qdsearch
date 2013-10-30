@@ -112,22 +112,23 @@ class Spectro(simserial.SimSerial):
         self.flushInput()
         self.write(cmd + ' ' + self.EOL )
         result = []
-        temp = self.readline()
-        result.append(temp)
+        temp = ''
 
         while temp.find("ok") == -1:
-            print temp
             temp = self.readline()
-            result.append(temp)
+            result.append(temp)    
+            print temp
 
         if len(result) == 1:
             return result[0]
-        return result
+        else:
+            return result[1:-1] # strip cmd and ok
 
     def output_grating(self):
         grating=[]
         self.flushInput()
         grating = self.get_until_okay("?GRATINGS")
+        grating = [g for g in grating if "Not Installed" not in g] 
         print "Gratings:", grating
         """fragt das current grating ab"""
         grating_current = self.get_until_okay("?GRATING")
@@ -186,7 +187,8 @@ class Spectro(simserial.SimSerial):
     def _QMGRATINGS(self):
         self.sim_output('?GRATINGS\r'\
           + '1 1801 g/mm BLZ=  750NM \r'\
-          + '2 Not Installed\r'\
+          + '2  600 g/mm BLZ=  750NM \r'\
+          + '3 Not Installed\r'\
           + 'ok')
 
     def _NM(self,string):

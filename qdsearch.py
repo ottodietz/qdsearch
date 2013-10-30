@@ -9,7 +9,7 @@ from pyface.api import information
 import time
 import math
 #from ctypes import *
-import pickle
+import pickle as pickle
 import numpy as np
 from threading import Thread
 from enable.api import BaseTool
@@ -31,6 +31,7 @@ reload (views.spectrometer)
 
 import views.camera
 reload (views.camera)
+
 
 """events on the plot"""
 class PlotTool(BaseTool):
@@ -54,6 +55,7 @@ class counts_thread(Thread):
 
 class MainWindow(HasTraits):
     VoltPerCount = 0.002 # 2mv/Count
+    autosave_filename = 'measurement/autosave.pkl'
 
 
     """for creating the menu"""
@@ -85,6 +87,8 @@ class MainWindow(HasTraits):
     finished=True
     x_koords=[]
     y_koords=[]
+    used_grating   = []
+    used_centerwvl = []
     spectra=[]
     wavelength=CFloat(0)
     plot=Instance(Plot,())
@@ -203,16 +207,14 @@ class MainWindow(HasTraits):
         self.x_koords=[]
         self.y_koords=[]
         self.spectra=[]
+        self.used_centerwvl=[]
+        self.used_grating=[]
 
         if self.x1>self.x2:
             self.x2,self.x1 = self.x1,self.x2
 
         if self.y1>self.y2:
             self.y1,self.y2=self.y2,self.y1
-
-        f = open('measurement/last_measurement.pick', "w") # creates new file
-        f.close()
-
 
         if self.ispectrometer.exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
              self.ispectrometer.exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
@@ -262,12 +264,11 @@ class MainWindow(HasTraits):
         self.x_koords.append(x)
         self.y_koords.append(y)
         self.spectra.append(spectrum)
-        self.add_to_file(x,y,spectrum)
+        self.used_centerwvl.append(self.ispectrometer.centerwvl)
+        self.used_grating.append(self.ispectrometer.current_grating)
 
-    def add_to_file(self,x,y,spectrum):
-        f = open('measurement/last_measurement.pick', "a")
-        pickle.dump([x,y,spectrum],f)
-        f.close()
+        self.file_name = self.autosave_filename
+        self.save_file()
 
     def reload_all(self):
         import pdb;pdb.set_trace()
@@ -412,7 +413,9 @@ class MainWindow(HasTraits):
             'values': {
                     'x':self.x_koords,
                     'y':self.y_koords,
-                    'spectra': self.spectra
+                    'spectra': self.spectra,
+                    'grating': self.used_grating,
+                    'centerwvl': self.used_centerwvl
                 }
             }
 
