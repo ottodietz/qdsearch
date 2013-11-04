@@ -103,7 +103,7 @@ class MainWindow(HasTraits):
     counts_thread = counts_thread()
     ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) 
     icryo         = Instance(views.cryo.CryoGUI,())
-    ivoltage      = Instance(views.voltage.VoltageGUI,())
+    ivoltage      = Instance(views.voltage.VoltageGUI)
 
     icamera       = Instance(views.camera.CameraGUI)# No ",()" as below, Instance is created in _default
 
@@ -111,6 +111,7 @@ class MainWindow(HasTraits):
     def _icamera_default(self):
         print "CAMERA INIT"
         return views.camera.CameraGUI(icryo=self.icryo, ivoltage=self.ivoltage)
+
     def _ivoltage_default(self):
         print "VOLTAGE INIT"
         temp = views.voltage.VoltageGUI()

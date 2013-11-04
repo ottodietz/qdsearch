@@ -3,6 +3,7 @@ import time
 import random
 import math
 from thread import allocate_lock
+import re
 
 class Voltage(SimSerial):
     EOL=''
@@ -52,15 +53,7 @@ class Voltage(SimSerial):
 
     def _V(self):
         self.buffer='Voltage'+'  '+str(random.randint(1,20))
-        buftemp = self.buffer.split(' ')
-        for i in range(10):
-            try:
-                temp = float(buftemp[i])
-                break
-            except:
-                print "read simulation buffer"
-        return(float(temp))
-
+        
     def measure(self):
         i = 0
 
@@ -90,5 +83,7 @@ class Voltage(SimSerial):
         return voltage
 
     def _S(self,string):
-#        temp = re.search(PARMS,string).group(0)
-        print "die gesetzte Spannung liegt bei x Volt",temp
+#        import pdb; pdb.set_trace()
+        temp = re.search(self.PARMS,string).group(0)
+        voltprint = float(int(temp)*5./255.)
+        print "die gesetzte Spannung liegt bei %1.1f  Volt" % voltprint

@@ -50,7 +50,7 @@ class SimSerial(serial.Serial):
                     import sys
                     print sys.exc_info()
                     self._DEFAULT(string)
-            print "buffer, due to write:", repr(self.buffer)
+            #print "buffer, due to write:", repr(self.buffer)
         else:
             if inter_char_delay:
                 for char in string:
