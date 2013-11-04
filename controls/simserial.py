@@ -37,10 +37,8 @@ class SimSerial(serial.Serial):
         return temp
 
     def write(self,string,inter_char_delay=None,*args,**kwargs):
-        #import pdb; pdb.set_trace()
         if self.simulation:
             name=self.search_function_name(string)
-            #import pdb;pdb.set_trace()
             try:
                 getattr(self,name)(string.rstrip())
             except:

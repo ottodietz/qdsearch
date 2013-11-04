@@ -163,6 +163,18 @@ class CryoGUI(HasTraits):
         self.cryo.toggle_simulation()
         if not self.checkbox:
             self.movex,self.movey=self.cryo.pos()
+# hier muss ich ansetzen zum fixen
+    def _simulation_changed(self):
+        thread.start_new_thread(self.toggle_simulation,())
+
+    def toggle_simulation(self):
+        # camera.toggle_simulation() liefert simulieren = True/False zurueck
+        if not self.toggle_active:
+            self.toggle_active = True
+            self.simulation = self.ivoltage.toggle_simulation()
+            self.toggle_active = False
+
+
 
     def refresh_cryo_gui(self):
         while self.cryo_refresh:
