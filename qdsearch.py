@@ -55,7 +55,8 @@ class PlotTool(BaseTool):
 class counts_thread(Thread):
     def run(self):
         while not self.wants_abort:
-            self.caller.counts = self.caller.ispectrometer.ivolt.measure()/self.VoltPerCount
+            self.caller.counts =  self.caller.ispectrometer.ivolt.measure()/self.VoltPerCount
+            time.sleep(0.1)
 
 class MainWindow(HasTraits):
     VoltPerCount = 0.002 # 2mv/Count
@@ -199,6 +200,7 @@ class MainWindow(HasTraits):
         self.counts_thread.caller = self
         self.counts_thread.VoltPerCount = self.VoltPerCount
         self.counts_thread.start()
+
 
     def call_cryo_menu(self):
        self.icryo.configure_traits(view='view_menu')
