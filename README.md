@@ -1,7 +1,8 @@
 qdsearch
 =========
 
-quantum dot search tools in python
+quantum dot search tools 
+written in python
 
 contains:
 
