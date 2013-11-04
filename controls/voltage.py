@@ -90,5 +90,5 @@ class Voltage(SimSerial):
         return voltage
 
     def _S(self,string):
-#        Volt =int((float(re.search(PARMS,string).group(0))*5./255))
-        print "die gesetzte Spannung liegt bei x Volt"
+#        temp = re.search(PARMS,string).group(0)
+        print "die gesetzte Spannung liegt bei x Volt",temp
