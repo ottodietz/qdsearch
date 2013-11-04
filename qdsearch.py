@@ -56,11 +56,12 @@ class counts_thread(Thread):
     def run(self):
         while not self.wants_abort:
             self.caller.counts = self.caller.ispectrometer.ivolt.measure()/self.VoltPerCount
+            # we need a waitstate! If not, our gui is constantly updating
+            time.sleep(0.1)
 
 class MainWindow(HasTraits):
     VoltPerCount = 0.002 # 2mv/Count
     autosave_filename = 'measurement/autosave.pkl'
-
 
     """for creating the menu"""
     call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
@@ -111,6 +112,7 @@ class MainWindow(HasTraits):
     def _icamera_default(self):
         print "CAMERA INIT"
         return views.camera.CameraGUI(icryo=self.icryo, ivoltage=self.ivoltage)
+
     def _ivoltage_default(self):
         print "VOLTAGE INIT"
         temp = views.voltage.VoltageGUI()

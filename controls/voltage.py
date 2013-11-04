@@ -52,14 +52,6 @@ class Voltage(SimSerial):
 
     def _V(self):
         self.buffer='Voltage'+'  '+str(random.randint(1,20))
-        buftemp = self.buffer.split(' ')
-        for i in range(10):
-            try:
-                temp = float(buftemp[i])
-                break
-            except:
-                print "read simulation buffer"
-        return(float(temp))
 
     def measure(self):
         i = 0
