@@ -15,7 +15,6 @@ class VoltageGUI(HasTraits):
     UP = Button()
     DOWN = Button()
     Blinken=Button()
-    setvoltage = Button(label="set Voltage")
     Setzero = Button(label="set zero")
     Input=Button(label="Input")
     read=Button(label="read")

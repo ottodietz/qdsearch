@@ -94,12 +94,8 @@ show_label=False)),
 
     def _single_fired(self):
         try:
-            print("im try")
-            import pdb; pdb.set_trace()
-            print self.ivoltage.voltage_simulation
-            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
         except: 
-            print("im except")
             self.line=self.camera.acquisition()
         self.plot_data()
 
@@ -107,20 +103,23 @@ show_label=False)),
         maxid = -1 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
         for i in range(256):
-            self.ivoltage.setvoltage(i)
-            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)   
+            self.ivoltage.Voltage = float((i/255.*5.))
+            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)   
+            self.plot_data()
             if maxcount < max(self.line):
                 maxid = i
-        print("Im Fokus bei der Spannung %03d" % maxid)
-        self.ivoltage.setvoltage(maxid)
-        self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+        print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
+
+        self.ivoltage.Voltage = maxid/255.*5.
+        self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
         self.plot_data()
 
     def _autofocus_fired(self):
         xtest = False
         ytest = False
+ #       import pdb; pdb.set_trace()
         try:
-            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+            self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
         except:
             self.line=self.camera.acquisition()
 
@@ -128,7 +127,7 @@ show_label=False)),
             a = max(self.line)
             self.icryo.cryo.rmove(self.x_step,0)
             try:
-                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
             except:
                 self.line=self.camera.acquisition()
             self.plot_data()
@@ -136,7 +135,7 @@ show_label=False)),
             if b < a:
                 self.icryo.cryo.rmove(-self.x_step,0)
                 try: #damit er wieder das aktuelle max hat
-                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
                 except:
                     self.line=self.camera.acquisition()
                 xtest = True
@@ -147,7 +146,7 @@ show_label=False)),
             a = max(self.line)
             self.icryo.cryo.rmove(-self.x_step,0)
             try:
-                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
             except:
                 self.line=self.camera.acquisition()
             self.plot_data()
@@ -155,7 +154,7 @@ show_label=False)),
             if b < a:
                 self.icryo.cryo.rmove(self.x_step,0)
                 try:
-                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
                 except:
                     self.line=self.camera.acquisition()
                 xtest = True
@@ -164,7 +163,7 @@ show_label=False)),
            a = max(self.line)
            self.icryo.cryo.rmove(0,self.y_step)
            try:
-                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
            except:
                 self.line=self.camera.acquisition()
            self.plot_data()
@@ -172,7 +171,7 @@ show_label=False)),
            if b < a:
                 self.icryo.cryo.rmove(0,-self.y_step)
                 try:
-                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
                 except:
                     self.line=self.camera.acquisition()
                 ytest = True
@@ -183,7 +182,7 @@ show_label=False)),
            a = max(self.line)
            self.icryo.cryo.rmove(0,-self.y_step)
            try:
-                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
            except:
                 self.line=self.camera.acquisition()
            self.plot_data()
@@ -191,7 +190,7 @@ show_label=False)),
            if b < a:
                 self.icryo.cryo.rmove(0,self.y_step)
                 try:
-                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.voltage_simulation)
+                    self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
                 except:
                     self.line=self.camera.acquisition()
                 ytest = True

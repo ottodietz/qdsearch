@@ -1,14 +1,13 @@
-
 from traits.api import*
 from traitsui.api import*
 import time
-
+import re
 
 from simserial import SimSerial
 
 class Cryo(SimSerial):
-    CMD = ''
-    PARMS = ''
+    CMD = '[a-zA-Z]+'
+    PARMS = '[0-9\s]+'
     EOL='\r'# if they are two characters written together (without space) it is one EOL
 
     def identify(self):

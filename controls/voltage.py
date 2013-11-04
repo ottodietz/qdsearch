@@ -83,7 +83,6 @@ class Voltage(SimSerial):
         return voltage
 
     def _S(self,string):
-#        import pdb; pdb.set_trace()
         temp = re.search(self.PARMS,string).group(0)
         voltprint = float(int(temp)*5./255.)
-        print "die gesetzte Spannung liegt bei %1.1f  Volt" % voltprint
+        print "die gesetzte Spannung liegt bei %1.2f  Volt" % voltprint
