@@ -108,7 +108,7 @@ show_label=False)),
             if maxcount < max(self.line):
                 maxcount = max(self.line)
                 maxid = i
-            print "Z-Scan bei %03d Prozent!" % str(i/255.*100.)
+            print "Z-Scan bei %03d Prozent!" % int(i/255.*100.)
         print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
 
         self.ivoltage.Voltage = maxid/255.*5.
