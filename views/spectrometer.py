@@ -55,6 +55,7 @@ class SpectrometerGUI(HasTraits):
     speed=CFloat(50.0)
     simulate_spectrometer=Bool(True, label="Simulation Spectrometer")
     simulate_voltmeter=Bool(True,label="Simulation Voltmeter")
+    toggle_active = False   
 
     str_nmmin = Str('nm/min')
     str_at = Str('@')
@@ -216,18 +217,24 @@ class SpectrometerGUI(HasTraits):
         self.plot = plot
 
 
-    def _simulate_spectrometer_fired(self):
-        thread.start_new_thread(self.toggle_simulate_spectrometer,())
+    def _simulate_spectrometer_changed(self):
+        if not self.toggle_active:
+            self.toggle_active = True
+            thread.start_new_thread(self.toggle_simulate_spectrometer,())
 
     def toggle_simulate_spectrometer(self):
         self.simulate_spectrometer = self.ispectro.toggle_simulation()
+        self.toggle_active = False
         self.ispectrometer_gui_refresh()
 
-    def _simulate_voltmeter_fired(self):
-        thread.start_new_thread(self.toggle_simulate_voltmeter,())
+    def _simulate_voltmeter_changed(self):
+        if not self.toggle_active:
+            self.toggle_active = True
+            thread.start_new_thread(self.toggle_simulate_voltmeter,())
     
     def toggle_simulate_voltmeter(self):
-        self.simulate_spectrometer = self.ispectro.toggle_simulation()
+        self.simulate_voltmeter = self.ivolt.toggle_simulation()
+        self.toggle_active = False
         
     def ispectrometer_gui_refresh(self):
         self.refresh_active=True
