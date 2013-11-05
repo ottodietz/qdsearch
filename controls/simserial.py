@@ -21,20 +21,19 @@ class SimSerial(serial.Serial):
 
     def toggle_simulation(self):
         """ toggle simulation of serial device. Returns new state of simulation """
-        temp = True
         if self.simulation:
-            temp=False
             try:
                 serial.Serial.__init__(self, *self.initargs, **self.initkwargs)
+                self.simulation = False
                 print("simulation off")
             except:
-                temp=True
+                self.simulation = True
                 print("couldn't switch simulation off")
         else:
-            temp=True
+            self.simulation = True
             self.close()
             print("simulation on")
-        return temp
+        return self.simulation
 
     def write(self,string,inter_char_delay=None,*args,**kwargs):
         if self.simulation:
