@@ -55,8 +55,8 @@ class CryoGUI(HasTraits):
 
 
 
-
-    checkbox=Bool(True, label="Simulation")
+    toggle_active = False
+    simulation=Bool(True, label="Simulation")
 
     x_step=Float(0.1)
     y_step=Float(0.1)
@@ -75,7 +75,7 @@ class CryoGUI(HasTraits):
 
        HGroup(Spring(height=20)),
        Item("output",style="readonly"),
-       HGroup(Item("checkbox"),Spring(width=350)),
+       HGroup(Item("simulation"),Spring(width=350)),
        buttons = [OKButton, CancelButton,],
        menubar=MenuBar(menu),
        resizable = True, width = 400, height = 400)
@@ -136,7 +136,7 @@ class CryoGUI(HasTraits):
         self.cryo.rmove(0,-self.y_step*self.factor1)
 
     def _leftleft_fired(self):
-          self.cryo.rmove(-self.x_step*self.factor1,0)
+        self.cryo.rmove(-self.x_step*self.factor1,0)
 
     def _rightright_fired(self):
         self.cryo.rmove(self.x_step*self.factor1,0)
@@ -159,22 +159,16 @@ class CryoGUI(HasTraits):
     def _status_fired(self):
         self.output=str(self.cryo.status())
 
-    def _checkbox_changed(self):
-        self.cryo.toggle_simulation()
-        if not self.checkbox:
-            self.movex,self.movey=self.cryo.pos()
-# hier muss ich ansetzen zum fixen
     def _simulation_changed(self):
-        thread.start_new_thread(self.toggle_simulation,())
+        if not self.toggle_active:
+            self.toggle_active = True
+            thread.start_new_thread(self.toggle_simulation,())
+        self.movex,self.movey=self.cryo.pos()
 
     def toggle_simulation(self):
         # camera.toggle_simulation() liefert simulieren = True/False zurueck
-        if not self.toggle_active:
-            self.toggle_active = True
-            self.simulation = self.ivoltage.toggle_simulation()
+            self.simulation = self.cryo.toggle_simulation()
             self.toggle_active = False
-
-
 
     def refresh_cryo_gui(self):
         while self.cryo_refresh:

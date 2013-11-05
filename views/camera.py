@@ -24,7 +24,7 @@ class CameraGUI(HasTraits):
     acq_active = False
     toggle_active = False
 
-    simulate_camera=Bool(True)
+    simulation=Bool(True)
     cooler=Bool(False)
     single=Button()
     continous=Button()
@@ -51,7 +51,7 @@ class CameraGUI(HasTraits):
 #    view_menu=View(HGroup(VGroup(
 #                        HGroup(Item('single',show_label=False), Item('plot',show_label=False)),
 #                        Item('settemperature'),
-#                        HGroup(Item('cooler'),Item('simulate_camera',label='Simulation camera')),
+#                        HGroup(Item('cooler'),Item('simulation',label='Simulation camera')),
 #                        HGroup(Item('output',label='Camera output',
 #                            style='readonly')),
 #                        VGroup(Item:('readmode'),Item('acquisitionmode'),Item('exposuretime'))
@@ -84,7 +84,7 @@ class CameraGUI(HasTraits):
                                Item('continous',show_label=False,editor=ButtonEditor(label_value
 = 'continous_label')),Item('autofocus',show_label=False),Item('zautofocus',
 show_label=False)),
-                        HGroup(Item('exposuretime'),Item('simulate_camera',label='simulate camera')),
+                        HGroup(Item('exposuretime'),Item('simulation',label='simulate camera')),
                         Item('readmodes'),
                         Item('Vshiftspeed'),
                         Item('Hshiftspeed')
@@ -226,7 +226,7 @@ show_label=False)),
         self.ensure_init()
         self.camera.settemperature(self.settemperature)
 
-    def _simulate_camera_changed(self):
+    def _simulation_changed(self):
         self.stop_acq_thread()
         # wenn es nicht schon läuft, schicke self.toggle_simulate() in den
         # Hintergrund
@@ -236,7 +236,7 @@ show_label=False)),
 
     def toggle_simulation(self):
         # camera.toggle_simulation() liefert simulieren = True/False zurück
-        self.simulate_camera = self.camera.toggle_simulation()
+        self.simulation = self.camera.toggle_simulation()
         self.toggle_active = False
 
     def acq_thread(self):

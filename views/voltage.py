@@ -72,12 +72,12 @@ class VoltageGUI(HasTraits):
         self.ivoltage.blink()
 
     def _simulation_changed(self):
-        thread.start_new_thread(self.toggle_simulation,())
-
-    def toggle_simulation(self):
-        # camera.toggle_simulation() liefert simulieren = True/False zurueck
         if not self.toggle_active:
             self.toggle_active = True
+            thread.start_new_thread(self.toggle_simulation,())
+
+    def toggle_simulation(self):
+            # .toggle_simulation() liefert simulieren = True/False zurueck
             self.simulation = self.ivoltage.toggle_simulation()
             self.toggle_active = False
 

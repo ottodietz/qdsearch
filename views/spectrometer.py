@@ -216,13 +216,19 @@ class SpectrometerGUI(HasTraits):
         self.plot = plot
 
 
-    def _simulate_spectrometer_changed(self):
-        self.ispectro.toggle_simulation()
+    def _simulate_spectrometer_fired(self):
+        thread.start_new_thread(self.toggle_simulate_spectrometer,())
+
+    def toggle_simulate_spectrometer(self):
+        self.simulate_spectrometer = self.ispectro.toggle_simulation()
         self.ispectrometer_gui_refresh()
 
-    def _simulate_voltmeter_changed(self):
-        self.ivolt.toggle_simulation()
-
+    def _simulate_voltmeter_fired(self):
+        thread.start_new_thread(self.toggle_simulate_voltmeter,())
+    
+    def toggle_simulate_voltmeter(self):
+        self.simulate_spectrometer = self.ispectro.toggle_simulation()
+        
     def ispectrometer_gui_refresh(self):
         self.refresh_active=True
         position=self.ispectro.output_position()

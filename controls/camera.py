@@ -7,7 +7,7 @@ from scipy.special import jn
 
 CAM_OKAY = 20002
 
-class Camera():
+class Camera(object):
     totalCameras=c_long()
     init_active=False
     camera_active=False
