@@ -94,8 +94,10 @@ show_label=False)),
 
     def _single_fired(self):
         try:
+            print "im single fire try"
             self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
         except: 
+            print "im single  fire except"
             self.line=self.camera.acquisition()
         self.plot_data()
 
