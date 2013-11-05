@@ -265,11 +265,12 @@ show_label=False)),
        print "acq mode changed"
 
     def _exposuretime_changed(self):
-       self.camera.exposuretime=c_float(self.exposuretime)
-       print "exp changed"
+        import pdb; pdb.set_trace()
+        self.camera.exposuretime=c_float(self.exposuretime)
+        print "exp changed"
 
     def call_menu(self):
-       self.configure_traits(view='view_menu')
+        self.configure_traits(view='view_menu')
 
     def reload_camera(self):
         import pdb; pdb.set_trace()
