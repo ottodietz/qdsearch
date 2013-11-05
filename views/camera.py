@@ -107,6 +107,8 @@ show_label=False)),
             self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)   
             self.plot_data()
             if maxcount < max(self.line):
+                maxcount = max(self.line)
+                print "max bei spannung ", i
                 maxid = i
         print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
 
