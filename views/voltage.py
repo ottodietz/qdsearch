@@ -9,7 +9,7 @@ import thread
 
 class VoltageGUI(HasTraits):
 
-    ivoltage=controls.voltage.Voltage('COM4', 115200, timeout=0.05)
+    ivoltage=controls.voltage.Voltage('COM9', 115200, timeout=0.05)
 
     Voltage = Range(low=0.,high=5.,value=2.5,editor=RangeEditor(evaluate=float,auto_set=False,mode='text'))
     UP = Button()
