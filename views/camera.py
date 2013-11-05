@@ -94,10 +94,8 @@ show_label=False)),
 
     def _single_fired(self):
         try:
-            print "im single fire try"
             self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)
         except: 
-            print "im single  fire except"
             self.line=self.camera.acquisition()
         self.plot_data()
 
@@ -107,10 +105,10 @@ show_label=False)),
         for i in range(256):
             self.ivoltage.Voltage = float((i/255.*5.))
             self.line=self.camera.acquisition(sim_pos=self.icryo.cryo.pos(),sim_volt=self.ivoltage.Voltage)   
-            self.plot_data()
             if maxcount < max(self.line):
                 maxcount = max(self.line)
                 maxid = i
+            print "Z-Scan bei %03d Prozent!" % str(i/255.*100.)
         print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
 
         self.ivoltage.Voltage = maxid/255.*5.

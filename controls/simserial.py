@@ -53,7 +53,6 @@ class SimSerial(serial.Serial):
                 for char in string:
                     serial.Serial.write(self,char,*args,**kwargs)
                     time.sleep(inter_char_delay)
-                print "ACHTUNG SimSerial.write nicht getestet"
             else: 
                 serial.Serial.write(self,string,*args,**kwargs)
 
