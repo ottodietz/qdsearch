@@ -39,8 +39,10 @@ class Camera(object):
                 self.init_active=False
         return self.simulation
 
-    def setexposuretime(self,exp=self.exposuretime):
+    def setexposuretime(self, exp=None):
         if not self.simulation:
+            if not exp:
+                exp = self.exposuretime
             return self.atm.SetExposureTime(exp)
         return CAM_OKAY
 

@@ -79,7 +79,7 @@ class Voltage(SimSerial):
 
     def setvoltage(self,voltage):
         Sxxxd = "S%03dd"% int(voltage*255/5.)
-        self.write(Sxxxd,inter_char_delay=0.1);
+        self.write(Sxxxd,inter_char_delay=0.001);
         return voltage
 
     def _S(self,string):
