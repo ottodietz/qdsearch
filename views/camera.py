@@ -12,9 +12,11 @@ import time
 from ctypes import *
 
 import controls.camera
-# refresh (controls.camera)
+#refresh (controls.camera)
 import views.cryo
+#refresh (views.cryo)
 import views.voltage
+#refresh (views.voltage)
 
 from pyface.api import error,warning,information
 
@@ -35,9 +37,9 @@ class CameraGUI(HasTraits):
     x_step = Float(0.1)
     y_step = Float(0.1)
     ivCryo = Instance(views.cryo.CryoGUI)
-    icCryo = ivCryo.icCryo
+    icCryo = Instance(controls.cryo.Cryo)
     ivVoltage = Instance(views.voltage.VoltageGUI)
-    icVoltage = ivVoltage.icVoltage
+    icVoltage = Instance(controls.voltage.Voltage)
 
     """menu"""
     readmode=Int(0)
@@ -48,6 +50,12 @@ class CameraGUI(HasTraits):
 
     output=Str()
     plot = Instance(Plot,())
+    
+    def _icCryo_default(self):
+        return self.ivCryo.icCryo
+    
+    def _icVoltage_default(self):
+        return self.ivVoltage.icVoltage
 
 
 #    view_menu=View(HGroup(VGroup(
@@ -96,7 +104,7 @@ show_label=False)),
 
     def _single_fired(self):
         try:
-            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
         except: 
             self.line=self.icCamera.acquisition()
         self.plot_data()
@@ -105,23 +113,23 @@ show_label=False)),
         maxid = -1 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
         for i in range(256):
-            self.ivoltage.Voltage = float((i/255.*5.))
-            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)   
+            self.ivVoltage.Voltage = float((i/255.*5.))
+            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)   
             if maxcount < max(self.line):
                 maxcount = max(self.line)
                 maxid = i
             print "Z-Scan bei %03d Prozent!" % int(i/255.*100.)
         print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
 
-        self.ivoltage.Voltage = maxid/255.*5.
-        self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+        self.ivVoltage.Voltage = maxid/255.*5.
+        self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
         self.plot_data()
 
     def _autofocus_fired(self):
         xtest = False
         ytest = False
         try:
-            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
         except:
             self.line=self.icCamera.acquisition()
 
@@ -129,7 +137,7 @@ show_label=False)),
             a = max(self.line)
             self.icCryo.rmove(self.x_step,0)
             try:
-                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
             except:
                 self.line=self.icCamera.acquisition()
             self.plot_data()
@@ -137,7 +145,7 @@ show_label=False)),
             if b < a:
                 self.icCryo.rmove(-self.x_step,0)
                 try: #damit er wieder das aktuelle max hat
-                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
                 except:
                     self.line=self.icCamera.acquisition()
                 xtest = True
@@ -148,7 +156,7 @@ show_label=False)),
             a = max(self.line)
             self.icCryo.rmove(-self.x_step,0)
             try:
-                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
             except:
                 self.line=self.icCamera.acquisition()
             self.plot_data()
@@ -156,7 +164,7 @@ show_label=False)),
             if b < a:
                 self.icCryo.rmove(self.x_step,0)
                 try:
-                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
                 except:
                     self.line=self.icCamera.acquisition()
                 xtest = True
@@ -165,7 +173,7 @@ show_label=False)),
            a = max(self.line)
            self.icCryo.rmove(0,self.y_step)
            try:
-                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
            except:
                 self.line=self.icCamera.acquisition()
            self.plot_data()
@@ -173,7 +181,7 @@ show_label=False)),
            if b < a:
                 self.icCryo.rmove(0,-self.y_step)
                 try:
-                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
                 except:
                     self.line=self.icCamera.acquisition()
                 ytest = True
@@ -184,7 +192,7 @@ show_label=False)),
            a = max(self.line)
            self.icCryo.rmove(0,-self.y_step)
            try:
-                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
            except:
                 self.line=self.icCamera.acquisition()
            self.plot_data()
@@ -192,7 +200,7 @@ show_label=False)),
            if b < a:
                 self.icCryo.rmove(0,self.y_step)
                 try:
-                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivoltage.Voltage)
+                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage)
                 except:
                     self.line=self.icCamera.acquisition()
                 ytest = True
@@ -288,6 +296,6 @@ show_label=False)),
         self.icCamera.close()
 
 if __name__=="__main__":
-    main=CameraGUI(icryo = views.cryo.CryoGUI(), ivoltage = views.voltage.VoltageGUI())
+    main=CameraGUI(ivCryo = views.cryo.CryoGUI(), ivVoltage = views.voltage.VoltageGUI())
     main.configure_traits()
     main.close()

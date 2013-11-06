@@ -36,6 +36,8 @@ import views.camera
 import views.voltage
 # refresh (views.voltage)
 
+import controls.cryo
+# refresh (controls.cryo)
 
 """events on the plot"""
 class PlotTool(BaseTool):
@@ -55,7 +57,7 @@ class PlotTool(BaseTool):
 class counts_thread(Thread):
     def run(self):
         while not self.wants_abort:
-            self.caller.counts =  self.caller.ivSpectro.ivolt.measure()/self.VoltPerCount
+            self.caller.counts =  self.caller.icVoltage.measure()/self.VoltPerCount
             # we need a waitstate! If not, our gui is constantly updating
             time.sleep(0.1)
 
@@ -104,25 +106,33 @@ class MainWindow(HasTraits):
     counts_thread = counts_thread()
     ivSpectro = Instance(views.spectrometer.SpectrometerGUI,() ) 
     ivCryo         = Instance(views.cryo.CryoGUI,())
-    icCryo         = ivCryo.icCryo
+    icCryo         = Instance(controls.cryo.Cryo)
     ivVoltage      = Instance(views.voltage.VoltageGUI)
-    icVoltage      = ivVoltage.icVoltage
+    icVoltage      = Instance(controls.voltage.Voltage) 
     ivCamera       = Instance(views.camera.CameraGUI)# No ",()" as below, Instance is created in _default
-    icCamera       = ivCamera.icCamera
+    icCamera       = Instance(controls.camera.Camera) 
 
-    def _icamera_default(self):
+    def _ivCamera_default(self):
         print "CAMERA INIT"
-        return views.camera.CameraGUI(icryo=self.icryo, ivoltage=self.ivoltage)
+        return views.camera.CameraGUI(ivCryo=self.ivCryo, ivVoltage=self.ivVoltage)
 
-    def _ivoltage_default(self):
-        print "VOLTAGE INIT"
-        temp = views.voltage.VoltageGUI()
-        try:
-            temp.ivoltage.blink()
-        except:
-            import sys
-            print sys.exc_info()
-        return temp
+#    def _ivVoltage_default(self):
+#        print "VOLTAGE INIT"
+#        try:
+#            self.icVoltage.blink()
+#        except:
+#            import sys
+#            print sys.exc_info()
+#        return views.voltage.Voltage()
+
+    def _icVoltage_default(self):
+        return self.ivVoltage.icVoltage
+
+    def _icCamera_default(self):
+        return self.ivCamera.icCamera
+
+    def _icCryo_defaul(self):
+        return self.ivCryo.icCryo
 
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
@@ -158,21 +168,20 @@ class MainWindow(HasTraits):
 
     spectrometer_tab = VGroup(
             Item('ispectrometer', style = 'custom',show_label=False),
-            Item('icamera',style = 'custom', show_label=False),
+            Item('ivCamera',style = 'custom', show_label=False),
             label='spectrometer'
             )
 
     focus_tab = VGroup(
-            Item('icamera',style = 'custom', show_label=False),
-            Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
-            Item('ivoltage', style='custom',show_label=False,label="voltage"),
-#            Item('testB',style="custom",show_label=True),
+            Item('ivCamera',style = 'custom', show_label=False),
+            Item('ivCryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
+            Item('ivVoltage', style='custom',show_label=False,label="voltage"),
             label='Focus'
             )
 
 
     tabs = Group(
-        Item('icryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
+        Item('ivCryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
         spectrometer_tab,
         scan_sample_group,
         focus_tab,
@@ -204,7 +213,7 @@ class MainWindow(HasTraits):
 
 
     def call_cryo_menu(self):
-       self.icryo.configure_traits(view='view_menu')
+       self.ivCryo.configure_traits(view='view_menu')
 
     def call_spectrometer_menu(self):
        self.ivSpectro.configure_traits(view='view_menu')
@@ -220,13 +229,13 @@ class MainWindow(HasTraits):
 
     def scanning_step(self):
 
-        if self.icamera.camera.init_active:
+        if self.icCamera.init_active:
             information(parent=None, title="please wait",
              message="The initialization of the camera is running. " + \
              "Please wait until the initialization is finished.")
             return False
 
-        #self.icryo.cryo.cryo_refresh=False
+        #self.icCryo.cryo_refresh=False
         self.finished=False
         self.x_koords=[]
         self.y_koords=[]
@@ -243,21 +252,21 @@ class MainWindow(HasTraits):
         if self.ivSpectro.exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
              self.ivSpectro.exit_mirror='side (APDs)'#self.ivSpectro.exit_mirror_value[1
 
-        self.icryo.cryo.waiting() #wartet bis cryo bereit
+        self.icCryo.waiting() #wartet bis cryo bereit
 
         #TODO das hier gehört nach cryo
-        # [x,y] = self.icryo.cryo.get_numeric_position()
-        #x,y=self.icryo.cryo.convert_output(self.icryo.cryo.position())
+        # [x,y] = self.icCryo.get_numeric_position()
+        #x,y=self.icCryo.convert_output(self.icCryo.position())
 
         x_pos,y_pos = self.calc_snake_xy_pos()
 
         for i in range(len(x_pos)):
             if self.finished:
                 break # abort condition
-            self.icryo.cryo.move(x_pos[i],y_pos[i])
-            self.icryo.cryo.waiting()
+            self.icCryo.move(x_pos[i],y_pos[i])
+            self.icCryo.waiting()
             # get actuall position, maybe x_pos[i] != x
-            x,y=self.icryo.cryo.pos()
+            x,y=self.icCryo.pos()
             if self.threshold_counts < self.ivSpectro.ivolt.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
                 self.take_spectrum(x,y)
             self.plot_map(x,y)
@@ -268,14 +277,14 @@ class MainWindow(HasTraits):
 
     def _abort_fired(self):
         self.finished=True
-        self.icryo.cryo.stop() #stopt cryo
+        self.icCryo.stop() #stopt cryo
         print 'abort'
 
     def take_spectrum(self,x,y):
         print "nehme spektrum, warte auf klappspiegel"
         self.ivSpectro.exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(1) # don't switch mirrors too fast!
-        c_spectrum=self.icamera.camera.acquisition() # nimmt das spektrum auf
+        c_spectrum=self.icCamera.acquisition() # nimmt das spektrum auf
 
         spectrum=[]
         for i in range(len(c_spectrum)):
@@ -364,7 +373,7 @@ class MainWindow(HasTraits):
                 x_gap=abs(x-self.x_koords[i])
                 y_gap=abs(y-self.y_koords[i])
                 if x_gap <self.toleranz and y_gap<self.toleranz:
-                    self.icryo.cryo.move(self.x_koords[i],self.y_koords[i])
+                    self.icCryo.move(self.x_koords[i],self.y_koords[i])
                     break
 
     def calc_snake_xy_pos(self):
@@ -427,11 +436,11 @@ class MainWindow(HasTraits):
                     },
 
             'camera': {
-                    'exposuretime':self.icamera.exposuretime,
-                    'readmode':self.icamera.readmode,
-                    'acquisitionmode':self.icamera.acquisitionmode,
-                    'Vshiftspeed ':self.icamera.Vshiftspeed,
-                    'Hshiftspeed ':self.icamera.Hshiftspeed
+                    'exposuretime':self.ivCamera.exposuretime,
+                    'readmode':self.ivCamera.readmode,
+                    'acquisitionmode':self.ivCamera.acquisitionmode,
+                    'Vshiftspeed ':self.ivCamera.Vshiftspeed,
+                    'Hshiftspeed ':self.ivCamera.Hshiftspeed
                     },
 
             'values': {
@@ -480,11 +489,11 @@ class MainWindow(HasTraits):
 
         self.threshold_counts = self.pop(data,'voltage','threshold')
 
-        self.icamera.exposuretime = self.pop(data,'camera','exposuretime')
-        self.icamera.readmode = self.pop(data,'camera','readmode')
-        self.icamera.acquisitionmode = self.pop(data,'camera','acquisitionmode')
-        self.icamera.Vshiftspeed = self.pop(data,'camera','Vshiftspeed ')
-        self.icamera.Hshiftspeed = self.pop(data,'camera','Hshiftspeed ')
+        self.ivCamera.exposuretime = self.pop(data,'camera','exposuretime')
+        self.ivCamera.readmode = self.pop(data,'camera','readmode')
+        self.ivCamera.acquisitionmode = self.pop(data,'camera','acquisitionmode')
+        self.ivCamera.Vshiftspeed = self.pop(data,'camera','Vshiftspeed ')
+        self.ivCamera.Hshiftspeed = self.pop(data,'camera','Hshiftspeed ')
 
         self.x_koords = self.pop(data,'values','x')
         self.y_koords = self.pop(data,'values','y')
@@ -507,7 +516,7 @@ if __name__ == '__main__':
     main.counts_thread.wants_abort=True
     sleep(1.0)
 
-    if not main.icryo.cryo.simulation:
+    if not main.icCryo.simulation:
         print"close cryo"
         main.icCryo.close()
         main.ivCryo.cryo_refresh=False

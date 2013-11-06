@@ -9,7 +9,7 @@ import thread
 
 class VoltageGUI(HasTraits):
 
-    icVoltage=controls.voltage.Voltage('COM9', 115200, timeout=0.05)
+    icVoltage = controls.voltage.Voltage('COM9', 115200, timeout=0.05)
 
     Voltage = Range(low=0.,high=5.,value=2.5,editor=RangeEditor(evaluate=float,auto_set=False,mode='text'))
     UP = Button()
@@ -20,8 +20,8 @@ class VoltageGUI(HasTraits):
     read=Button(label="read")
     read2=Button(label="read2")
     output = Str()
-    test=Button(label="elapsed time 1")
-    test2=Button(label="elapsed time 2")
+    test = Button(label="elapsed time 1")
+    test2 = Button(label="elapsed time 2")
     simulation=Bool(True, label="Simulation")
     toggle_active = False
 
