@@ -8,7 +8,9 @@ bin-release/
 
 # Other files and folders
 .settings/
+build/
 
+*.orig
 *.pyc
 .*.swp
 
