@@ -15,14 +15,14 @@ from ctypes import *
 import random
 
 import controls.spectrometer
-reload(controls.spectrometer)
-
-import controls.voltage
-reload(controls.voltage)
+# reload(controls.spectrometer)
+import views.voltage
+# reload(views.voltage)
 
 class SpectrometerGUI(HasTraits):
-    ivolt=controls.voltage.Voltage('COM9', 115200, timeout=1)
-    ispectro=controls.spectrometer.Spectro('COM4', 9600, timeout=1)
+    icSpectro=controls.spectrometer.Spectro('COM4', 9600, timeout=1)
+    ivVoltage = Instance(views.voltage.VoltageGUI)
+    icVoltage = ivVoltage.icVoltage
 
     measurement_process=False
     acquisition_process=False
@@ -98,7 +98,7 @@ class SpectrometerGUI(HasTraits):
 
 
     def __init__(self):
-        self.ispectrometer_gui_refresh()
+        self.Spectrometer_gui_refresh()
         self.refresh_active=True
         if len(self.grating_value)>0:
             self.current_grating=self.grating_value[0]
@@ -108,19 +108,19 @@ class SpectrometerGUI(HasTraits):
 
 
     def _goto_fired(self):
-        self.ispectro.wavelength_goto(self.centerwvl)
-        self.ispectro.waiting()
+        self.icSpectro.wavelength_goto(self.centerwvl)
+        self.icSpectro.waiting()
 
 
     def _sweep_fired(self):
-                self.ispectro.wavelength_uncontrolled_nm(self.centerwvl)
-                self.ispectro.waiting()
+                self.icSpectro.wavelength_uncontrolled_nm(self.centerwvl)
+                self.icSpectro.waiting()
 
 
 
     def _speed_changed(self):
         print "speed changed: " + str(self.speed)
-        self.ispectro.velocity(self.speed)
+        self.icSpectro.velocity(self.speed)
 
     def _jogup_fired(self):
         try:
@@ -138,27 +138,27 @@ class SpectrometerGUI(HasTraits):
 
 
     def _position_fired(self):
-            self.output=self.ispectro.output_position()
+            self.output=self.icSpectro.output_position()
 
 
     def _identify_fired(self):
-            self.output=self.ispectro.ident()
+            self.output=self.icSpectro.ident()
 
 
     def _output_speed_fired(self):
-            self.output=self.ispectro.output_velocity()
+            self.output=self.icSpectro.output_velocity()
 
 
     def _current_grating_changed(self):
        if not self.refresh_active: # ueberprueft ob der Wert wegen einer aktualisierung geaendert worden ist, dann kein Befehl senden
-         self.ispectro.grating_change(self.current_grating[1])
+         self.icSpectro.grating_change(self.current_grating[1])
 
     def _exit_mirror_changed(self):
         if not self.refresh_active:
             if self.exit_mirror=='front (CCD)':
-                self.ispectro.exit_mirror_change('front')
+                self.icSpectro.exit_mirror_change('front')
             else:
-                self.ispectro.exit_mirror_change('side')
+                self.icSpectro.exit_mirror_change('side')
 
     def _search_maximum_fired(self):
             if self.measurement_process:
@@ -173,19 +173,19 @@ class SpectrometerGUI(HasTraits):
 
     def measure(self,start_value,end_value):
         self.search_max_label='abort'
-        self.ispectro.wavelength_goto(start_value)
-        self.ispectro.waiting()
-        self.ispectro.wavelength_controlled_nm(end_value)
+        self.icSpectro.wavelength_goto(start_value)
+        self.icSpectro.waiting()
+        self.icSpectro.wavelength_controlled_nm(end_value)
         self.measurement_process=True
         start=time.clock()
         self.measured_values=[]
         self.wavelength=[]
 
         while self.measurement_process:
-            self.measured_values.append(self.ivolt.measure())
+            self.measured_values.append(self.icVoltage.measure())
             ende=time.clock()
-            time.sleep(1) # without the method is to fast for the ispectrometer
-            self.wavelength.append(float(self.ispectro.output_position()))
+            time.sleep(1) # without the method is to fast for the Spectrometer
+            self.wavelength.append(float(self.icSpectro.output_position()))
             self.draw(self.wavelength,self.measured_values)
 
             """die beiden Abbruchbedingungen, wenn die Wellaenge fast gr??er als der end_value ist oder aber die letzen beiden eingelessenen Wellenl?ngen identisch sind"""
@@ -198,10 +198,10 @@ class SpectrometerGUI(HasTraits):
 
         maximum=max(self.measured_values) # sucht das groesste element der liste
         wavelength_maximum=self.measured_values.index(maximum) # sucht den ort in der Liste von der Zahl maximum
-        self.ispectro.mono_stop()
+        self.icSpectro.mono_stop()
         self.measurement_process=False
         print self.wavelength[wavelength_maximum]
-        self.ispectro.wavelength_goto(self.wavelength[wavelength_maximum]) # geht an ort des Maximums zurueck
+        self.icSpectro.wavelength_goto(self.wavelength[wavelength_maximum]) # geht an ort des Maximums zurueck
         self.search_max_label='search maximum'
 
 
@@ -223,9 +223,9 @@ class SpectrometerGUI(HasTraits):
             thread.start_new_thread(self.toggle_simulate_spectrometer,())
 
     def toggle_simulate_spectrometer(self):
-        self.simulate_spectrometer = self.ispectro.toggle_simulation()
+        self.simulate_spectrometer = self.icSpectro.toggle_simulation()
         self.toggle_active = False
-        self.ispectrometer_gui_refresh()
+        self.Spectrometer_gui_refresh()
 
     def _simulate_voltmeter_changed(self):
         if not self.toggle_active:
@@ -233,14 +233,14 @@ class SpectrometerGUI(HasTraits):
             thread.start_new_thread(self.toggle_simulate_voltmeter,())
     
     def toggle_simulate_voltmeter(self):
-        self.simulate_voltmeter = self.ivolt.toggle_simulation()
+        self.simulate_voltmeter = self.icVoltage.toggle_simulation()
         self.toggle_active = False
         
-    def ispectrometer_gui_refresh(self):
+    def Spectrometer_gui_refresh(self):
         self.refresh_active=True
-        position=self.ispectro.output_position()
+        position=self.icSpectro.output_position()
         self.centerwvl=position
-        self.speed=self.ispectro.output_velocity()
+        self.speed=self.icSpectro.output_velocity()
         self.read_gratings()
         self.read_exit_mirror()
         self.refresh_active=False
@@ -248,25 +248,25 @@ class SpectrometerGUI(HasTraits):
 
     def read_gratings(self):
         #import pdb;pdb.set_trace()
-        (self.grating_value,aktuell)=self.ispectro.output_grating() #aktuell als zweite output hinzuschreiben
+        (self.grating_value,aktuell)=self.icSpectro.output_grating() #aktuell als zweite output hinzuschreiben
         self.current_grating=self.grating_value[aktuell-1] # -1 da Grating bei 1 anfaengt zu zaehlen und List bei 0
 
     def read_exit_mirror(self):
-        exit_mirror=self.ispectro.output_exit_mirror()
+        exit_mirror=self.icSpectro.output_exit_mirror()
         if exit_mirror=='front':
             self.exit_mirror=self.exit_mirror_value[0]
         else:
             self.exit_mirror=self.exit_mirror_value[1]
     def _abort_fired(self):
-        self.ispectro.mono_stop()
+        self.icSpectro.mono_stop()
         self.measurement_process=False
 
 if __name__=="__main__":
-    main=SpectrometerGUI()
+    main=SpectrometerGUI(ivVoltage = views.voltage.VoltageGUI())
     main.configure_traits()
-    if not main.ispectro.simulation:
-        print"close ispectrometer"
-        main.ispectro.close()
-    if not main.ivolt.simulation:
+    if not main.icSpectro.simulation:
+        print"close Spectrometer"
+        main.icSpectro.close()
+    if not main.icVoltage.simulation:
         print"close controls.voltage"
-        main.ivolt.close()
+        main.icVoltage.close()

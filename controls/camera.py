@@ -50,7 +50,6 @@ class Camera(object):
         pixel=1024
 
         if self.simulation:
-#            import pdb; pdb.set_trace()
             line = [ 2*sin(2.*pi/12.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(pixel) ]
             return line
 
