@@ -247,7 +247,6 @@ class SpectrometerGUI(HasTraits):
 
 
     def read_gratings(self):
-        #import pdb;pdb.set_trace()
         (self.grating_value,aktuell)=self.icSpectro.output_grating() #aktuell als zweite output hinzuschreiben
         self.current_grating=self.grating_value[aktuell-1] # -1 da Grating bei 1 anfaengt zu zaehlen und List bei 0
 

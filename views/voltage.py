@@ -9,7 +9,7 @@ import thread
 
 class VoltageGUI(HasTraits):
 
-    ivoltage=controls.voltage.Voltage('COM9', 115200, timeout=0.05)
+    icVoltage=controls.voltage.Voltage('COM9', 115200, timeout=0.05)
 
     Voltage = Range(low=0.,high=5.,value=2.5,editor=RangeEditor(evaluate=float,auto_set=False,mode='text'))
     UP = Button()
@@ -45,7 +45,7 @@ class VoltageGUI(HasTraits):
                 resizable = True)
 
     def _Voltage_changed(self):
-        self.ivoltage.setvoltage(self.Voltage)
+        self.icVoltage.setvoltage(self.Voltage)
 
     def _UP_fired(self):
         try:
@@ -63,13 +63,13 @@ class VoltageGUI(HasTraits):
         self.Voltage = 0
 
     def _read_fired(self):
-        self.output=str(self.ivoltage.read_voltage())
+        self.output=str(self.icVoltage.read_voltage())
 
     def _read2_fired(self):
-        self.output=str(self.ivoltage.read_voltage_new())
+        self.output=str(self.icVoltage.read_voltage_new())
 
     def _Blinken_fired(self):
-        self.ivoltage.blink()
+        self.icVoltage.blink()
 
     def _simulation_changed(self):
         if not self.toggle_active:
@@ -78,7 +78,7 @@ class VoltageGUI(HasTraits):
 
     def toggle_simulation(self):
             # .toggle_simulation() liefert simulieren = True/False zurueck
-            self.simulation = self.ivoltage.toggle_simulation()
+            self.simulation = self.icVoltage.toggle_simulation()
             self.toggle_active = False
 
     def _test_fired(self):
@@ -86,7 +86,7 @@ class VoltageGUI(HasTraits):
         error=0
         for i in range(100):
             print i
-            temp=self.ivoltage.read_voltage()
+            temp=self.icVoltage.read_voltage()
             print temp
             if temp==0:
                 error=error+1
@@ -100,7 +100,7 @@ class VoltageGUI(HasTraits):
         error=0
         for i in range(100):
             print i
-            temp=self.ivoltage.read_voltage_new()
+            temp=self.icVoltage.read_voltage_new()
             print temp
             if temp==0:
                 error=error+1
@@ -113,7 +113,7 @@ class VoltageGUI(HasTraits):
 if __name__ == '__main__':
     main=VoltageGUI()
     main.configure_traits()
-    if main.ivoltage.simulation==0:
+    if main.icVoltage.simulation==0:
         print"close Voltage"
-        main.ivolt.close()
+        main.icVoltage.close()
 

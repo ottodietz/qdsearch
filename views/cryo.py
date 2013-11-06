@@ -5,13 +5,13 @@ from pyface.api import confirm,ImageResource
 import time
 import thread
 
-from controls.cryo import Cryo
+import controls.cryo
 
 
 class CryoGUI(HasTraits):
     mi_cryo = Action(name='cryo menu', accelerator='Ctrl+p', action='call_cryo_menu')
     menu =    Menu(mi_cryo,name='Cryo')
-    cryo=Cryo('COM3', 9600, timeout=1)
+    icCryo = controls.cryo.Cryo('COM3', 9600, timeout=1)
     cryo_refresh=True
 
     output=Str()
@@ -94,86 +94,86 @@ class CryoGUI(HasTraits):
         #thread.start_new_thread(self.refresh_cryo_gui,())
 
     def _identity_fired(self):
-        self.output=self.cryo.identify()
+        self.output=self.icCryo.identify()
 
 
     def _position_fired(self):
-        self.output=str(self.cryo.pos())
+        self.output=str(self.icCryo.pos())
 
     def _cal_fired(self):
-        self.output=self.cryo.cal()
+        self.output=self.icCryo.cal()
 
     def _rm_fired(self):
-        self.output=self.cryo.rm()
+        self.output=self.icCryo.rm()
 
     def _up_fired(self):
-        self.cryo.rmove(0,self.y_step)
+        self.icCryo.rmove(0,self.y_step)
 
     def _down_fired(self):
-        self.cryo.rmove(0,-self.y_step)
+        self.icCryo.rmove(0,-self.y_step)
 
     def _left_fired(self):
-        self.cryo.rmove(-self.x_step,0)
+        self.icCryo.rmove(-self.x_step,0)
 
     def _right_fired(self):
-        self.cryo.rmove(self.x_step,0)
+        self.icCryo.rmove(self.x_step,0)
 
     def _northwest_fired(self):
-        self.cryo.rmove(-self.x_step,self.y_step)
+        self.icCryo.rmove(-self.x_step,self.y_step)
 
     def _northeast_fired(self):
-        self.cryo.rmove(self.x_step,self.y_step)
+        self.icCryo.rmove(self.x_step,self.y_step)
 
     def _southwest_fired(self):
-        self.cryo.rmove(-self.x_step,-self.y_step)
+        self.icCryo.rmove(-self.x_step,-self.y_step)
 
 
     def _southeast_fired(self):
-        self.cryo.rmove(self.x_step,-self.y_step)
+        self.icCryo.rmove(self.x_step,-self.y_step)
 
 
     def _downdown_fired(self):
-        self.cryo.rmove(0,-self.y_step*self.factor1)
+        self.icCryo.rmove(0,-self.y_step*self.factor1)
 
     def _leftleft_fired(self):
-        self.cryo.rmove(-self.x_step*self.factor1,0)
+        self.icCryo.rmove(-self.x_step*self.factor1,0)
 
     def _rightright_fired(self):
-        self.cryo.rmove(self.x_step*self.factor1,0)
+        self.icCryo.rmove(self.x_step*self.factor1,0)
 
     def _upup_fired(self):
-        self.cryo.rmove(0,self.y_step*self.factor1)
+        self.icCryo.rmove(0,self.y_step*self.factor1)
 
     def _move_fired(self):
-        self.cryo.move(self.movex,self.movey)
+        self.icCryo.move(self.movex,self.movey)
 
     def _setzero_fired(self):
         answer=confirm(parent=None, title="confirmation", message="You want to set a new point of origin. All previous coordinates can be become useless. Do you want to continue?  ")
         # confirm gives a 40 for no and 30 for firing yes
         if answer==30:
-            self.cryo.setpos(self.movex,self.movey)
+            self.icCryo.setpos(self.movex,self.movey)
 
     def _stop_fired(self):
-        self.cryo.stop()
+        self.icCryo.stop()
 
     def _status_fired(self):
-        self.output=str(self.cryo.status())
+        self.output=str(self.icCryo.status())
 
     def _simulation_changed(self):
         if not self.toggle_active:
             self.toggle_active = True
             thread.start_new_thread(self.toggle_simulation,())
-        self.movex,self.movey=self.cryo.pos()
+        self.movex,self.movey=self.icCryo.pos()
 
     def toggle_simulation(self):
         # camera.toggle_simulation() liefert simulieren = True/False zurueck
-            self.simulation = self.cryo.toggle_simulation()
+            self.simulation = self.icCryo.toggle_simulation()
             self.toggle_active = False
 
     def refresh_cryo_gui(self):
-        while self.cryo_refresh:
+        while self.icCryo.refresh:
             try:
-                self.output=str(self.cryo.pos())
+                self.output=str(self.icCryo.pos())
             except:
                 pass
             time.sleep(2)
@@ -185,7 +185,7 @@ class CryoGUI(HasTraits):
 if __name__=="__main__":
     main=CryoGUI()
     main.configure_traits()
-    if not main.cryo.simulation:
+    if not main.icCryo.simulation:
         print"close cryo"
-        main.cryo.close()
-        main.cryo.cryo_refresh=False
+        main.icCryo.close()
+        main.icCryo.cryo_refresh=False

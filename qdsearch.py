@@ -55,7 +55,7 @@ class PlotTool(BaseTool):
 class counts_thread(Thread):
     def run(self):
         while not self.wants_abort:
-            self.caller.counts =  self.caller.ispectrometer.ivolt.measure()/self.VoltPerCount
+            self.caller.counts =  self.caller.ivSpectro.ivolt.measure()/self.VoltPerCount
             # we need a waitstate! If not, our gui is constantly updating
             time.sleep(0.1)
 
@@ -102,12 +102,13 @@ class MainWindow(HasTraits):
     testB = Button(label="test test")
 
     counts_thread = counts_thread()
-    ispectrometer = Instance(views.spectrometer.SpectrometerGUI,() ) 
-    icryo         = Instance(views.cryo.CryoGUI,())
-    ivoltage      = Instance(views.voltage.VoltageGUI)
-
-    icamera       = Instance(views.camera.CameraGUI)# No ",()" as below, Instance is created in _default
-
+    ivSpectro = Instance(views.spectrometer.SpectrometerGUI,() ) 
+    ivCryo         = Instance(views.cryo.CryoGUI,())
+    icCryo         = ivCryo.icCryo
+    ivVoltage      = Instance(views.voltage.VoltageGUI)
+    icVoltage      = ivVoltage.icVoltage
+    ivCamera       = Instance(views.camera.CameraGUI)# No ",()" as below, Instance is created in _default
+    icCamera       = ivCamera.icCamera
 
     def _icamera_default(self):
         print "CAMERA INIT"
@@ -206,13 +207,13 @@ class MainWindow(HasTraits):
        self.icryo.configure_traits(view='view_menu')
 
     def call_spectrometer_menu(self):
-       self.ispectrometer.configure_traits(view='view_menu')
+       self.ivSpectro.configure_traits(view='view_menu')
 
     def call_scan_sample_menu(self):
         self.configure_traits(view='setting_view')
 
     def _scan_sample_step_fired(self):
-        if self.ispectrometer.measurement_process or self.ispectrometer.acquisition_process:
+        if self.ivSpectro.measurement_process or self.ivSpectro.acquisition_process:
             information(parent=None,title='please wait', message='Measurement at the spectrometer is running please finish this first.')
         else:
             thread.start_new_thread(self.scanning_step,())
@@ -239,8 +240,8 @@ class MainWindow(HasTraits):
         if self.y1>self.y2:
             self.y1,self.y2=self.y2,self.y1
 
-        if self.ispectrometer.exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
-             self.ispectrometer.exit_mirror='side (APDs)'#self.ispectrometer.exit_mirror_value[1
+        if self.ivSpectro.exit_mirror=='front (CCD)': #ueberprueft ob spiegel umgeklappt bzw falls nicht klappt er ihn um
+             self.ivSpectro.exit_mirror='side (APDs)'#self.ivSpectro.exit_mirror_value[1
 
         self.icryo.cryo.waiting() #wartet bis cryo bereit
 
@@ -257,7 +258,7 @@ class MainWindow(HasTraits):
             self.icryo.cryo.waiting()
             # get actuall position, maybe x_pos[i] != x
             x,y=self.icryo.cryo.pos()
-            if self.threshold_counts < self.ispectrometer.ivolt.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
+            if self.threshold_counts < self.ivSpectro.ivolt.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
                 self.take_spectrum(x,y)
             self.plot_map(x,y)
 
@@ -272,7 +273,7 @@ class MainWindow(HasTraits):
 
     def take_spectrum(self,x,y):
         print "nehme spektrum, warte auf klappspiegel"
-        self.ispectrometer.exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
+        self.ivSpectro.exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(1) # don't switch mirrors too fast!
         c_spectrum=self.icamera.camera.acquisition() # nimmt das spektrum auf
 
@@ -280,15 +281,15 @@ class MainWindow(HasTraits):
         for i in range(len(c_spectrum)):
             spectrum.append(c_spectrum[i])
 
-        self.ispectrometer.exit_mirror='side (APDs)' # klappt spiegel vom spectro auf ausgang um
+        self.ivSpectro.exit_mirror='side (APDs)' # klappt spiegel vom spectro auf ausgang um
 
         # warning: we don't check if we are still at the same position!
 
         self.x_koords.append(x)
         self.y_koords.append(y)
         self.spectra.append(spectrum)
-        self.used_centerwvl.append(self.ispectrometer.centerwvl)
-        self.used_grating.append(self.ispectrometer.current_grating)
+        self.used_centerwvl.append(self.ivSpectro.centerwvl)
+        self.used_grating.append(self.ivSpectro.current_grating)
 
         self.file_name = self.autosave_filename
         self.save_file()
@@ -324,12 +325,12 @@ class MainWindow(HasTraits):
     def create_wavelength_for_plotting(self):
         wavelength=[]
         pixel=1024
-        grooves=self.ispectrometer.current_grating.split(' ')
+        grooves=self.ivSpectro.current_grating.split(' ')
         grooves=int([x for x in grooves if x][1])
         for i in range(pixel+1):
             wavelength.append(i)
         width=26*10**-3
-        wavelength[pixel/2]=self.ispectrometer.centerwvl
+        wavelength[pixel/2]=self.ivSpectro.centerwvl
         for i in range(pixel/2):
             wavelength[pixel/2-i-1]=wavelength[pixel/2-i]-width*self.calculate_dispersion(wavelength[pixel/2-i],grooves)
             wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
@@ -416,10 +417,10 @@ class MainWindow(HasTraits):
                      'y_stepsize':self.y_stepsize
                     },
 
-            'spectrometer': { 'centerwvl': self.ispectrometer.centerwvl,
-                              'grating': self.ispectrometer.current_grating,
-                              'slot_width_in': self.ispectrometer.slot_width_in,
-                              'slot_width_out': self.ispectrometer.slot_width_out
+            'spectrometer': { 'centerwvl': self.ivSpectro.centerwvl,
+                              'grating': self.ivSpectro.current_grating,
+                              'slot_width_in': self.ivSpectro.slot_width_in,
+                              'slot_width_out': self.ivSpectro.slot_width_out
                             },
             'voltage': {
                     'threshold': self.threshold_counts
@@ -472,10 +473,10 @@ class MainWindow(HasTraits):
         self.x_stepsize = self.pop(data,'cryo','x_stepsize')
         self.y_stepsize = self.pop(data,'cryo','y_stepsize')
 
-        self.ispectrometer.centerwvl = self.pop(data,'spectrometer','centerwvl')
-        self.ispectrometer.current_grating = self.pop(data,'spectrometer','grating')
-        self.ispectrometer.slot_width_in = self.pop(data,'spectrometer','slot_width_in')
-        self.ispectrometer.slot_width_out = self.pop(data,'spectrometer','slot_width_out')
+        self.ivSpectro.centerwvl = self.pop(data,'spectrometer','centerwvl')
+        self.ivSpectro.current_grating = self.pop(data,'spectrometer','grating')
+        self.ivSpectro.slot_width_in = self.pop(data,'spectrometer','slot_width_in')
+        self.ivSpectro.slot_width_out = self.pop(data,'spectrometer','slot_width_out')
 
         self.threshold_counts = self.pop(data,'voltage','threshold')
 
@@ -502,20 +503,20 @@ class MainWindow(HasTraits):
 main = MainWindow()
 if __name__ == '__main__':
     main.configure_traits(scrollable = True)
-    main.icryo.open=False
+    main.icCryo.open=False
     main.counts_thread.wants_abort=True
     sleep(1.0)
 
     if not main.icryo.cryo.simulation:
         print"close cryo"
-        main.icryo.cryo.close()
-        main.icryo.cryo_refresh=False
-    if not main.ispectrometer.ispectro.simulation:
+        main.icCryo.close()
+        main.ivCryo.cryo_refresh=False
+    if not main.icSpectro.simulation:
         print"close spectro"
-        main.ispectrometer.ispectro.close()
-    if not main.ispectrometer.ivolt.simulation:
+        main.icSpectro.close()
+    if not main.icVoltage.simulation:
         print"close Voltage"
-        main.ispectrometer.ivolt.close()
-    main.icamera.close()
+        main.icVoltage.close()
+    main.icCamera.close()
 
 
