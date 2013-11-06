@@ -27,7 +27,7 @@ class Camera(object):
                 print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
                 print "SetReadMode:",self.atm.SetReadMode(self.readmode) #FullverticalBinning
                 print "SetAcqMode:",self.atm.SetAcquisitionMode(self.acquisitionmode) # single shoot
-                print "SetExpTime:",self.atm.SetExposureTime(self.exposuretime) #Belichtungsdauer
+                print "SetExpTime:",self.setexposuretime() #Belichtungsdauer
                 print "Cooler ON",self.cooler_on()
                 print "SetTemo to -70", self.settemperature(c_long(-70))
                 self.camera_active=True
@@ -39,6 +39,10 @@ class Camera(object):
                 self.init_active=False
         return self.simulation
 
+    def setexposuretime(self,exp=self.exposuretime):
+        if not self.simulation:
+            return self.atm.SetExposureTime(exp)
+        return CAM_OKAY
 
     def acquisition(self, sim_pos=(0,0),sim_volt=(0)):#,sim_posx=None,sim_posy=None):
         pixel=1024

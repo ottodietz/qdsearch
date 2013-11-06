@@ -266,7 +266,7 @@ show_label=False)),
 
     def _exposuretime_changed(self):
         import pdb; pdb.set_trace()
-        self.camera.exposuretime=c_float(self.exposuretime)
+        self.camera.setexposuretime(self.exposuretime)
         print "exp changed"
 
     def call_menu(self):
