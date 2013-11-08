@@ -36,7 +36,7 @@ import views.camera
 import views.voltage
 # refresh (views.voltage)
 
-import controls.cryo
+import controls
 # refresh (controls.cryo)
 
 """events on the plot"""
@@ -117,7 +117,7 @@ class MainWindow(HasTraits):
         print "CAMERA INIT"
         return views.camera.CameraGUI(ivCryo=self.ivCryo, ivVoltage=self.ivVoltage)
 
-    def _icCryo_default(self):
+    def _ivCryo_default(self):
         print "CRYO INIT"
         return views.cryo.CryoGUI()
 
@@ -126,14 +126,14 @@ class MainWindow(HasTraits):
         return views.spectrometer.SpectroGUI(ivVoltage=self.ivVoltage)
 
     def _ivVoltage_default(self):
-        import pdb; pdb.set_trace()
+#        import pdb; pdb.set_trace()
         print "VOLTAGE INIT"
-        try:
-            print "print in der INI"
-            self.icVoltage.blink()
-        except:
-            import sys
-            print sys.exc_info()
+#        try:
+#            print "print in der INI"
+#            self.icVoltage.blink()
+#        except:
+#            import sys
+#            print sys.exc_info()
         return views.voltage.VoltageGUI()
 
     def _icVoltage_default(self):
