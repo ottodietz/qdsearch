@@ -103,14 +103,14 @@ class SpectroGUI(HasTraits):
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
 
-#    def __init__(self):
-#        self.Spectrometer_gui_refresh()
-#        self.refresh_active=True
-#        if len(self.grating_value)>0:
-#            self.current_grating=self.grating_value[0]
-#        if len(self.exit_mirror_value)>0:
-#            self.exit_mirror=self.exit_mirror_value[0]
-#        self.refresh_active=False
+    def __init__(self):
+        self.Spectrometer_gui_refresh()
+        self.refresh_active=True
+        if len(self.grating_value)>0:
+            self.current_grating=self.grating_value[0]
+        if len(self.exit_mirror_value)>0:
+            self.exit_mirror=self.exit_mirror_value[0]
+        self.refresh_active=False
 
     def _goto_fired(self):
         self.icSpectro.wavelength_goto(self.centerwvl)
