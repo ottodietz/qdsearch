@@ -21,7 +21,8 @@ import views.voltage
 
 class SpectroGUI(HasTraits):
 
-    icSpectro=controls.spectrometer.Spectro('COM4', 9600, timeout=1)
+    icSpectro = controls.spectrometer.Spectro('COM4', 9600, timeout=1)
+
     ivVoltage = Instance(views.voltage.VoltageGUI)
     icVoltage = Instance(controls.voltage.Voltage)
 
@@ -103,7 +104,7 @@ class SpectroGUI(HasTraits):
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.Spectrometer_gui_refresh()
         self.refresh_active=True
         if len(self.grating_value)>0:
@@ -174,9 +175,9 @@ class SpectroGUI(HasTraits):
                 if start_value <0:
                     start_value=0
                     end_value=self.scan_bereich
-                thread.start_new_thread(self.measure,(start_value,end_value,))
+                thread.start_new_thread(self.lookformax,(start_value,end_value,))
 
-    def measure(self,start_value,end_value):
+    def lookformax(self,start_value,end_value):
         self.search_max_label='abort'
         self.icSpectro.wavelength_goto(start_value)
         self.icSpectro.waiting()
@@ -266,6 +267,7 @@ class SpectroGUI(HasTraits):
         self.measurement_process=False
 
 if __name__=="__main__":
+#    import pdb; pdb.set_trace()
     main=SpectroGUI(ivVoltage = views.voltage.VoltageGUI())
     main.configure_traits()
     if not main.icSpectro.simulation:

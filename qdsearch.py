@@ -57,7 +57,7 @@ class PlotTool(BaseTool):
 class counts_thread(Thread):
     def run(self):
         while not self.wants_abort:
-            self.caller.counts =  self.caller.icVoltage.measure()/self.VoltPerCount
+            self.caller.counts =  self.caller.ivSpectro.measure()/self.VoltPerCount
             # we need a waitstate! If not, our gui is constantly updating
             time.sleep(0.1)
 
@@ -126,14 +126,7 @@ class MainWindow(HasTraits):
         return views.spectrometer.SpectroGUI(ivVoltage=self.ivVoltage)
 
     def _ivVoltage_default(self):
-#        import pdb; pdb.set_trace()
         print "VOLTAGE INIT"
-#        try:
-#            print "print in der INI"
-#            self.icVoltage.blink()
-#        except:
-#            import sys
-#            print sys.exc_info()
         return views.voltage.VoltageGUI()
 
     def _icVoltage_default(self):
@@ -181,7 +174,7 @@ class MainWindow(HasTraits):
           )
 
     spectrometer_tab = VGroup(
-            Item('ispectrometer', style = 'custom',show_label=False),
+            Item('ivSpectro', style = 'custom',show_label=False),
             Item('ivCamera',style = 'custom', show_label=False),
             label='spectrometer'
             )
@@ -193,7 +186,6 @@ class MainWindow(HasTraits):
             label='Focus'
             )
 
-
     tabs = Group(
         Item('ivCryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
         spectrometer_tab,
@@ -203,10 +195,10 @@ class MainWindow(HasTraits):
 
     traits_view = View(
         tabs,
-     menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,scan_sample_menu),
-    title   = 'qdsearch',
-    buttons = [ 'OK' ],
-    resizable = True
+        menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,scan_sample_menu),
+        title   = 'qdsearch',
+        buttons = [ 'OK' ],
+        resizable = True
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
@@ -281,7 +273,7 @@ class MainWindow(HasTraits):
             self.icCryo.waiting()
             # get actuall position, maybe x_pos[i] != x
             x,y=self.icCryo.pos()
-            if self.threshold_counts < self.ivSpectro.ivolt.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
+            if self.threshold_counts < self.ivSpectro.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
                 self.take_spectrum(x,y)
             self.plot_map(x,y)
 
