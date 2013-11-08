@@ -525,7 +525,7 @@ class MainWindow(HasTraits):
 
 main = MainWindow()
 if __name__ == '__main__':
-    main.configure_traits(scrollable = False)
+    main.configure_traits(scrollable = True)
     main.icCryo.open=False
     main.counts_thread.wants_abort=True
     sleep(1.0)
