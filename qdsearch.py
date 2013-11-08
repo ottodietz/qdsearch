@@ -104,8 +104,9 @@ class MainWindow(HasTraits):
     testB = Button(label="test test")
 
     counts_thread = counts_thread()
-    ivSpectro = Instance(views.spectrometer.SpectrometerGUI,() ) 
-    ivCryo         = Instance(views.cryo.CryoGUI,())
+    ivSpectro      = Instance(views.spectrometer.SpectroGUI) 
+    icSpectro      = Instance(controls.spectrometer.Spectrometer)
+    ivCryo         = Instance(views.cryo.CryoGUI)
     icCryo         = Instance(controls.cryo.Cryo)
     ivVoltage      = Instance(views.voltage.VoltageGUI)
     icVoltage      = Instance(controls.voltage.Voltage) 
@@ -116,14 +117,22 @@ class MainWindow(HasTraits):
         print "CAMERA INIT"
         return views.camera.CameraGUI(ivCryo=self.ivCryo, ivVoltage=self.ivVoltage)
 
-#    def _ivVoltage_default(self):
-#        print "VOLTAGE INIT"
-#        try:
-#            self.icVoltage.blink()
-#        except:
-#            import sys
-#            print sys.exc_info()
-#        return views.voltage.Voltage()
+    def _icCryo_default(self):
+        print "CRYO INIT"
+        return views.cryo.CryoGUI()
+
+    def _ivSpectro_default(self):
+        print "SPECTRO INIT"
+        return views.spectrometer.SpectroGUI(ivVoltage=self.ivVoltage)
+
+    def _ivVoltage_default(self):
+        print "VOLTAGE INIT"
+        try:
+            self.icVoltage.blink()
+        except:
+            import sys
+            print sys.exc_info()
+        return views.voltage.VoltageGUI()
 
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
@@ -131,8 +140,11 @@ class MainWindow(HasTraits):
     def _icCamera_default(self):
         return self.ivCamera.icCamera
 
-    def _icCryo_defaul(self):
+    def _icCryo_default(self):
         return self.ivCryo.icCryo
+
+    def _icSpectro_default(self):
+        return self.ivSpectro.icSpectro
 
 
     hide_during_scan = { 'enabled_when': 'finished==True'}
@@ -517,14 +529,14 @@ if __name__ == '__main__':
     sleep(1.0)
 
     if not main.icCryo.simulation:
-        print"close cryo"
+        print"CLOSE CRYO"
         main.icCryo.close()
         main.ivCryo.cryo_refresh=False
     if not main.icSpectro.simulation:
-        print"close spectro"
+        print"CLOSE SPECTROMETER"
         main.icSpectro.close()
     if not main.icVoltage.simulation:
-        print"close Voltage"
+        print"CLOSE VOLTAGE"
         main.icVoltage.close()
     main.icCamera.close()
 

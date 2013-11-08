@@ -19,12 +19,11 @@ import controls.spectrometer
 import views.voltage
 # reload(views.voltage)
 
-class SpectrometerGUI(HasTraits):
+class SpectroGUI(HasTraits):
 
     icSpectro=controls.spectrometer.Spectro('COM4', 9600, timeout=1)
     import pdb; pdb.set_trace()
     ivVoltage = Instance(views.voltage.VoltageGUI)
-
     icVoltage = Instance(controls.voltage.Voltage)
 
     measurement_process=False
@@ -110,7 +109,7 @@ class SpectrometerGUI(HasTraits):
         self.refresh_active=False
 
     def _ivVoltage_default(self):
-        return views.voltage.ivVoltage
+        return views.voltage.VoltageGUI()
 
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
@@ -270,11 +269,11 @@ class SpectrometerGUI(HasTraits):
 
 if __name__=="__main__":
     import pdb; pdb.set_trace()
-    main=SpectrometerGUI(ivVoltage = views.voltage.VoltageGUI())
+    main=SpectroGUI(ivVoltage = views.voltage.VoltageGUI())
     main.configure_traits()
     if not main.icSpectro.simulation:
         print"close Spectrometer"
         main.icSpectro.close()
     if not main.icVoltage.simulation:
-        print"close controls.voltage"
+        print"close Voltage"
         main.icVoltage.close()

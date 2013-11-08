@@ -113,7 +113,7 @@ class VoltageGUI(HasTraits):
 if __name__ == '__main__':
     main=VoltageGUI()
     main.configure_traits()
-    if main.icVoltage.simulation==0:
+    if not main.icVoltage.simulation:
         print"close Voltage"
         main.icVoltage.close()
 

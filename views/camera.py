@@ -298,4 +298,13 @@ show_label=False)),
 if __name__=="__main__":
     main=CameraGUI(ivCryo = views.cryo.CryoGUI(), ivVoltage = views.voltage.VoltageGUI())
     main.configure_traits()
-    main.close()
+    if not main.icCamera.simulation:
+        print "CAMERA CLOSE"
+        main.icCamera.close()
+    if not main.icCryo.simulation:
+        print "CRYO CLOSE"
+        main.icCryo.close()
+    if not main.icVoltage.simulation:
+        print "VOLTAGE CLOSE"
+        main.icVoltage.close() 
+#    main.close()
