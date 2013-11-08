@@ -57,7 +57,7 @@ class PlotTool(BaseTool):
 class counts_thread(Thread):
     def run(self):
         while not self.wants_abort:
-            self.caller.counts =  self.caller.ivSpectro.measure()/self.VoltPerCount
+            self.caller.counts =  self.caller.icVoltage.measure()/self.VoltPerCount
             # we need a waitstate! If not, our gui is constantly updating
             time.sleep(0.1)
 
@@ -273,7 +273,7 @@ class MainWindow(HasTraits):
             self.icCryo.waiting()
             # get actuall position, maybe x_pos[i] != x
             x,y=self.icCryo.pos()
-            if self.threshold_counts < self.ivSpectro.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
+            if self.threshold_counts < self.icVoltage.measure()/self.VoltPerCount: # vergleicht schwellenspannung mit aktueller
                 self.take_spectrum(x,y)
             self.plot_map(x,y)
 
