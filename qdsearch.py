@@ -105,7 +105,7 @@ class MainWindow(HasTraits):
 
     counts_thread = counts_thread()
     ivSpectro      = Instance(views.spectrometer.SpectroGUI) 
-    icSpectro      = Instance(controls.spectrometer.Spectrometer)
+    icSpectro      = Instance(controls.spectrometer.Spectro)
     ivCryo         = Instance(views.cryo.CryoGUI)
     icCryo         = Instance(controls.cryo.Cryo)
     ivVoltage      = Instance(views.voltage.VoltageGUI)
@@ -126,8 +126,10 @@ class MainWindow(HasTraits):
         return views.spectrometer.SpectroGUI(ivVoltage=self.ivVoltage)
 
     def _ivVoltage_default(self):
+        import pdb; pdb.set_trace()
         print "VOLTAGE INIT"
         try:
+            print "print in der INI"
             self.icVoltage.blink()
         except:
             import sys
@@ -523,7 +525,7 @@ class MainWindow(HasTraits):
 
 main = MainWindow()
 if __name__ == '__main__':
-    main.configure_traits(scrollable = True)
+    main.configure_traits(scrollable = False)
     main.icCryo.open=False
     main.counts_thread.wants_abort=True
     sleep(1.0)

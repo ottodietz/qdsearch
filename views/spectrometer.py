@@ -22,7 +22,6 @@ import views.voltage
 class SpectroGUI(HasTraits):
 
     icSpectro=controls.spectrometer.Spectro('COM4', 9600, timeout=1)
-    import pdb; pdb.set_trace()
     ivVoltage = Instance(views.voltage.VoltageGUI)
     icVoltage = Instance(controls.voltage.Voltage)
 
@@ -98,21 +97,20 @@ class SpectroGUI(HasTraits):
             ),
             width=750,height=600,buttons = [OKButton,], resizable = True)
 
-
-    def __init__(self):
-        self.Spectrometer_gui_refresh()
-        self.refresh_active=True
-        if len(self.grating_value)>0:
-            self.current_grating=self.grating_value[0]
-        if len(self.exit_mirror_value)>0:
-            self.exit_mirror=self.exit_mirror_value[0]
-        self.refresh_active=False
-
     def _ivVoltage_default(self):
         return views.voltage.VoltageGUI()
 
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
+
+#    def __init__(self):
+#        self.Spectrometer_gui_refresh()
+#        self.refresh_active=True
+#        if len(self.grating_value)>0:
+#            self.current_grating=self.grating_value[0]
+#        if len(self.exit_mirror_value)>0:
+#            self.exit_mirror=self.exit_mirror_value[0]
+#        self.refresh_active=False
 
     def _goto_fired(self):
         self.icSpectro.wavelength_goto(self.centerwvl)
@@ -268,7 +266,6 @@ class SpectroGUI(HasTraits):
         self.measurement_process=False
 
 if __name__=="__main__":
-    import pdb; pdb.set_trace()
     main=SpectroGUI(ivVoltage = views.voltage.VoltageGUI())
     main.configure_traits()
     if not main.icSpectro.simulation:
