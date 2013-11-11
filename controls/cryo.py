@@ -83,6 +83,9 @@ class Cryo(SimSerial):
     def stop(self):
         self.write('\x03 \r') #ctrl +c
 
+    def _(self):
+       print "stop cryo in simulation" 
+
     def waiting(self):
         running=True
         while running :
