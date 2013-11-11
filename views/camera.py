@@ -34,8 +34,8 @@ class CameraGUI(HasTraits):
     zautofocus=Button(label="AF Z")
     settemperature=Range(low=-70,high=20,value=20)
 
-    x_step = Float(0.1)
-    y_step = Float(0.1)
+    x_step = Float(0.001)
+    y_step = Float(0.001)
     ivCryo = Instance(views.cryo.CryoGUI)
     icCryo = Instance(controls.cryo.Cryo)
     ivVoltage = Instance(views.voltage.VoltageGUI)
