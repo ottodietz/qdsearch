@@ -290,7 +290,12 @@ class MainWindow(HasTraits):
         print "nehme spektrum, warte auf klappspiegel"
         self.ivSpectro.exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(1) # don't switch mirrors too fast!
-        c_spectrum=self.icCamera.acquisition() # nimmt das spektrum auf
+        try:
+#            import pdb; pdb.set_trace()
+            c_spectrum=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.ivCamera.exposuretime) # nimmt das spektrum auf
+        except:
+            print "im except"
+            c_spectrum=self.icCamera.acquisition() # nimmt das spektrum auf
 
         spectrum=[]
         for i in range(len(c_spectrum)):
