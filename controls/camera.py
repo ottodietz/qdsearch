@@ -43,7 +43,7 @@ class Camera(object):
         if not self.simulation:
             if not exp:
                 exp = self.exposuretime
-            return self.atm.SetExposureTime(exp)
+            return self.atm.SetExposureTime(c_float(exp))
         return CAM_OKAY
 
     def acquisition(self, sim_pos=(0,0),sim_volt=(0),exptme=(0)):#,sim_posx=None,sim_posy=None):
