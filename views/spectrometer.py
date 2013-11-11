@@ -26,6 +26,13 @@ class SpectroGUI(HasTraits):
     ivVoltage = Instance(views.voltage.VoltageGUI)
     icVoltage = Instance(controls.voltage.Voltage)
 
+    def _ivVoltage_default(self):
+        return views.voltage.VoltageGUI()
+
+    def _icVoltage_default(self):
+        return self.ivVoltage.icVoltage
+
+
     measurement_process=False
     acquisition_process=False
     refresh_active=False
@@ -55,8 +62,12 @@ class SpectroGUI(HasTraits):
     exit_mirror=Str()
 
     speed=CFloat(50.0)
-    simulate_spectrometer=Bool(True, label="Simulation Spectrometer")
-    simulate_voltmeter=Bool(True,label="Simulation Voltmeter")
+    simulate_spectrometer = Bool(True, label="Simulation Spectrometer")
+    simulate_voltmeter = Bool(True,label="Simulation Voltmeter")
+
+    def _simulate_voltmeter_default(self):
+        return self.ivVoltage.simulation    
+
     toggle_active = False   
 
     str_nmmin = Str('nm/min')
@@ -97,12 +108,6 @@ class SpectroGUI(HasTraits):
              Item("plot",editor=ComponentEditor(),show_label=False)
             ),
             width=750,height=600,buttons = [OKButton,], resizable = True)
-
-    def _ivVoltage_default(self):
-        return views.voltage.VoltageGUI()
-
-    def _icVoltage_default(self):
-        return self.ivVoltage.icVoltage
 
     def __init__(self, *args, **kwargs):
         self.Spectrometer_gui_refresh()
@@ -237,7 +242,7 @@ class SpectroGUI(HasTraits):
         if not self.toggle_active:
             self.toggle_active = True
             thread.start_new_thread(self.toggle_simulate_voltmeter,())
-    
+     
     def toggle_simulate_voltmeter(self):
         self.simulate_voltmeter = self.icVoltage.toggle_simulation()
         self.toggle_active = False
@@ -267,7 +272,6 @@ class SpectroGUI(HasTraits):
         self.measurement_process=False
 
 if __name__=="__main__":
-#    import pdb; pdb.set_trace()
     main=SpectroGUI(ivVoltage = views.voltage.VoltageGUI())
     main.configure_traits()
     if not main.icSpectro.simulation:
