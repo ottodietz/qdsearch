@@ -6,7 +6,7 @@ import re
 from simserial import SimSerial
 
 class Cryo(SimSerial):
-    CMD = '[a-zA-Z]+'
+    CMD = '[a-zA-Z+]+'  #das plus ist fuer hot_key_check in simserial
     PARMS = '[0-9\s]+'
     EOL='\r'# if they are two characters written together (without space) it is one EOL
 
@@ -83,7 +83,7 @@ class Cryo(SimSerial):
     def stop(self):
         self.write('\x03 \r') #ctrl +c
 
-    def _(self):
+    def _ctrlplusc(self):
        print "stop cryo in simulation" 
 
     def waiting(self):

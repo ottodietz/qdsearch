@@ -7,7 +7,7 @@ import re
 
 class Voltage(SimSerial):
     EOL=''
-    CMD='^[A-Z]'
+    CMD='^[A-Z+]' #das plus ist fuer hot_key_check in simserial
     PARMS='[^a-zA-Z]+'
     simulation=True
     busy=False

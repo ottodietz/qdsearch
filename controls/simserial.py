@@ -108,13 +108,7 @@ class SimSerial(serial.Serial):
         else: return(len(self.buffer))
 
     def search_function_name(self,command):
-#        if self.EOL!='':
-#            command=command.replace(' '+self.EOL,'')
-#        command=command.split(' ')
-#        if self.commando_position=='first':
-#            name=command[0]
-#        else:
-#            name=command[-1]
+        command = self.hot_key_check(command)
         name= re.search(self.CMD,command).group(0) 
         name = self.replace_special_characters(name)
         name='_'+name
@@ -124,6 +118,13 @@ class SimSerial(serial.Serial):
         name =re.search(self.PARMS,command).group(0)
         name.self.replace_special_characters(name)
         return(name)
+
+    def hot_key_check(self,name):
+        _hotkey=['\x03'] #ASCII fuer hotkeys
+        _replace=['ctrl+c']
+        for i in range(len(_hotkey)):
+            name = name.replace(_hotkey[i],_replace[i])
+        return name
 
     def replace_special_characters(self,name):
         _sign=['?','!','+','-','<','>','/',' ','\r']
