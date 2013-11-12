@@ -64,7 +64,7 @@ class SpectroGUI(HasTraits):
     speed=CFloat(50.0)
     
     simulation_spectrometer = Bool(True, label="Simulation Spectrometer")
-    import pdb; pdb.set_trace()
+#    import pdb; pdb.set_trace()
     simulation_voltmeter = ivVoltage.simulation # Bool(True,label="Simulation Voltmeter")
 
 #    def _simulation_voltmeter_default(self):
