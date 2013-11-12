@@ -90,16 +90,19 @@ class CameraGUI(HasTraits):
 
 
     traits_view=View(HGroup(VGroup(
-                        HGroup(Item('single',label='Single',show_label=False),
-                               Item('continous',show_label=False,editor=ButtonEditor(label_value
-= 'continous_label')),Item('autofocus',show_label=False),Item('zautofocus',
-show_label=False)),
-                        HGroup(Item('exposuretime'),Item('simulation',label='simulate camera')),
-                        Item('readmodes'),
-                        Item('Vshiftspeed'),
-                        Item('Hshiftspeed')
-                       ),
-                       Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False)),
+                            HGroup(
+                                    Item('single',label='Single',show_label=False),
+                                    Item('continous',show_label=False,editor=ButtonEditor(label_value
+= 'continous_label')),
+                                    Item('autofocus',show_label=False),
+                                    Item('zautofocus',show_label=False)),
+                            HGroup(
+                                Item('exposuretime'),Item('simulation',label='simulate camera')),
+                            Item('readmodes'),
+                            Item('Vshiftspeed'),
+                            Item('Hshiftspeed')),
+                            VGroup(
+                                Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                        resizable = True, menubar=MenuBar(menu) )
 
     def _single_fired(self):
