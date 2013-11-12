@@ -15,6 +15,7 @@ import numpy as np
 from threading import Thread
 from enable.api import BaseTool
 from time import sleep
+import sys
 
 from chaco.api import Plot, ArrayPlotData
 
@@ -523,7 +524,13 @@ class MainWindow(HasTraits):
 
 main = MainWindow()
 if __name__ == '__main__':
-    main.configure_traits(scrollable = True)
+
+    if sys.platform[0]=="l": #Fuer das reskalieren in windows
+        scroll = True
+    else:
+        scroll = False
+
+    main.configure_traits(scrollable = scroll)
     main.icCryo.open=False
     main.counts_thread.wants_abort=True
     sleep(1.0)
