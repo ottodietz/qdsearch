@@ -14,7 +14,7 @@ class Camera(object):
     low_temperature=False
     readmode=int(0)
     acquisitionmode=int(1)
-    exposuretime=c_float(0.1)
+    exposuretime=0.1
     simulation=True
 
     def toggle_simulation(self):

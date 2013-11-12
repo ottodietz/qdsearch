@@ -294,15 +294,12 @@ class CameraGUI(HasTraits):
             while self.continous_label == 'Stop':
                 time.sleep(0.1)
 
-    def close(self):
-        self.stop_acq_thread()
-        self.icCamera.close()
-
 if __name__=="__main__":
     main=CameraGUI(ivCryo = views.cryo.CryoGUI(), ivVoltage = views.voltage.VoltageGUI())
     main.configure_traits()
     if not main.icCamera.simulation:
         print "CAMERA CLOSE"
+        main.stop_acq_thread()
         main.icCamera.close()
     if not main.icCryo.simulation:
         print "CRYO CLOSE"
@@ -310,4 +307,3 @@ if __name__=="__main__":
     if not main.icVoltage.simulation:
         print "VOLTAGE CLOSE"
         main.icVoltage.close() 
-#    main.close()

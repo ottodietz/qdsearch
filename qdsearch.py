@@ -91,6 +91,7 @@ class MainWindow(HasTraits):
     counts=CFloat(125)
     scan_sample=Button()
     scan_sample_step=Button()
+    scan_range_set=Button()
     abort=Button()
     finished=True
     x_koords=[]
@@ -102,9 +103,8 @@ class MainWindow(HasTraits):
     plot=Instance(Plot,())
     plot_current=Instance(Plot,())
     plot_compare=Instance(Plot,())
-    testB = Button(label="test test")
-
     counts_thread = counts_thread()
+
     ivSpectro      = Instance(views.spectrometer.SpectroGUI) 
     icSpectro      = Instance(controls.spectrometer.Spectro)
     ivCryo         = Instance(views.cryo.CryoGUI)
@@ -162,6 +162,10 @@ class MainWindow(HasTraits):
                    Item('scan_sample_step',label='Scan',show_label=False,**hide_during_scan),
                    Item('abort',show_label=False,**hide_no_scan),
                   ))
+
+    scan_range=HGroup(
+                    
+                )
 
     scan_sample_group=HGroup(
           VGroup(
@@ -380,7 +384,7 @@ class MainWindow(HasTraits):
                     self.plot_compare=plot
 
     def move_cryo(self,x,y):
-        """looks whether a measured point is in the near of the plot event"""
+        """looks whether a measured point is close to the plot event"""
         if self.finished:
             for i in range(len(self.x_koords)):
                 x_gap=abs(x-self.x_koords[i])

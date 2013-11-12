@@ -9,7 +9,7 @@ class Voltage(SimSerial):
     EOL=''
     CMD='^[A-Z+]' #das plus ist fuer hot_key_check in simserial
     PARMS='[^a-zA-Z]+'
-    simulation=True
+    simulation = True
     busy=False
 
     lock = allocate_lock()
@@ -67,12 +67,6 @@ class Voltage(SimSerial):
                 i = 0
         self.busy=True
         self.lock.release()
-
-#        if  self.simulation:
-#            measurement=random.randint(1,20)
-#            time.sleep(0.2)
-#        else:
-
         measurement=self.read_voltage()
         self.busy=False
         return(measurement)

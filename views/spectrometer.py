@@ -62,11 +62,13 @@ class SpectroGUI(HasTraits):
     exit_mirror=Str()
 
     speed=CFloat(50.0)
-    simulate_spectrometer = Bool(True, label="Simulation Spectrometer")
-    simulate_voltmeter = Bool(True,label="Simulation Voltmeter")
+    
+    simulation_spectrometer = Bool(True, label="Simulation Spectrometer")
+    import pdb; pdb.set_trace()
+    simulation_voltmeter = ivVoltage.simulation # Bool(True,label="Simulation Voltmeter")
 
-    def _simulate_voltmeter_default(self):
-        return self.ivVoltage.simulation    
+#    def _simulation_voltmeter_default(self):
+#        return self.ivVoltage.simulation
 
     toggle_active = False   
 
@@ -103,7 +105,7 @@ class SpectroGUI(HasTraits):
                      Item('slot_width_out', show_label=False, enabled_when='False'),
                      **hide
                     ),
-              Item('simulate_spectrometer',**hide),Item('simulate_voltmeter',**hide)
+              Item('simulation_spectrometer',**hide),Item('simulation_voltmeter',**hide)
               ),
              Item("plot",editor=ComponentEditor(),show_label=False)
             ),
@@ -228,24 +230,27 @@ class SpectroGUI(HasTraits):
         self.plot = plot
 
 
-    def _simulate_spectrometer_changed(self):
+    def _simulation_spectrometer_changed(self):
         if not self.toggle_active:
             self.toggle_active = True
-            thread.start_new_thread(self.toggle_simulate_spectrometer,())
+            thread.start_new_thread(self.toggle_simulation_spectrometer,())
 
-    def toggle_simulate_spectrometer(self):
-        self.simulate_spectrometer = self.icSpectro.toggle_simulation()
+    def toggle_simulation_spectrometer(self):
+        self.simulation_spectrometer = self.icSpectro.toggle_simulation()
         self.toggle_active = False
         self.Spectrometer_gui_refresh()
 
-    def _simulate_voltmeter_changed(self):
-        if not self.toggle_active:
-            self.toggle_active = True
-            thread.start_new_thread(self.toggle_simulate_voltmeter,())
-     
-    def toggle_simulate_voltmeter(self):
-        self.simulate_voltmeter = self.icVoltage.toggle_simulation()
-        self.toggle_active = False
+#    def _simulation_voltmeter_changed(self):
+#        self.ivVoltage.toggle_active = True
+#        self.ivVoltage.simulation = not self.ivVoltage.simulation
+#        self.ivVoltage.toggle_active = False
+#        if not self.toggle_active:
+#            self.toggle_active = True
+#            thread.start_new_thread(self.toggle_simulation_voltmeter,())
+#     
+#    def toggle_simulation_voltmeter(self):
+#        self.simulation_voltmeter = self.icVoltage.toggle_simulation()
+#        self.toggle_active = False
         
     def Spectrometer_gui_refresh(self):
         self.refresh_active=True

@@ -72,14 +72,14 @@ class VoltageGUI(HasTraits):
         self.icVoltage.blink()
 
     def _simulation_changed(self):
+        print "der button in VoltageGUI wurde geaendert"
         if not self.toggle_active:
             self.toggle_active = True
             thread.start_new_thread(self.toggle_simulation,())
 
     def toggle_simulation(self):
-            # .toggle_simulation() liefert simulieren = True/False zurueck
-            self.simulation = self.icVoltage.toggle_simulation()
-            self.toggle_active = False
+        self.simulation = self.icVoltage.toggle_simulation()
+        self.toggle_active = False
 
     def _test_fired(self):
         start = time.clock()
@@ -116,4 +116,3 @@ if __name__ == '__main__':
     if not main.icVoltage.simulation:
         print"close Voltage"
         main.icVoltage.close()
-
