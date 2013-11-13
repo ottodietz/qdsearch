@@ -93,6 +93,11 @@ class MainWindow(HasTraits):
     scan_sample_step=Button()
     scan_range_set=Button()
     abort=Button()
+    exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
+    plotrangestart = (label="Start")
+    plotrangemarker = Float(value=894.35,label="Marker",editor=TextEditor(evaluate=float,auto_set=False))
+    plotrangeend = Button(label="End")
+    plotrangeset = Button(label="Set")
     finished=True
     x_koords=[]
     y_koords=[]
@@ -162,20 +167,25 @@ class MainWindow(HasTraits):
                    Item('abort',show_label=False,**hide_no_scan),
                   ))
 
-    scan_range=HGroup(
-                    
+    scan_plotctrl=HGroup(
+                Item('plotrangestart', style = 'custom', show_label=True),
+                Item('plotmarker', style = 'custom', show_label=True),
+                Item('plotrangeend', style = 'custom', show_label=True),
+                Item('plotrangeset', style = 'custom', show_label=True),    
                 )
 
     scan_sample_group=HGroup(
-          VGroup(
-              Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False),
-              scan_ctrl
-              ),
-          VGroup(Item('plot_current',editor=ComponentEditor(size=(100,200)),show_label=False),
-                 Item('plot_compare',editor=ComponentEditor(size=(100,200)),show_label=False)
+            VGroup(
+                Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False),
+                scan_ctrl
+                scan_plotctrl
                 ),
-         label='scan sample'
-          )
+            VGroup(Item('plot_current',editor=ComponentEditor(size=(100,200)),show_label=False),
+                
+                Item('plot_compare',editor=ComponentEditor(size=(100,200)),show_label=False)
+                ),
+            label='scan sample'
+            )
 
     spectrometer_tab = VGroup(
             Item('ivSpectro', style = 'custom',show_label=False),
