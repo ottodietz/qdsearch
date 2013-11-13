@@ -65,10 +65,7 @@ class SpectroGUI(HasTraits):
     
     simulation_spectrometer = Bool(True, label="Simulation Spectrometer")
 #    import pdb; pdb.set_trace()
-    simulation_voltmeter = ivVoltage.simulation # Bool(True,label="Simulation Voltmeter")
-
-#    def _simulation_voltmeter_default(self):
-#        return self.ivVoltage.simulation
+    simulation_voltmeter = Bool(True,label="Simulation Voltmeter")
 
     toggle_active = False   
 
@@ -240,17 +237,20 @@ class SpectroGUI(HasTraits):
         self.toggle_active = False
         self.Spectrometer_gui_refresh()
 
-#    def _simulation_voltmeter_changed(self):
-#        self.ivVoltage.toggle_active = True
-#        self.ivVoltage.simulation = not self.ivVoltage.simulation
-#        self.ivVoltage.toggle_active = False
-#        if not self.toggle_active:
-#            self.toggle_active = True
-#            thread.start_new_thread(self.toggle_simulation_voltmeter,())
-#     
-#    def toggle_simulation_voltmeter(self):
-#        self.simulation_voltmeter = self.icVoltage.toggle_simulation()
-#        self.toggle_active = False
+    def _simulation_voltmeter_changed(self):
+        if not self.simulation_voltmeter == self.ivVoltage.simulation
+            self.toggle_active = True
+            self.simulation_voltmeter = self.ivVoltage.simulation
+            
+        if not self.toggle_active:
+            self.toggle_active = True
+            thread.start_new_thread(self.toggle_simulation_voltmeter,())
+        self.toggle_active = False
+     
+    def toggle_simulation_voltmeter(self):
+        self.ivVoltage._simulation_changed()
+        self.simulation_voltmeter = self.ivVoltage.simulation
+        self.toggle_active = False
         
     def Spectrometer_gui_refresh(self):
         self.refresh_active=True

@@ -72,7 +72,6 @@ class VoltageGUI(HasTraits):
         self.icVoltage.blink()
 
     def _simulation_changed(self):
-        print "der button in VoltageGUI wurde geaendert"
         if not self.toggle_active:
             self.toggle_active = True
             thread.start_new_thread(self.toggle_simulation,())
