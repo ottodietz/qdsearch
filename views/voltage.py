@@ -43,7 +43,8 @@ class VoltageGUI(HasTraits):
                     Item('test2',show_label=True)),
                 Item('simulation', show_label=True),
                 resizable = True)
-    sim_view = Item('simulation', show_label=True)
+
+    sim_view = View(Item('simulation', show_label=True, label='Simulate Voltmeter'))
 
     def _Voltage_changed(self):
         self.icVoltage.setvoltage(self.Voltage)

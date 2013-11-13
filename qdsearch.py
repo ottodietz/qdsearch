@@ -182,6 +182,8 @@ class MainWindow(HasTraits):
 
     spectrometer_tab = VGroup(
             Item('ivSpectro', style = 'custom',show_label=False),
+            Item('ivVoltage', style = 'custom', editor=InstanceEditor(view='sim_view'),show_label=False),
+            Item('ivVoltage', style = 'custom', editor=InstanceEditor(view=View(Item('simulation'))),show_label=False),
             Item('ivCryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
             Item('ivCamera',style = 'custom', show_label=False),
             label='spectrometer'
