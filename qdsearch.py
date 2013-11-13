@@ -17,7 +17,7 @@ from enable.api import BaseTool
 from time import sleep
 import sys
 
-from chaco.api import Plot, ArrayPlotData
+from chaco.api import Plot, ArrayPlotData, AbstractDataRange
 
 from enable.component_editor import ComponentEditor
 
@@ -93,10 +93,9 @@ class MainWindow(HasTraits):
     scan_sample_step=Button()
     scan_range_set=Button()
     abort=Button()
-    exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
-    plotrangestart = (label="Start")
-    plotrangemarker = Float(value=894.35,label="Marker",editor=TextEditor(evaluate=float,auto_set=False))
-    plotrangeend = Button(label="End")
+    plotrangestart = Range(low=0,high=1000,value=884,editor=TextEditor(evaluate=int,auto_set=False))
+    plotrangemarker = Range(low=0.,high=1000.,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
+    plotrangeend = Range(low=0,high=1000,value=904,editor=TextEditor(evaluate=int,auto_set=False))
     plotrangeset = Button(label="Set")
     finished=True
     x_koords=[]
@@ -168,37 +167,38 @@ class MainWindow(HasTraits):
                   ))
 
     scan_plotctrl=HGroup(
-                Item('plotrangestart', style = 'custom', show_label=True),
-                Item('plotmarker', style = 'custom', show_label=True),
-                Item('plotrangeend', style = 'custom', show_label=True),
-                Item('plotrangeset', style = 'custom', show_label=True),    
+                Item('plotrangestart', style = 'simple',label="Start",show_label=True),
+                Item('plotrangemarker', style = 'text', label="Marker",show_label=True),
+                Item('plotrangeend', style = 'simple', label="End",show_label=True),
+                Item('plotrangeset', style ='simple',label="Set",show_label=False),    
                 )
 
     scan_sample_group=HGroup(
             VGroup(
                 Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False),
                 scan_ctrl
-                scan_plotctrl
                 ),
-            VGroup(Item('plot_current',editor=ComponentEditor(size=(100,200)),show_label=False),
-                
+            VGroup(
+                Item('plot_current',editor=ComponentEditor(size=(100,200)),show_label=False),
+                scan_plotctrl,
                 Item('plot_compare',editor=ComponentEditor(size=(100,200)),show_label=False)
                 ),
             label='scan sample'
             )
 
     spectrometer_tab = VGroup(
-            Item('ivSpectro', style = 'custom',show_label=False),
-            Item('ivVoltage', style = 'custom', editor=InstanceEditor(view='sim_view'),show_label=False),
-            Item('ivVoltage', style = 'custom', editor=InstanceEditor(view=View(Item('simulation'))),show_label=False),
-            Item('ivCryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
-            Item('ivCamera',style = 'custom', show_label=False),
+            Item('ivSpectro', style='custom',springy=False,show_label=False),
+            HGroup(Item('ivVoltage', style = 'custom',label="Voltmeter Simulation",
+editor=InstanceEditor(view=View(Item('simulation',show_label=False))),springy=False,show_label=True)),
+            Item('ivCryo', style = 'custom',show_label=False,springy=False,label="cryo", enabled_when='finished==True'),
+            Item('ivCamera',style = 'custom',springy=False,
+show_label=False),
             label='spectrometer'
             )
 
     focus_tab = VGroup(
             Item('ivCamera',style = 'custom', show_label=False),
-            Item('ivCryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
+            Item('ivCryo', style = 'custom',springy=False,show_label=False,label="cryo", enabled_when='finished==True'),
             Item('ivVoltage', style='custom',show_label=False,label="voltage"),
             label='Focus'
             )
@@ -308,10 +308,8 @@ class MainWindow(HasTraits):
         self.ivSpectro.exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
         time.sleep(1) # don't switch mirrors too fast!
         try:
-#            import pdb; pdb.set_trace()
             c_spectrum=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.ivCamera.exposuretime) # nimmt das spektrum auf
         except:
-            print "im except"
             c_spectrum=self.icCamera.acquisition() # nimmt das spektrum auf
 
         spectrum=[]
@@ -373,7 +371,23 @@ class MainWindow(HasTraits):
             wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
         return wavelength
 
-
+    def _plotrangeset_fired(self):
+        if self.plotrangestart > self.plotrangeend:
+            self.plotrangestart, self.plotrangeend = self.plotrangeend, self.plotrangestart#swap val
+        if self.plotrangestart == self.plotrangeend:
+            self.plotrangestart = 884
+            self.plotrangeend = 904
+        if self.plotrangemarker>self.plotrangeend or self.plotrangemarker<self.plotrangestart:
+            self.plotrangemarker = self.plotrangestart+(self.plotrangeend-self.plotrangestart)/2.
+        self.plot_current.range2d.x_range.high = self.plotrangeend
+        self.plot_current.range2d.x_range.low = self.plotrangestart
+        self.plot_compare.range2d.x_range.high = self.plotrangeend
+        self.plot_compare.range2d.x_range.low = self.plotrangestart
+        self.plot_current.range2d.y_range.high = ('auto')
+        self.plot_current.range2d.y_range.low = ('auto')
+        self.plot_compare.range2d.y_range.high_setting = ('auto')
+        self.plot_compare.range2d.y_range.low__setting = ('auto')
+        
     def plot_spectrum(self,x,y,field):
         for i in range(len(self.x_koords)):
             x_gap=abs(x-self.x_koords[i])

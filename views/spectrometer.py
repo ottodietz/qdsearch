@@ -46,8 +46,7 @@ class SpectroGUI(HasTraits):
     # 0.002 nm ist kleinster Schritt
     jogup = Button()
     jogdown = Button()
-
-    centerwvl=Range(0.0,1000.0,894.35,mode='text')
+    centerwvll = Range(low=0.0,high=1000.0,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
     scan_bereich=CFloat(3)
 
     slot_width_in = Range(10,3000,1)
@@ -63,10 +62,7 @@ class SpectroGUI(HasTraits):
 
     speed=CFloat(50.0)
     
-    simulation_spectrometer = Bool(True, label="Simulation Spectrometer")
-#    import pdb; pdb.set_trace()
-    simulation_voltmeter = Bool(True,label="Simulation Voltmeter")
-
+    simulation = Bool(True, label="Simulation Spectrometer")
     toggle_active = False   
 
     str_nmmin = Str('nm/min')
@@ -83,7 +79,7 @@ class SpectroGUI(HasTraits):
     traits_view=View(
             HGroup(
              VGroup(
-              HGroup(Item("centerwvl",show_label=False),Item("goto",label='goto',show_label=False),
+              HGroup(Item("centerwvll",show_label=False),Item("goto",label='goto',show_label=False),
                      VGroup(Item('jogup',label='up',show_label=False),Item('jogdown',label='down',show_label=False))
                      ,**hide),
               VGrid(Item('sweep',label='sweep',show_label=False,**hide),
@@ -102,7 +98,7 @@ class SpectroGUI(HasTraits):
                      Item('slot_width_out', show_label=False, enabled_when='False'),
                      **hide
                     ),
-              Item('simulation_spectrometer',**hide),Item('simulation_voltmeter',**hide)
+              Item('simulation',label="Simulation Spectrometer",show_label=True,**hide)
               ),
              Item("plot",editor=ComponentEditor(),show_label=False)
             ),
@@ -227,25 +223,15 @@ class SpectroGUI(HasTraits):
         self.plot = plot
 
 
-    def _simulation_spectrometer_changed(self):
+    def _simulation_changed(self):
         if not self.toggle_active:
             self.toggle_active = True
-            thread.start_new_thread(self.toggle_simulation_spectrometer,())
+            thread.start_new_thread(self.toggle_simulation,())
 
-    def toggle_simulation_spectrometer(self):
-        self.simulation_spectrometer = self.icSpectro.toggle_simulation()
+    def toggle_simulation(self):
+        self.simulation = self.icSpectro.toggle_simulation()
         self.toggle_active = False
         self.Spectrometer_gui_refresh()
-
-    def _simulation_voltmeter_changed(self):
-        if not self.toggle_active:
-            self.toggle_active = True
-            thread.start_new_thread(self.toggle_simulation_voltmeter,())
-     
-    def toggle_simulation_voltmeter(self):
-        self.ivVoltage._simulation_changed()
-        self.simulation_voltmeter = self.ivVoltage.simulation
-        self.toggle_active = False
         
     def Spectrometer_gui_refresh(self):
         self.refresh_active=True

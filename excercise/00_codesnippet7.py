@@ -22,7 +22,7 @@ class Camera(HasTraits):
 	display = Instance(TextDisplay)
 	capture_thread = Instance(CaptureThread)
 
-	view = View( Item('start_stop_capture', show_label=False ))
+	view = View( Item('start_stop_capture',style='custom',springy=False, show_label=False ))
 
 	def _start_stop_capture_fired(self):
 		if self.capture_thread and self.capture_thread.isAlive():

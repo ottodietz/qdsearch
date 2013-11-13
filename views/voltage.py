@@ -25,7 +25,7 @@ class VoltageGUI(HasTraits):
     simulation=Bool(True, label="Simulation")
     toggle_active = False
 
-    view = View(HGroup(
+    traits_view = View(HGroup(
                     Item('Voltage', show_label=False), 
                     VGroup(
                         Item("UP", show_label=False),
@@ -74,7 +74,6 @@ class VoltageGUI(HasTraits):
         self.icVoltage.blink()
 
     def _simulation_changed(self):
-        print "voltGUI sim changed"
         if not self.toggle_active:
             self.toggle_active = True
             thread.start_new_thread(self.toggle_simulation,())
