@@ -142,9 +142,6 @@ class MainWindow(HasTraits):
     def _icSpectro_default(self):
         return self.ivSpectro.icSpectro
 
-    sim_view = ivVoltage.sim_view
-    
-
     hide_during_scan = { 'enabled_when': 'finished==True'}
     hide_no_scan = { 'enabled_when': 'finished==False'}
     hide = { 'enabled_when': 'False'}
