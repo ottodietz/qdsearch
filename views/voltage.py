@@ -44,6 +44,8 @@ class VoltageGUI(HasTraits):
                 Item('simulation', show_label=True),
                 resizable = True)
 
+    sim_view = View(Item('simulation', show_label=True, label='Simulate Voltmeter'))
+
     def _Voltage_changed(self):
         self.icVoltage.setvoltage(self.Voltage)
 
@@ -72,6 +74,7 @@ class VoltageGUI(HasTraits):
         self.icVoltage.blink()
 
     def _simulation_changed(self):
+        print "voltGUI sim changed"
         if not self.toggle_active:
             self.toggle_active = True
             thread.start_new_thread(self.toggle_simulation,())
