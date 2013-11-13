@@ -238,14 +238,9 @@ class SpectroGUI(HasTraits):
         self.Spectrometer_gui_refresh()
 
     def _simulation_voltmeter_changed(self):
-        if not self.simulation_voltmeter == self.ivVoltage.simulation:
-            self.toggle_active = True
-            self.simulation_voltmeter = self.ivVoltage.simulation
-            
         if not self.toggle_active:
             self.toggle_active = True
             thread.start_new_thread(self.toggle_simulation_voltmeter,())
-        self.toggle_active = False
      
     def toggle_simulation_voltmeter(self):
         self.ivVoltage._simulation_changed()
