@@ -19,6 +19,8 @@ import sys
 
 from chaco.api import Plot, ArrayPlotData, AbstractDataRange
 
+from chaco.axis import PlotAxis
+
 from enable.component_editor import ComponentEditor
 
 from chaco.tools.api import PanTool, ZoomTool
@@ -96,7 +98,9 @@ class MainWindow(HasTraits):
     plotrangestart = Range(low=0,high=1000,value=884,editor=TextEditor(evaluate=int,auto_set=False))
     plotrangemarker = Range(low=0.,high=1000.,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
     plotrangeend = Range(low=0,high=1000,value=904,editor=TextEditor(evaluate=int,auto_set=False))
+    plotrangey = Range(low=0,high=16000,value=5000,editor=TextEditor(evaluate=int,auto_set=False))
     plotrangeset = Button(label="Set")
+    plotsetalways = Bool(False)
     finished=True
     x_koords=[]
     y_koords=[]
@@ -170,6 +174,8 @@ class MainWindow(HasTraits):
                 Item('plotrangestart', style = 'simple',label="Start",show_label=True),
                 Item('plotrangemarker', style = 'text', label="Marker",show_label=True),
                 Item('plotrangeend', style = 'simple', label="End",show_label=True),
+                Item('plotrangey', style = 'text', label="Count-Range",show_label=True),
+                Item('plotsetalways', style = 'simple', label="Always",show_label=True),
                 Item('plotrangeset', style ='simple',label="Set",show_label=False),    
                 )
 
@@ -379,14 +385,17 @@ show_label=False),
             self.plotrangeend = 904
         if self.plotrangemarker>self.plotrangeend or self.plotrangemarker<self.plotrangestart:
             self.plotrangemarker = self.plotrangestart+(self.plotrangeend-self.plotrangestart)/2.
+        self.plot_compare.plot(("xm","ym"),type="line", color="red")
+        self.plot_current.plot(("xm","ym"),type="line", color="red")
         self.plot_current.range2d.x_range.high = self.plotrangeend
         self.plot_current.range2d.x_range.low = self.plotrangestart
         self.plot_compare.range2d.x_range.high = self.plotrangeend
         self.plot_compare.range2d.x_range.low = self.plotrangestart
-        self.plot_current.range2d.y_range.high = ('auto')
-        self.plot_current.range2d.y_range.low = ('auto')
-        self.plot_compare.range2d.y_range.high_setting = ('auto')
-        self.plot_compare.range2d.y_range.low__setting = ('auto')
+        self.plot_current.range2d.y_range.high = self.plotrangey
+        self.plot_compare.range2d.y_range.high = self.plotrangey
+        self.plot_current.range2d.y_range.low = 0
+        self.plot_compare.range2d.y_range.low = 0 
+                
         
     def plot_spectrum(self,x,y,field):
         for i in range(len(self.x_koords)):
@@ -395,7 +404,9 @@ show_label=False),
             if x_gap <self.toleranz and y_gap<self.toleranz:
                 spectrum=self.spectra[i]
                 wavelength=self.create_wavelength_for_plotting()
-                plotdata = ArrayPlotData(x=wavelength, y=spectrum)
+                xm = [self.plotrangemarker,self.plotrangemarker] #for red line in plot
+                ym = [0,self.plotrangey]
+                plotdata = ArrayPlotData(x=wavelength, y=spectrum,xm=xm,ym=ym)
                 plot = Plot(plotdata)
                 plot.plot(("x", "y"), type="line", color="blue")
                 plot.x_axis.title="Wavelength [nm]"
@@ -405,8 +416,12 @@ show_label=False),
                 plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
                 if field=='current':
                     self.plot_current=plot
+                    if self.plotsetalways:
+                        self._plotrangeset_fired()
                 if field=='compare':
                     self.plot_compare=plot
+                    if self.plotsetalways:
+                        self._plotrangeset_fired()
 
     def move_cryo(self,x,y):
         """looks whether a measured point is close to the plot event"""
