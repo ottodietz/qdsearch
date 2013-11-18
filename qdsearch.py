@@ -405,7 +405,7 @@ show_label=False),
                 spectrum=self.spectra[i]
                 wavelength=self.create_wavelength_for_plotting()
                 xm = [self.plotrangemarker,self.plotrangemarker] #for red line in plot
-                ym = [0,self.plotrangey]
+                ym = [0,16000] #self.plotrangey
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum,xm=xm,ym=ym)
                 plot = Plot(plotdata)
                 plot.plot(("x", "y"), type="line", color="blue")
