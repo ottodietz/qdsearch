@@ -569,7 +569,7 @@ show_label=False),
 main = MainWindow()
 if __name__ == '__main__':
 
-    if sys.platform[0]=="l": #Fuer das reskalieren in windows
+    if sys.platform[0]=="l" or sys.platform[0]=="w": #Fuer das reskalieren in windows
         scroll = True
     else:
         scroll = False

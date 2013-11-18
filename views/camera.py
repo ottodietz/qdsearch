@@ -8,7 +8,7 @@ from chaco.api import Plot, ArrayPlotData
 from chaco.tools.api import PanTool, ZoomTool
 from enable.component_editor import ComponentEditor
 import thread
-import time
+from time import sleep
 from ctypes import *
 
 import controls.camera
@@ -263,8 +263,8 @@ class CameraGUI(HasTraits):
             self._single_fired()
         self.continous_label = 'Continous'
 
-    def _test_fired(self):
-        self.icCamera.speedinit()
+#    def _test_fired(self):
+#        self.icCamera.speedinit()
 
     def _continous_fired(self):
         self.acq_active = not self.acq_active

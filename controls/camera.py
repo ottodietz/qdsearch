@@ -1,7 +1,7 @@
 from ctypes import *
 import random
 import numpy as np
-import time
+from time import sleep
 from math import *
 from scipy.special import jn
 
@@ -123,7 +123,7 @@ class Camera(object):
         print 'maxtemp' ,
         print maxtemp
 
-    def setemperature(self,temperature):
+    def settemperature(self,temperature):
         if self.simulation:
             print 'settemperature: simulation'
             return True
@@ -146,17 +146,17 @@ class Camera(object):
         print 'targettemp',
         print targettemp
 
-    def speedinit(self):
-        print "GetNumerHSSSpeeds"
+#    def speedinit(self):
+#        print "GetNumerHSSSpeeds"
 #        print self.atm.GetNumberHSSpeeds(0, 0, &a) #first A-D, request data speeds for (I = 0; I <a;I++)
-        print "MHZ of HSSSpeed"
+#        print "MHZ of HSSSpeed"
 #        print self.atm.GetHSSpeed(0, 0, I, &speed[I])
-        self.atm.SetHSSpeed(0, 0) #Fastest speed
-        print "GetNumerHSSSpeeds"
+#        self.atm.SetHSSpeed(0, 0) #Fastest speed
+#        print "GetNumerHSSSpeeds"
 #        print self.atm.GetNumberVSSpeeds(0, 0, &a) #first A-D, request data speeds for (I = 0; I <a;I++)
-        print "MHZ of VSSpeed"
+#        print "MHZ of VSSpeed"
 #        print self.atm.GetVSSpeed(0, 0, I, &speed[I])
-        self.atm.SetVSSpeed(0, 0) #Fastest speed
+#        self.atm.SetVSSpeed(0, 0) #Fastest speed
 
     def setVshiftspeed(self,value=None):
         if not value:
@@ -164,7 +164,7 @@ class Camera(object):
         if self.simulation:
             print "simulation Vshiftspeed set to",value
         else:
-            self.atm.SetVSSpeed(0,value)
+            self.atm.SetVSSpeed(int(value))
             print "Vshiftspeed set to", value
             
     def setHshiftspeed(self,value=None):
@@ -173,7 +173,7 @@ class Camera(object):
         if self.simulation:
             print "simulation Hshiftspeed set to",value
         else:
-            self.atm.SetHSSpeed(0,value)
+            self.atm.SetHSSpeed(int(value))
             print "Hshiftspeed set to",value
 
     def setreadmodes(self,name=None):
