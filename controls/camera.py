@@ -43,7 +43,10 @@ class Camera(object):
         if not self.simulation:
             if not exp:
                 exp = self.exposuretime
+                print "set exposure time to ",float(exp)
             return self.atm.SetExposureTime(c_float(exp))
+        else:
+            print "simulate exposure time at ",float(exp)
         return CAM_OKAY
 
     def acquisition(self, sim_pos=(0,0),sim_volt=(0),exptme=(0)):#,sim_posx=None,sim_posy=None):
@@ -118,7 +121,7 @@ class Camera(object):
         print 'maxtemp' ,
         print maxtemp
 
-    def settemperature(self,temperature):
+    def setemperature(self,temperature):
         if self.simulation:
             print 'settemperature: simulation'
             return True
@@ -144,15 +147,19 @@ class Camera(object):
     def setVshiftspeed(self,value):
         if self.simulation:
             print "simulation Vshiftspeed ",value
-
+        else:
+            print "changed Vshiftspeed to ", value
+            
     def setHshiftspeed(self,value):
         if self.simulation:
             print "simulation Hshiftspeed ",value
 
     def setreadmodes(self,value):
         if self.simulation:
-            print "simulation readmodes ",value
-
+            print "simulation readmode ",value
+        else:
+            self.atm.SetReadMode(int(value))
+            print "changed readmode"
 
 if __name__ == "__main__":
     c = Camera()

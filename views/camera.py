@@ -272,9 +272,14 @@ class CameraGUI(HasTraits):
         else:
             self.icCamera.cooler_off()
 
-    def _readmode_changed(self):
-       self.icCamera.readmode=c_long(self.readmode)
-       print "readmode changed"
+    def _readmodes_changed(self):
+       self.icCamera.setreadmodes(self.readmodes) #=c_long(self.readmode)
+
+    def _Hshiftspeed_changed(self):
+        self.icCamera.setHshiftspeed(self.Hshiftspeed)
+
+    def _Vshiftspeed_changed(self):
+        self.icCamera.setVshiftspeed(self.Vshiftspeed)
 
     def _acquisitionmode_changed(self):
        self.icCamera.acquisitionmode=c_long(self.acquisitionmode)
@@ -282,7 +287,6 @@ class CameraGUI(HasTraits):
 
     def _exposuretime_changed(self):
         self.icCamera.setexposuretime(self.exposuretime)
-        print "exp changed"
 
     def call_menu(self):
         self.configure_traits(view='view_menu')
