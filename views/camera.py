@@ -45,8 +45,10 @@ class CameraGUI(HasTraits):
     readmode=Int(0)
     acquisitionmode=Int(1)
     exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
-    Vshiftspeed = Enum(1,2,3)
-    Hshiftspeed = Enum(1,2,3)
+    Vshiftspeed_value = List(["1","2","3"]) #Enum(1,2,3)
+    Hshiftspeed_value = List(["1","2","3"]) #Enum(1,2,3)
+    Vshiftspeed = Str()
+    Hshiftspeed = Str()
 
     output=Str()
     plot = Instance(Plot,())
@@ -75,11 +77,12 @@ class CameraGUI(HasTraits):
 
     menu=Menu(menu_action,mi_reload,name='Camera')
 
-    readmodes = Enum('Full Vertical Binning','Image')
-            #SetReadMode(0)
+    readmodes_value = List(['Full Vertical Binning','Image'])
+    readmodes = Str()
+#SetReadMode(0)
 
-            #SetReadMode(4);
-            #SetImage(1,1,1,1024,1,256);
+#SetReadMode(4);
+#SetImage(1,1,1,1024,1,256);
 
 #GetNumberHSSpeeds(0, 0, &a); //first A-D, request data speeds for (I = 0; I <
 #        a;I++)
@@ -98,9 +101,9 @@ class CameraGUI(HasTraits):
                                     Item('zautofocus',show_label=False)),
                             HGroup(
                                 Item('exposuretime'),Item('simulation',label='simulate camera')),
-                            Item('readmodes'),
-                            Item('Vshiftspeed'),
-                            Item('Hshiftspeed')),
+                            Item('readmodes',editor=EnumEditor(name='readmodes_value')),
+                            Item('Vshiftspeed',editor=EnumEditor(name='Vshiftspeed_value')),
+                            Item('Hshiftspeed',editor=EnumEditor(name='Hshiftspeed_value'))),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                        resizable = True, menubar=MenuBar(menu) )

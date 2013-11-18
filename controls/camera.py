@@ -141,6 +141,19 @@ class Camera(object):
         print 'targettemp',
         print targettemp
 
+    def setVshiftspeed(self,value):
+        if self.simulation:
+            print "simulation Vshiftspeed ",value
+
+    def setHshiftspeed(self,value):
+        if self.simulation:
+            print "simulation Hshiftspeed ",value
+
+    def setreadmodes(self,value):
+        if self.simulation:
+            print "simulation readmodes ",value
+
+
 if __name__ == "__main__":
     c = Camera()
     c.toggle_simulation()
