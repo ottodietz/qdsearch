@@ -28,6 +28,7 @@ class CameraGUI(HasTraits):
 
     simulation=Bool(True)
     cooler=Bool(False)
+    test = Button()
     single=Button()
     continous=Button()
     autofocus=Button(label="AF X/Y")
@@ -97,6 +98,7 @@ class CameraGUI(HasTraits):
                                     Item('single',label='Single',show_label=False),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value
 = 'continous_label')),
+                                    Item('test',show_label=False),
                                     Item('autofocus',show_label=False),
                                     Item('zautofocus',show_label=False)),
                             HGroup(
@@ -260,6 +262,9 @@ class CameraGUI(HasTraits):
         while self.acq_active:
             self._single_fired()
         self.continous_label = 'Continous'
+
+    def _test_fired(self):
+        self.icCamera.speedinit()
 
     def _continous_fired(self):
         self.acq_active = not self.acq_active

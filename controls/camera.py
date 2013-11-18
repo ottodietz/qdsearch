@@ -25,7 +25,9 @@ class Camera(object):
                 self.atm = WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
                 print "Init:", self.atm.Initialize(None)
                 print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
-                print "SetReadMode:",self.atm.SetReadMode(self.readmode) #FullverticalBinning
+                print "SetReadMode:",self.setreadmodes() #FullverticalBinning
+                print "SetHShiftspeed:",self.setHshiftspeed() #slowest speed
+                print "SetVShiftspeed:",self.setVshiftspeed() #slowest speed
                 print "SetAcqMode:",self.atm.SetAcquisitionMode(self.acquisitionmode) # single shoot
                 print "SetExpTime:",self.setexposuretime() #Belichtungsdauer
                 print "Cooler ON",self.cooler_on()
@@ -144,22 +146,49 @@ class Camera(object):
         print 'targettemp',
         print targettemp
 
-    def setVshiftspeed(self,value):
-        if self.simulation:
-            print "simulation Vshiftspeed ",value
-        else:
-            print "changed Vshiftspeed to ", value
-            
-    def setHshiftspeed(self,value):
-        if self.simulation:
-            print "simulation Hshiftspeed ",value
+    def speedinit(self):
+        print "GetNumerHSSSpeeds"
+#        print self.atm.GetNumberHSSpeeds(0, 0, &a) #first A-D, request data speeds for (I = 0; I <a;I++)
+        print "MHZ of HSSSpeed"
+#        print self.atm.GetHSSpeed(0, 0, I, &speed[I])
+        self.atm.SetHSSpeed(0, 0) #Fastest speed
+        print "GetNumerHSSSpeeds"
+#        print self.atm.GetNumberVSSpeeds(0, 0, &a) #first A-D, request data speeds for (I = 0; I <a;I++)
+        print "MHZ of VSSpeed"
+#        print self.atm.GetVSSpeed(0, 0, I, &speed[I])
+        self.atm.SetVSSpeed(0, 0) #Fastest speed
 
-    def setreadmodes(self,value):
+    def setVshiftspeed(self,value=None):
+        if not value:
+            value = 1 
         if self.simulation:
-            print "simulation readmode ",value
+            print "simulation Vshiftspeed set to",value
+        else:
+            self.atm.SetVSSpeed(0,value)
+            print "Vshiftspeed set to", value
+            
+    def setHshiftspeed(self,value=None):
+        if not value:
+            value = 1
+        if self.simulation:
+            print "simulation Hshiftspeed set to",value
+        else:
+            self.atm.SetHSSpeed(0,value)
+            print "Hshiftspeed set to",value
+
+    def setreadmodes(self,name=None):
+        if not name or name == "Full Vertical Binning":
+            value = 0
+            name = "Full Vertical Binning"
+        if name == "Image":
+            value = 4
+        if self.simulation:
+            print "simulation readmode set to",name
         else:
             self.atm.SetReadMode(int(value))
-            print "changed readmode"
+            if value == 4:
+                self.atm.SetImage(1,1,1,1024,1,256)
+            print "readmode set to",name
 
 if __name__ == "__main__":
     c = Camera()
