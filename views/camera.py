@@ -30,6 +30,7 @@ class CameraGUI(HasTraits):
     cooler=Bool(False)
     test = Button()
     single=Button()
+    continous_label = Str('Continous')
     continous=Button()
     autofocus=Button(label="AF X/Y")
     zautofocus=Button(label="AF Z")
@@ -61,42 +62,18 @@ class CameraGUI(HasTraits):
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
 
-
-#    view_menu=View(HGroup(VGroup(
-#                        HGroup(Item('single',show_label=False), Item('plot',show_label=False)),
-#                        Item('settemperature'),
-#                        HGroup(Item('cooler'),Item('simulation',label='Simulation camera')),
-#                        HGroup(Item('output',label='Camera output',
-#                            style='readonly')),
-#                        VGroup(Item:('readmode'),Item('acquisitionmode'),Item('exposuretime'))
-#                        ),
-#                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
-#                        resizable = True )
-#
     menu_action = Action(name='camera menu', accelerator='Ctrl+p', action='call_menu')
-    mi_reload = Action(name='reload camera module', accelerator='Ctrl+r',
-            action='reload_camera')
-
+    mi_reload = Action(
+                        name='reload camera module', 
+                        accelerator='Ctrl+r',
+                        action='reload_camera'
+                        )
     menu=Menu(menu_action,mi_reload,name='Camera')
-
-#SetReadMode(0)
-
-#SetReadMode(4);
-#SetImage(1,1,1,1024,1,256);
-
-#GetNumberHSSpeeds(0, 0, &a); //first A-D, request data speeds for (I = 0; I <
-#        a;I++)
-#GetHSSpeed(0, 0, I, &speed[I]);
-#SetHSSpeed(0, 0); /* Fastest speed */
-
-    continous_label = Str('Continous')
-
 
     traits_view=View(HGroup(VGroup(
                             HGroup(
                                     Item('single',label='Single',show_label=False),
-                                    Item('continous',show_label=False,editor=ButtonEditor(label_value
-= 'continous_label')),
+                                    Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
                                     Item('test',show_label=False),
                                     Item('autofocus',show_label=False),
                                     Item('zautofocus',show_label=False)),
@@ -108,6 +85,10 @@ class CameraGUI(HasTraits):
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                        resizable = True, menubar=MenuBar(menu) )
+
+    def _imageacq_fired(self):
+        self.image = self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
+        self.plot_data()
 
     def _single_fired(self):
         try:
@@ -221,9 +202,11 @@ class CameraGUI(HasTraits):
             plotdata = ArrayPlotData(x=self.line[:])
             plot = Plot(plotdata)
             plot.plot(("x"),  color="blue")
-            plot.title = ""
-            plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
-            plot.tools.append(PanTool(plot, constrain_key="shift"))
+        if self.readmode_name == 'Image':
+            plotdata = ArrayPlotData(x=self.image[:])            
+        plot.title = ""
+        plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
+        plot.tools.append(PanTool(plot, constrain_key="shift"))
         #plot.tools.append(PlotTool(component=plot))
         #plot.range2d.x_range.low=self.x1
         #plot.range2d.x_range.high=self.x2

@@ -77,16 +77,21 @@ class Camera(object):
         action.append("Wait:")
         error.append(self.atm.WaitForAcquisition())
         action.append("GetMostRecentImage")
-        line  = (c_long * hpixel)()
-        error.append(self.atm.GetMostRecentImage(byref(line),c_ulong(hpixel)))
-        #image = (c_long * hpixel * vpixel)()
-        #error.append(self.atm.GetMostRecentImage(byref(image),c_ulong(vpixel*hpixel)))
+        if self.readmode_name == "Full Vertical Binning":
+            line  = (c_long * hpixel)()
+            error.append(self.atm.GetMostRecentImage(byref(line),c_ulong(hpixel)))
+        if self.readmode_name == "Image":
+            image = (c_long * hpixel * vpixel)()
+            error.append(self.atm.GetMostRecentImage(byref(image),c_ulong(vpixel*hpixel)))
         if not np.all(np.array(error) == CAM_OKAY):
             print action
             print error
         #action.append('cancel acq:')
         #error.append(self.atm.AbortAcquisition())
-        return(line)
+        if self.readmode_name == "Full Vertical Binning":
+            return(line)
+        if self.readmode_name == "Image":
+            return(image)
 
     def close(self):
         if self.camera_active:

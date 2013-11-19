@@ -6,7 +6,7 @@ from traitsui.api import View,Item,ButtonEditor
 class TextDisplay(HasTraits):
 	string = String()
 
-	view = View( Item('string',show_label=False,springy=True,style='custom'))
+	view = View( Item('string',show_label=False,springy=True,style='simple'))
 
 class CaptureThread(Thread):
 	def run(self):
@@ -22,7 +22,7 @@ class Camera(HasTraits):
 	display = Instance(TextDisplay)
 	capture_thread = Instance(CaptureThread)
 
-	view = View( Item('start_stop_capture',style='custom',springy=False, show_label=False ))
+	view = View( Item('start_stop_capture',style='simple',springy=False, show_label=False ))
 
 	def _start_stop_capture_fired(self):
 		if self.capture_thread and self.capture_thread.isAlive():
@@ -41,7 +41,7 @@ class MainWindow(HasTraits):
 	def _camera_default(self):
 		return Camera(display=self.display)
 
-	view = View('display', 'camera', style="custom", resizable=True)
+	view = View('display', 'camera', style="simple", resizable=True)
 
 
 if __name__ == '__main__':
