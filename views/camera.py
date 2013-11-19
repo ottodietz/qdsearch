@@ -50,7 +50,7 @@ class CameraGUI(HasTraits):
     Vshiftspeed = Str()
     Hshiftspeed = Str()
     readmode_name = List(['Full Vertical Binning','Image'])
-    readmode = Str('Full Vertical Binning')
+    readmode = Str()
 
     output=Str()
     plot = Instance(Plot,())
@@ -103,8 +103,8 @@ class CameraGUI(HasTraits):
                             HGroup(
                                 Item('exposuretime'),Item('simulation',label='simulate camera')),
                             Item('readmode',editor=EnumEditor(name='readmode_name')),
-                            Item('Vshiftspeed',editor=EnumEditor(name='Vshiftspeed_value')),
-                            Item('Hshiftspeed',editor=EnumEditor(name='Hshiftspeed_value'))),
+                            Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_value')),
+                            Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_value'))),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                        resizable = True, menubar=MenuBar(menu) )
@@ -277,19 +277,16 @@ class CameraGUI(HasTraits):
             self.icCamera.cooler_off()
 
     def _readmode_changed(self):
-        self.icCamera.readmode_name = self.readmode
-        self.icCamera.setreadmode() #=c_long(self.readmode)
+        self.icCamera.setreadmode(self.readmode) #=c_long(self.readmode)
 
     def _Hshiftspeed_changed(self):
-        import pdb; pdb.set_trace()
         self.icCamera.setHshiftspeed(self.Hshiftspeed)
 
     def _Vshiftspeed_changed(self):
         self.icCamera.setVshiftspeed(self.Vshiftspeed)
 
     def _acquisitionmode_changed(self):
-        self.icCamera.acquisitionmode = self.acquisitionmode
-        self.icCamera.setacquistionmode()
+        self.icCamera.setacquistionmode(self.acquisitionmode)
         print "acq mode changed"
 
     def _exposuretime_changed(self):
