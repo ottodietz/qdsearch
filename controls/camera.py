@@ -23,8 +23,8 @@ class Camera(object):
     NumOfVSpeeds = c_int()
     ValueOfHSpeed = c_float()
     ValueOfVSpeed = c_float()
-    Vshitftspeed = int(1)
-    Hshiftspeed = int(1)
+    Vshitftspeed_value = int(0) # zero is fastest speed
+    Hshiftspeed_value = int(0)
     exposuretime=0.1 #hier darf kein c_float stehen, sonst bug in setexposuretime in der return zeile
     simulation=True
 
@@ -180,21 +180,27 @@ class Camera(object):
             print self.ValueOfVSpeed
         self.atm.SetVSSpeed(c_int(0), c_int(0)) #Fastest speed
 
-    def setVshiftspeed(self):
+    def setVshiftspeed(self,value=None):
+        if value:
+            self.Vshiftspeed_value = value
         if self.simulation:
             print "simulation Vshiftspeed set to",self.Vshiftspeed_value
         else:
             self.atm.SetVSSpeed(c_int(0),c_int(self.Vshiftspeed_value)) #first parameter is for conventional mode electron multiplication, second parameter is for speed index (0-(getHSSpeed-1)
             print "Vshiftspeed set to", self.Vshiftspeed_value
             
-    def setHshiftspeed(self):
+    def setHshiftspeed(self,value=None):
+        if value:
+            self.Hshiftspeed_value = value
         if self.simulation:
             print "simulation Hshiftspeed set to",self.Hshiftspeed_value
         else:
             self.atm.SetHSSpeed(c_int(0),c_int(self.Hshiftspeed_value))
             print "Hshiftspeed set to",self.Hshiftspeed_value
 
-    def setreadmode(self):
+    def setreadmode(self,name=None):
+        if value:
+            self.readmode_name = name
         if self.readmode_name == "Full Vertical Binning":
             self.readmode_value = 0
         if self.readmode_name == "Image":
@@ -207,7 +213,9 @@ class Camera(object):
                 self.atm.SetImage(c_int(1),c_int(1),c_int(1),c_int(1024),c_int(1),c_int(256))
             print "readmode set to",self.readmode_name
 
-    def setacquisitionmode(self):
+    def setacquisitionmode(self,value=None):
+        if value:
+            self.acquistionmode = value
         if self.simulation:
             print "simulation Acquisitionmode"
         else:
