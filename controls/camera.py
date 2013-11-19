@@ -209,7 +209,7 @@ class Camera(object):
             print "simulation readmode set to",self.readmode_name
         else:
             self.atm.SetReadMode(c_int(self.readmode_value)) #check if problem with ad channel check sdk
-            if self.readmode_name = "Image":
+            if self.readmode_name == "Image":
                 self.atm.SetImage(c_int(1),c_int(1),c_int(1),c_int(1024),c_int(1),c_int(256))
             print "readmode set to",self.readmode_name
 
