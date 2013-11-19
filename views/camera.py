@@ -217,12 +217,13 @@ class CameraGUI(HasTraits):
 
 
     def plot_data(self):
-        plotdata = ArrayPlotData(x=self.line[:])
-        plot = Plot(plotdata)
-        plot.plot(("x"),  color="blue")
-        plot.title = ""
-        plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
-        plot.tools.append(PanTool(plot, constrain_key="shift"))
+        if self.readmode_name == 'Full Vertical Binning':
+            plotdata = ArrayPlotData(x=self.line[:])
+            plot = Plot(plotdata)
+            plot.plot(("x"),  color="blue")
+            plot.title = ""
+            plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
+            plot.tools.append(PanTool(plot, constrain_key="shift"))
         #plot.tools.append(PlotTool(component=plot))
         #plot.range2d.x_range.low=self.x1
         #plot.range2d.x_range.high=self.x2
