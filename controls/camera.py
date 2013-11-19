@@ -17,7 +17,7 @@ class Camera(object):
     camera_active=False
     low_temperature=False
     readmode_name=str('Full Vertical Binning') #hier der default fuer den start
-    readmode_value=Int()
+    readmode_value=int()
     acquisitionmode=int(1) #single shot as default
     NumOfHSpeeds = c_int()
     NumOfVSpeeds = c_int()
@@ -199,7 +199,7 @@ class Camera(object):
             print "Hshiftspeed set to",self.Hshiftspeed_value
 
     def setreadmode(self,name=None):
-        if value:
+        if name:
             self.readmode_name = name
         if self.readmode_name == "Full Vertical Binning":
             self.readmode_value = 0

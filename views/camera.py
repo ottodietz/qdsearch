@@ -47,8 +47,10 @@ class CameraGUI(HasTraits):
     exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
     Vshiftspeed_value = List(["0","1","2"]) #Enum(0,1,2) speeds from 0 to highest
     Hshiftspeed_value = List(["0","1","2"]) #Enum(0,1,2)
-    Vshiftspeed = int(0)
-    Hshiftspeed = int(0)
+    Vshiftspeed = Str()
+    Hshiftspeed = Str()
+    readmode_name = List(['Full Vertical Binning','Image'])
+    readmode = Str('Full Vertical Binning')
 
     output=Str()
     plot = Instance(Plot,())
@@ -77,8 +79,6 @@ class CameraGUI(HasTraits):
 
     menu=Menu(menu_action,mi_reload,name='Camera')
 
-    readmode_name = List(['Full Vertical Binning','Image'])
-    readmode = Str('Full Vertical Binning')
 #SetReadMode(0)
 
 #SetReadMode(4);
@@ -281,6 +281,7 @@ class CameraGUI(HasTraits):
         self.icCamera.setreadmode() #=c_long(self.readmode)
 
     def _Hshiftspeed_changed(self):
+        import pdb; pdb.set_trace()
         self.icCamera.setHshiftspeed(self.Hshiftspeed)
 
     def _Vshiftspeed_changed(self):
