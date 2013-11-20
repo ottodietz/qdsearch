@@ -83,12 +83,21 @@ class Spectro(simserial.SimSerial):
         self.write(grat+" GRATING \r")
         ## HIER NOCH EIN READLINE?
 
+    def set_ent_slit_width(self,width):
+        self.write("SIDE-ENT-SLIT \r");
+        self.write(int(width)+" MICRONS \r")
+        self.readline()
+
+    def set_exit_slit_width(self,width):
+        self.write("SIDE-EXIT-SLIT \r");
+        self.write(int(width)+" MICRONS \r")
+        self.readline()
+    
     def exit_mirror_change(self,mirror):
         self.write("EXIT-MIRROR \r")
         self.readline()
         self.write(mirror+" \r")
         self.readline()
-        ## HIER NOCH EIN READLINE?
 
     def convert_output(self,tmp):
         #import pdb;pdb.set_trace()

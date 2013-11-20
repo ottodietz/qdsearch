@@ -49,8 +49,8 @@ class SpectroGUI(HasTraits):
     centerwvll = Range(low=0.0,high=1000.0,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
     scan_bereich=CFloat(3)
 
-    slot_width_in = Range(10,3000,1)
-    slot_width_out = Range(10,3000,1)
+    slit_width_in = Range(10,3000,1)
+    slit_width_out = Range(10,3000,1)
 
     measured_values=[]
     wavelength=[]
@@ -94,8 +94,8 @@ class SpectroGUI(HasTraits):
                      ),
               Item('current_grating', editor=EnumEditor(name='grating_value'), label='Gratings',**hide),
               Item("exit_mirror",editor=EnumEditor(name='exit_mirror_value'),**hide),
-              HGroup(Item('slot_width_in', label='Slot width in/out',enabled_when='False'),
-                     Item('slot_width_out', show_label=False, enabled_when='False'),
+              HGroup(Item('slit_width_in', label='Slot width in/out',enabled_when='False'),
+                     Item('slit_width_out', show_label=False, enabled_when='False'),
                      **hide
                     ),
               Item('simulation',label="Simulation Spectrometer",show_label=True,**hide)
