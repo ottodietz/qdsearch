@@ -189,39 +189,30 @@ class MainWindow(HasTraits):
                 scan_plotctrl,
                 Item('plot_compare',editor=ComponentEditor(size=(100,200)),show_label=False)
                 ),
-            label='scan sample'
+            label='Scan Sample'
             )
 
-    spectrometer_tab = VGroup(
-            Item('ivSpectro', style='custom',springy=False,show_label=False),
-            HGroup(Item('ivVoltage', style = 'custom',label="Voltmeter Simulation",
-editor=InstanceEditor(view=View(Item('simulation',show_label=False))),springy=False,show_label=True)),
-            Item('ivCryo', style = 'custom',show_label=False,springy=False,label="cryo", enabled_when='finished==True'),
-            Item('ivCamera',style = 'custom',springy=False,
-show_label=False),
-            label='spectrometer'
-            )
-
-    focus_tab = VGroup(
-            Item('ivCamera',style = 'custom', show_label=False),
-            Item('ivCryo', style = 'custom',springy=False,show_label=False,label="cryo", enabled_when='finished==True'),
-            Item('ivVoltage', style='custom',show_label=False,label="voltage"),
-            label='Focus'
-            )
+    device_tab = VGroup(
+        Item('ivCryo',      show_label=False, enabled_when='finished==True'),
+        Item('ivSpectro',   show_label=False),
+        Item('ivCamera',    show_label=False),
+        Item('ivVoltage',   show_label=False,label="voltage"),
+        label='Instruments'
+        )
 
     tabs = Group(
-        Item('ivCryo', style = 'custom',show_label=False,label="cryo", enabled_when='finished==True'),
-        spectrometer_tab,
+        device_tab,
         scan_sample_group,
-        focus_tab,
-        layout='tabbed')
+        layout='tabbed'
+        )
 
     traits_view = View(
         tabs,
         menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,scan_sample_menu),
         title   = 'qdsearch',
         buttons = [ 'OK' ],
-        resizable = True
+        resizable = True,
+        width=300
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
