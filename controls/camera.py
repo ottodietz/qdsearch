@@ -191,7 +191,7 @@ class Camera(object):
 
     def setVshiftspeed(self,value=None):
         if value:
-            self.Vshiftspeed_value = value
+            self.Vshiftspeed_value = int(value)
         if self.simulation:
             print "simulation Vshiftspeed set to",self.Vshiftspeed_value
         else:
@@ -200,7 +200,7 @@ class Camera(object):
             
     def setHshiftspeed(self,value=None):
         if value:
-            self.Hshiftspeed_value = value
+            self.Hshiftspeed_value = int(value)
         if self.simulation:
             print "simulation Hshiftspeed set to",self.Hshiftspeed_value
         else:
