@@ -4,7 +4,7 @@ from traits.api import*
 from traitsui.api import*
 from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
-from chaco.api import Plot, ArrayPlotData
+from chaco.api import Plot, ArrayPlotData, jet
 from chaco.tools.api import PanTool, ZoomTool
 from enable.component_editor import ComponentEditor
 import thread
@@ -85,10 +85,6 @@ class CameraGUI(HasTraits):
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                        resizable = True, menubar=MenuBar(menu) )
-
-    def _imageacq_fired(self):
-        self.image = self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-        self.plot_data()
 
     def _single_fired(self):
         try:
@@ -198,12 +194,17 @@ class CameraGUI(HasTraits):
 
 
     def plot_data(self):
-        if self.readmode_name == 'Full Vertical Binning':
+#        import pdb; pdb.set_trace()
+        if self.icCamera.readmode_name == 'Full Vertical Binning':
             plotdata = ArrayPlotData(x=self.line[:])
             plot = Plot(plotdata)
             plot.plot(("x"),  color="blue")
-        if self.readmode_name == 'Image':
-            plotdata = ArrayPlotData(x=self.image[:])            
+        if self.icCamera.readmode_name == 'Image':
+            self.line = self.image
+            plotdata = ArrayPlotData(imagedata = self.image)           
+            plot = Plot(plotdata)
+            plot.img_plot("imagedata", colormap = jet)
+ 
         plot.title = ""
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
         plot.tools.append(PanTool(plot, constrain_key="shift"))

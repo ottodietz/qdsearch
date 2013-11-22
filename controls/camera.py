@@ -66,9 +66,13 @@ class Camera(object):
         hpixel=1024
         vpixel=256
 
-        if self.simulation:
+        if self.simulation and self.readmode_name == "Full Vertical Binning":
             line = [ 10*exptme*2*sin(2.*pi/12.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(hpixel) ]
             return line
+
+        if self.simulation and self.readmode_name == "Image":
+            image = [[random.randint(1,100) for e in range(256)] for e in range(1024)]
+            return image
 
         action = []
         error  = []
