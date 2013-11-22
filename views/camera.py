@@ -46,7 +46,7 @@ class CameraGUI(HasTraits):
     """menu"""
     acquisitionmode=Int(1)
     exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
-    Vshiftspeed_value = List(["0","1","2"]) #Enum(0,1,2) speeds from 0 to highest
+    Vshiftspeed_value = List(["0","1","2","3"]) #Enum(0,1,2) speeds from 0 to highest
     Hshiftspeed_value = List(["0","1","2"]) #Enum(0,1,2)
     Vshiftspeed = Str()
     Hshiftspeed = Str()
