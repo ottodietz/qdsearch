@@ -171,21 +171,21 @@ class Camera(object):
 
     def speedinit(self):
         print "GetNumerHSSSpeeds"
-        print self.atm.GetNumberHSSpeeds(c_int(0), c_int(0), bref(self.NumOfHSpeeds))
+        print self.atm.GetNumberHSSpeeds(c_int(0), c_int(0), byref(self.NumOfHSpeeds))
         print self.NumOfHSpeeds
         print "MHZ of HSSSpeed"
         for i in range(len(self.NumOfHSpeeds)):
             print "speed in MHZ of setting",i
-            self.atm.GetHSSpeed(c_int(0), c_int(0),c_int(i), bref(self.ValueOfHSpeed))
+            self.atm.GetHSSpeed(c_int(0), c_int(0),c_int(i), byref(self.ValueOfHSpeed))
             print self.ValueOfHSpeed
         self.atm.SetHSSpeed(c_int(0),c_int(0)) #Fastest speed
         print "GetNumerHSSSpeeds"
-        print self.atm.GetNumberVSSpeeds(c_int(0), c_int(0), bref(self.NumOfVSpeeds))
+        print self.atm.GetNumberVSSpeeds(c_int(0), c_int(0), byref(self.NumOfVSpeeds))
         print self.NumOfVSpeeds
         print "MHZ of VSSpeed"
         for i in range(len(self.NumOfVSpeeds)):
             print "speed in MHZ of setting",i
-            self.atm.GetVSSpeed(c_int(0), c_int(0),c_int(i), bref(self.ValueOfVSpeed))
+            self.atm.GetVSSpeed(c_int(0), c_int(0),c_int(i), byref(self.ValueOfVSpeed))
             print self.ValueOfVSpeed
         self.atm.SetVSSpeed(c_int(0), c_int(0)) #Fastest speed
 
