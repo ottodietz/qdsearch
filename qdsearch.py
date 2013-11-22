@@ -193,10 +193,10 @@ class MainWindow(HasTraits):
             )
 
     device_tab = VGroup(
-        Item('ivCryo',      show_label=False, enabled_when='finished==True'),
-        Item('ivSpectro',   show_label=False),
-        Item('ivCamera',    show_label=False),
-        Item('ivVoltage',   show_label=False,label="voltage"),
+        Item('ivCryo',      label="Cryostat", show_label=True, enabled_when='finished==True'),
+        Item('ivSpectro',   label="Spectrometer", show_label=True),
+        Item('ivCamera',    label="Camera", show_label=True),
+        Item('ivVoltage',   label="Voltmeter", show_label=True),
         label='Instruments'
         )
 
