@@ -193,7 +193,7 @@ class Camera(object):
         if value:
             self.Vshiftspeed_value = int(value)
         if self.simulation:
-            print "simulation Vshiftspeed set to",self.Vshiftspeed_value
+            print "simulation Vshiftspeed set to",str(self.Vshiftspeed_value)
         else:
             self.atm.SetVSSpeed(c_int(self.Vshiftspeed_value)) #first parameter is for conventional mode electron multiplication, second parameter is for speed index (0-(getHSSpeed-1)
             print "Vshiftspeed set to", self.Vshiftspeed_value
@@ -205,7 +205,7 @@ class Camera(object):
             print "simulation Hshiftspeed set to",self.Hshiftspeed_value
         else:
             self.atm.SetHSSpeed(c_int(0),c_int(0))
-            print "Hshiftspeed set to",self.Hshiftspeed_value
+            print "Hshiftspeed set to %1d" % self.Hshiftspeed_value
 
     def setreadmode(self,name=None):
         if name:
