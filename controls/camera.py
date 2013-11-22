@@ -10,6 +10,10 @@ CAM_OKAY = 20002
 #initializing empty c-types is okay for getfunctions, for setfunctions NOT init
 #c-types at beginning, ONLY use them DIRECTLY in the setfunction e.g.
 #setreadmode()
+#IMPORTANT DONT TRUST ANDOR SDK MANUAL
+#it lies, check with pdb.set_trace() what args are needed in the setfunctions,
+#way it is in the SetVSSpeeds is the right way, trial and error and a lot of
+#pain
 
 class Camera(object):
     totalCameras=c_long()
