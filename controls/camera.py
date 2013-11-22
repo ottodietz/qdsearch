@@ -180,10 +180,10 @@ class Camera(object):
             print self.ValueOfHSpeed
         self.atm.SetHSSpeed(c_int(0),c_int(0)) #Fastest speed
         print "GetNumerVSSpeeds"
-        print self.atm.GetNumberVSSpeeds(c_int(0), c_int(0), byref(self.NumOfVSpeeds))
+        print self.atm.GetNumberVSSpeeds(byref(self.NumOfVSpeeds))
         print self.NumOfVSpeeds
         print "MHZ of VSSpeed"
-        for i in range(3):
+        for i in range(4):
             print "speed in MHZ of setting",i
             self.atm.GetVSSpeed(c_int(0), c_int(0),c_int(i), byref(self.ValueOfVSpeed))
             print self.ValueOfVSpeed
