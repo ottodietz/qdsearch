@@ -179,7 +179,7 @@ class Camera(object):
             self.atm.GetHSSpeed(c_int(0), c_int(0),c_int(i), byref(self.ValueOfHSpeed))
             print self.ValueOfHSpeed
         self.atm.SetHSSpeed(c_int(0),c_int(0)) #Fastest speed
-        print "GetNumerHSSSpeeds"
+        print "GetNumerVSSpeeds"
         print self.atm.GetNumberVSSpeeds(c_int(0), c_int(0), byref(self.NumOfVSpeeds))
         print self.NumOfVSpeeds
         print "MHZ of VSSpeed"
