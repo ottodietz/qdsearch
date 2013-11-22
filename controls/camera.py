@@ -23,9 +23,9 @@ class Camera(object):
     NumOfVSpeeds = c_int()
     ValueOfHSpeed = c_float()
     ValueOfVSpeed = c_float()
-    Vshitftspeed_value = int(0) # zero is fastest speed
+    Vshiftspeed_value = int(0) # zero is fastest speed
     Hshiftspeed_value = int(0)
-    exposuretime=0.1 #hier darf kein c_float stehen, sonst bug in setexposuretime in der return zeile
+    exposuretime=0.1 #hier darf kein c_float stehen, siehe comment am anfang
     simulation=True
 
     def toggle_simulation(self):
