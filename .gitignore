@@ -10,6 +10,7 @@ bin-release/
 .settings/
 build/
 
+df
 *.orig
 *.pyc
 .*.swp
