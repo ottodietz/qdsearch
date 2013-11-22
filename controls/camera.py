@@ -14,6 +14,7 @@ CAM_OKAY = 20002
 #it lies, check with pdb.set_trace() what args are needed in the setfunctions,
 #way it is in the SetVSSpeeds is the right way, trial and error and a lot of
 #pain
+#TODO thomas meinte andor haette nur 128 px in der hoehe?!
 
 class Camera(object):
     totalCameras=c_long()
