@@ -48,8 +48,8 @@ class CameraGUI(HasTraits):
     exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
     Vshiftspeed_value = List(["0","1","2","3"]) #Enum(0,1,2) speeds from 0 to highest
     Hshiftspeed_value = List(["0","1","2"]) #Enum(0,1,2)
-    Vshiftspeed = Str()
-    Hshiftspeed = Str()
+    Vshiftspeed = str()
+    Hshiftspeed = str()
     readmode_name = List(['Full Vertical Binning','Image'])
     readmode = Str()
 
