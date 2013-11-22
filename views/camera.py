@@ -200,8 +200,7 @@ class CameraGUI(HasTraits):
             plot = Plot(plotdata)
             plot.plot(("x"),  color="blue")
         if self.icCamera.readmode_name == 'Image':
-            self.line = self.image
-            plotdata = ArrayPlotData(imagedata = self.image)           
+            plotdata = ArrayPlotData(imagedata = self.line) #self.line now has an image stored! since an image comes from acquisition           
             plot = Plot(plotdata)
             plot.img_plot("imagedata", colormap = jet)
  
