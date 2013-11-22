@@ -51,7 +51,7 @@ class CameraGUI(HasTraits):
     Vshiftspeed = Str("0")
     Hshiftspeed = Str("0")
     readmode_name = List(['Full Vertical Binning','Image'])
-    readmode = Str()
+    readmode = Str("Full Vertical Binning")
 
     output=Str()
     plot = Instance(Plot,())
