@@ -4,11 +4,11 @@ from traits.api import*
 from traitsui.api import*
 from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
-from chaco.api import Plot, ArrayPlotData
+from chaco.api import Plot, ArrayPlotData, jet
 from chaco.tools.api import PanTool, ZoomTool
 from enable.component_editor import ComponentEditor
 import thread
-import time
+from time import sleep
 from ctypes import *
 
 import controls.camera
@@ -28,7 +28,9 @@ class CameraGUI(HasTraits):
 
     simulation=Bool(True)
     cooler=Bool(False)
+    test = Button()
     single=Button()
+    continous_label = Str('Continous')
     continous=Button()
     autofocus=Button(label="AF X/Y")
     zautofocus=Button(label="AF Z")
@@ -42,13 +44,16 @@ class CameraGUI(HasTraits):
     icVoltage = Instance(controls.voltage.Voltage)
 
     """menu"""
-    readmode=Int(0)
     acquisitionmode=Int(1)
     exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
-    Vshiftspeed_value = List(["1","2","3"]) #Enum(1,2,3)
-    Hshiftspeed_value = List(["1","2","3"]) #Enum(1,2,3)
-    Vshiftspeed = Str()
-    Hshiftspeed = Str()
+    Vshiftspeed_value = List(["0","1","2","3"])
+    Hshiftspeed_value = List(["0","1","2"])
+    Vshiftspeed = Str("0")
+    Vshiftspeed_Output = Str("0")
+    Hshiftspeed = Str("0")
+    Hshiftspeed_Output = Str("0")
+    readmode_name = List(['Full Vertical Binning','Image'])
+    readmode = Str("Full Vertical Binning")
 
     output=Str()
     plot = Instance(Plot,())
@@ -59,51 +64,29 @@ class CameraGUI(HasTraits):
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
 
-
-#    view_menu=View(HGroup(VGroup(
-#                        HGroup(Item('single',show_label=False), Item('plot',show_label=False)),
-#                        Item('settemperature'),
-#                        HGroup(Item('cooler'),Item('simulation',label='Simulation camera')),
-#                        HGroup(Item('output',label='Camera output',
-#                            style='readonly')),
-#                        VGroup(Item:('readmode'),Item('acquisitionmode'),Item('exposuretime'))
-#                        ),
-#                        Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False)),
-#                        resizable = True )
-#
     menu_action = Action(name='camera menu', accelerator='Ctrl+p', action='call_menu')
-    mi_reload = Action(name='reload camera module', accelerator='Ctrl+r',
-            action='reload_camera')
-
+    mi_reload = Action(
+                        name='reload camera module', 
+                        accelerator='Ctrl+r',
+                        action='reload_camera'
+                        )
     menu=Menu(menu_action,mi_reload,name='Camera')
-
-    readmodes_value = List(['Full Vertical Binning','Image'])
-    readmodes = Str()
-#SetReadMode(0)
-
-#SetReadMode(4);
-#SetImage(1,1,1,1024,1,256);
-
-#GetNumberHSSpeeds(0, 0, &a); //first A-D, request data speeds for (I = 0; I <
-#        a;I++)
-#GetHSSpeed(0, 0, I, &speed[I]);
-#SetHSSpeed(0, 0); /* Fastest speed */
-
-    continous_label = Str('Continous')
-
 
     traits_view=View(HGroup(VGroup(
                             HGroup(
                                     Item('single',label='Single',show_label=False),
-                                    Item('continous',show_label=False,editor=ButtonEditor(label_value
-= 'continous_label')),
+                                    Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
+                                    Item('test',show_label=False),
                                     Item('autofocus',show_label=False),
                                     Item('zautofocus',show_label=False)),
                             HGroup(
                                 Item('exposuretime'),Item('simulation',label='simulate camera')),
-                            Item('readmodes',editor=EnumEditor(name='readmodes_value')),
-                            Item('Vshiftspeed',editor=EnumEditor(name='Vshiftspeed_value')),
-                            Item('Hshiftspeed',editor=EnumEditor(name='Hshiftspeed_value'))),
+                            Item('readmode',editor=EnumEditor(name='readmode_name')),
+                            Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_value')),
+                            Item('Vshiftspeed_Output',label="Vertical Speed in uS",style='readonly'),
+                            Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_value')),
+                            Item('Hshiftspeed_Output',label="Vertical Speed in MHZ",style='readonly')
+),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                        resizable = True, menubar=MenuBar(menu) )
@@ -216,9 +199,16 @@ class CameraGUI(HasTraits):
 
 
     def plot_data(self):
-        plotdata = ArrayPlotData(x=self.line[:])
-        plot = Plot(plotdata)
-        plot.plot(("x"),  color="blue")
+#        import pdb; pdb.set_trace()
+        if self.icCamera.readmode_name == 'Full Vertical Binning':
+            plotdata = ArrayPlotData(x=self.line[:])
+            plot = Plot(plotdata)
+            plot.plot(("x"),  color="blue")
+        if self.icCamera.readmode_name == 'Image':
+            plotdata = ArrayPlotData(imagedata = self.line) #self.line now has an image stored! since an image comes from acquisition           
+            plot = Plot(plotdata)
+            plot.img_plot("imagedata", colormap = jet)
+ 
         plot.title = ""
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
         plot.tools.append(PanTool(plot, constrain_key="shift"))
@@ -261,6 +251,9 @@ class CameraGUI(HasTraits):
             self._single_fired()
         self.continous_label = 'Continous'
 
+    def _test_fired(self):
+        self.icCamera.speedinit()
+
     def _continous_fired(self):
         self.acq_active = not self.acq_active
         if self.acq_active:
@@ -273,16 +266,22 @@ class CameraGUI(HasTraits):
             self.icCamera.cooler_off()
 
     def _readmode_changed(self):
-       self.icCamera.readmode=c_long(self.readmode)
-       print "readmode changed"
+        self.icCamera.setreadmode(self.readmode) #=c_long(self.readmode)
+
+    def _Hshiftspeed_changed(self):
+        self.icCamera.setHshiftspeed(self.Hshiftspeed)
+        self.Hshiftspeed_Output = str(self.icCamera.Hshiftspeed_value)
+
+    def _Vshiftspeed_changed(self):
+        self.icCamera.setVshiftspeed(self.Vshiftspeed)
+        self.Vshiftspeed_Output = str(self.icCamera.Vshiftspeed_value)
 
     def _acquisitionmode_changed(self):
-       self.icCamera.acquisitionmode=c_long(self.acquisitionmode)
-       print "acq mode changed"
+        self.icCamera.setacquistionmode(self.acquisitionmode)
+        print "acq mode changed"
 
     def _exposuretime_changed(self):
         self.icCamera.setexposuretime(self.exposuretime)
-        print "exp changed"
 
     def call_menu(self):
         self.configure_traits(view='view_menu')

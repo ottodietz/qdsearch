@@ -1,20 +1,40 @@
 from ctypes import *
 import random
 import numpy as np
-import time
+from time import sleep
 from math import *
 from scipy.special import jn
 
 CAM_OKAY = 20002
+
+#initializing empty c-types is okay for getfunctions, for setfunctions NOT init
+#c-types at beginning, ONLY use them DIRECTLY in the setfunction e.g.
+#setreadmode()
+#IMPORTANT DONT TRUST ANDOR SDK MANUAL
+#it lies, check with pdb.set_trace() what args are needed in the setfunctions,
+#way it is in the SetVSSpeeds is the right way, trial and error and a lot of
+#pain
+#TODO thomas meinte andor haette nur 128 px in der hoehe?!
 
 class Camera(object):
     totalCameras=c_long()
     init_active=False
     camera_active=False
     low_temperature=False
-    readmode=int(0)
-    acquisitionmode=int(1)
-    exposuretime=0.1
+    readmode_name=str('Full Vertical Binning') #hier der default fuer den start
+    readmode_value=int()
+    acquisitionmode=int(1) #single shot as default
+    NumOfHSpeeds = c_int()
+    NumOfVSpeeds = c_int()
+    ValueOfHSpeed = c_float()
+    ValueOfVSpeed = c_float()
+    Vshiftspeed_index = int(0) # zero is fastest speed
+    Vshiftspeed_value = str()
+    Hshiftspeed_index = int(0)
+    Hshiftspeed_value = str()
+    Hshiftspeed_data = [[0,0],[1,1],[2,2]]
+    Vshiftspeed_data = [[0,0],[1,1],[2,2],[3,3]]
+    exposuretime=0.1 #hier darf kein c_float stehen, siehe comment am anfang
     simulation=True
 
     def toggle_simulation(self):
@@ -25,11 +45,13 @@ class Camera(object):
                 self.atm = WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
                 print "Init:", self.atm.Initialize(None)
                 print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
-                print "SetReadMode:",self.atm.SetReadMode(self.readmode) #FullverticalBinning
-                print "SetAcqMode:",self.atm.SetAcquisitionMode(self.acquisitionmode) # single shoot
+                print "SetReadMode:",self.setreadmode()
+                print "SetHShiftspeed:",self.setHshiftspeed() #highest speed as default
+                print "SetVShiftspeed:",self.setVshiftspeed() #highest speed as default
+                print "SetAcqMode:",self.setacquisitionmode()
                 print "SetExpTime:",self.setexposuretime() #Belichtungsdauer
                 print "Cooler ON",self.cooler_on()
-                print "SetTemo to -70", self.settemperature(c_long(-70))
+                print "SetTemo to -70", self.settemperature(-70)
                 self.camera_active=True
             except (NameError,) as e:
                 print "Camera init failed: ",e
@@ -43,17 +65,24 @@ class Camera(object):
         if not self.simulation:
             if not exp:
                 exp = self.exposuretime
+                print "set exposure time to ",float(exp)
             return self.atm.SetExposureTime(c_float(exp))
+        else:
+            print "simulate exposure time at ",float(exp)
         return CAM_OKAY
 
     def acquisition(self, sim_pos=(0,0),sim_volt=(0),exptme=(0)):#,sim_posx=None,sim_posy=None):
-        pixel=1024
+        hpixel=1024
+        vpixel=128
 
-        if self.simulation:
-            line = [ 10*exptme*2*sin(2.*pi/12.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(pixel) ]
+        if self.simulation and self.readmode_name == "Full Vertical Binning":
+            line = [ 10*exptme*2*sin(2.*pi/12.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(hpixel) ]
             return line
 
-        line  = (c_long * pixel)()
+        if self.simulation and self.readmode_name == "Image":
+            image = [[random.randint(1,100) for e in range(128)] for e in range(1024)]
+            return image
+
         action = []
         error  = []
         action.append("StartAcq:")
@@ -61,13 +90,21 @@ class Camera(object):
         action.append("Wait:")
         error.append(self.atm.WaitForAcquisition())
         action.append("GetMostRecentImage")
-        error.append(self.atm.GetMostRecentImage(byref(line),c_ulong(pixel)))
+        if self.readmode_name == "Full Vertical Binning":
+            line  = (c_long * hpixel)()
+            error.append(self.atm.GetMostRecentImage(byref(line),c_ulong(hpixel)))
+        if self.readmode_name == "Image":
+            image = (c_long * hpixel * vpixel)()
+            error.append(self.atm.GetMostRecentImage(byref(image),c_ulong(vpixel*hpixel)))
         if not np.all(np.array(error) == CAM_OKAY):
             print action
             print error
         #action.append('cancel acq:')
         #error.append(self.atm.AbortAcquisition())
-        return(line)
+        if self.readmode_name == "Full Vertical Binning":
+            return(line)
+        if self.readmode_name == "Image":
+            return(image)
 
     def close(self):
         if self.camera_active:
@@ -122,7 +159,7 @@ class Camera(object):
         if self.simulation:
             print 'settemperature: simulation'
             return True
-        print 'settemperature', self.atm.SetTemperature(temperature)
+        print 'settemperature', self.atm.SetTemperature(c_int(temperature))
 
     def gettemperature_status(self):
         sensortemp=c_float()
@@ -141,18 +178,70 @@ class Camera(object):
         print 'targettemp',
         print targettemp
 
-    def setVshiftspeed(self,value):
-        if self.simulation:
-            print "simulation Vshiftspeed ",value
+    def speedinit(self):
+        print "GetNumerHSSSpeeds"
+        print self.atm.GetNumberHSSpeeds(c_int(0), c_int(0), byref(self.NumOfHSpeeds))
+        print self.NumOfHSpeeds
+        print "MHZ of HSSSpeed"
+        for i in range(3):
+            print "speed in MHZ of setting",i
+            self.atm.GetHSSpeed(c_int(0), c_int(0),c_int(i), byref(self.ValueOfHSpeed))
+            print self.ValueOfHSpeed
+        self.atm.SetHSSpeed(c_int(0),c_int(0)) #Fastest speed
+        print "GetNumerVSSpeeds"
+        print self.atm.GetNumberVSSpeeds(byref(self.NumOfVSpeeds))
+        print self.NumOfVSpeeds
+        print "MHZ of VSSpeed"
+        for i in range(4):
+            print "speed in MHZ of setting",i
+            self.atm.GetVSSpeed(c_int(i), byref(self.ValueOfVSpeed))
+            print self.ValueOfVSpeed
+        self.atm.SetVSSpeed(c_int(0)) #Fastest speed
 
-    def setHshiftspeed(self,value):
+    def setVshiftspeed(self,value=None):
+        if value: #falls ein Wert uebergeben wird
+            value = int(value) #conversion to int as list[][] takes only int 
+            self.Vshiftspeed_index = self.Vshiftspeed_data[value][0]
+        self.Vshiftspeed_value = self.Vshiftspeed_data[self.Vshiftspeed_index][1]
         if self.simulation:
-            print "simulation Hshiftspeed ",value
-
-    def setreadmodes(self,value):
+            print "simulation Vshiftspeed set to %2f" % self.Vshiftspeed_value
+        else:
+            self.atm.SetVSSpeed(c_int(self.Vshiftspeed_index)) #first parameter is for conventional mode electron multiplication, second parameter is for speed index (0-(getHSSpeed-1)
+            print "Vshiftspeed set to %2f" % self.Vshiftspeed_value
+            
+    def setHshiftspeed(self,value=None):
+        if value:
+            value = int(value) #conversion to int as list[][] takes only int 
+            self.Hshiftspeed_index = self.Hshiftspeed_data[value][0]
+        self.Hshiftspeed_value = self.Hshiftspeed_data[self.Hshiftspeed_index][1]
         if self.simulation:
-            print "simulation readmodes ",value
+            print "simulation Hshiftspeed set to %2f" % self.Hshiftspeed_value
+        else:
+            self.atm.SetHSSpeed(c_int(0),c_int(self.Hshiftspeed_index))
+            print "Hshiftspeed set to %2f" % self.Hshiftspeed_value
 
+    def setreadmode(self,name=None):
+        if name:
+            self.readmode_name = name
+        if self.readmode_name == "Full Vertical Binning":
+            self.readmode_value = 0
+        if self.readmode_name == "Image":
+            self.readmode_value = 4
+        if self.simulation:
+            print "simulation readmode set to",self.readmode_name
+        else:
+            self.atm.SetReadMode(c_int(self.readmode_value)) #check if problem with ad channel check sdk
+            if self.readmode_name == "Image":
+                self.atm.SetImage(c_int(1),c_int(1),c_int(1),c_int(1024),c_int(1),c_int(256))
+            print "readmode set to",self.readmode_name
+
+    def setacquisitionmode(self,value=None):
+        if value:
+            self.acquistionmode = value
+        if self.simulation:
+            print "simulation Acquisitionmode"
+        else:
+            self.atm.SetAcquisitionMode(c_int(self.acquisitionmode))
 
 if __name__ == "__main__":
     c = Camera()
