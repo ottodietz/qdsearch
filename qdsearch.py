@@ -476,8 +476,8 @@ class MainWindow(HasTraits):
 
             'spectrometer': { 'centerwvl': self.ivSpectro.centerwvl,
                               'grating': self.ivSpectro.current_grating,
-                              'slot_width_in': self.ivSpectro.slot_width_in,
-                              'slot_width_out': self.ivSpectro.slot_width_out
+                              'slit_width_in': self.ivSpectro.slit_width_in,
+                              'slit_width_out': self.ivSpectro.slit_width_out
                             },
             'voltage': {
                     'threshold': self.threshold_counts
@@ -532,8 +532,8 @@ class MainWindow(HasTraits):
 
         self.ivSpectro.centerwvl = self.pop(data,'spectrometer','centerwvl')
         self.ivSpectro.current_grating = self.pop(data,'spectrometer','grating')
-        self.ivSpectro.slot_width_in = self.pop(data,'spectrometer','slot_width_in')
-        self.ivSpectro.slot_width_out = self.pop(data,'spectrometer','slot_width_out')
+        self.ivSpectro.slit_width_in = self.pop(data,'spectrometer','slit_width_in')
+        self.ivSpectro.slit_width_out = self.pop(data,'spectrometer','slit_width_out')
 
         self.threshold_counts = self.pop(data,'voltage','threshold')
 
