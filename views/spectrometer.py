@@ -49,9 +49,8 @@ class SpectroGUI(HasTraits):
     centerwvll = Range(low=0.0,high=1000.0,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
     scan_bereich=CFloat(3)
 
-    slit_width_in = Range(10,3000,1)
-    slit_width_out = Range(10,3000,1)
-
+    slit_width_in=Range(low=10,high=3000,value=50)
+    slit_width_out=Range(low=10,high=3000,value=50)
     measured_values=[]
     wavelength=[]
 
@@ -94,8 +93,8 @@ class SpectroGUI(HasTraits):
                      ),
               Item('current_grating', editor=EnumEditor(name='grating_value'), label='Gratings',**hide),
               Item("exit_mirror",editor=EnumEditor(name='exit_mirror_value'),**hide),
-              HGroup(Item('slit_width_in', label='Slot width in/out',enabled_when='False'),
-                     Item('slit_width_out', show_label=False, enabled_when='False'),
+              HGroup(Item('slit_width_in', label='Slot width in/out',enabled_when='True'),
+                     Item('slit_width_out', show_label=False, enabled_when='True'),
                      **hide
                     ),
               Item('simulation',label="Simulation Spectrometer",show_label=True,**hide)
@@ -168,6 +167,12 @@ class SpectroGUI(HasTraits):
                 self.icSpectro.exit_mirror_change('front')
             else:
                 self.icSpectro.exit_mirror_change('side')
+
+    def _slit_width_in_changed(self):
+        self.icSpectro.set_ent_slit_width(self.slit_width_in)
+
+    def _slit_width_out_changed(self):
+        self.icSpectro.set_exit_slit_width(self.slit_width_out)
 
     def _search_maximum_fired(self):
             if self.measurement_process:

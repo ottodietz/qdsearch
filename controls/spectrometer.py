@@ -5,6 +5,7 @@ import time
 from chaco.tools.api import PanTool, ZoomTool
 from pyface.api import error,warning,information
 import thread
+import re
 
 import simserial
 reload(simserial)
@@ -84,14 +85,14 @@ class Spectro(simserial.SimSerial):
         ## HIER NOCH EIN READLINE?
 
     def set_ent_slit_width(self,width):
-        self.write("SIDE-ENT-SLIT \r");
-        self.write(int(width)+" MICRONS \r")
+        self.write("SIDE-ENT-SLIT \r")
+        self.write(str(width)+" MICRONS \r")
         self.readline()
 
     def set_exit_slit_width(self,width):
-        self.write("SIDE-EXIT-SLIT \r");
-        self.write(int(width)+" MICRONS \r")
-        self.readline()
+        self.write("SIDE-EXIT-SLIT \r")
+        self.write(str(width)+" MICRONS \r")
+        self.readline() # does this belong here, not really sure, gives warning
     
     def exit_mirror_change(self,mirror):
         self.write("EXIT-MIRROR \r")
@@ -100,7 +101,6 @@ class Spectro(simserial.SimSerial):
         self.readline()
 
     def convert_output(self,tmp):
-        #import pdb;pdb.set_trace()
         a=tmp.split(" ")
         if len(a)<3:
             error(parent=None, title="error", message= "fehler: falscher string sollte Konvertiert werden: "+ str(a))
@@ -118,7 +118,6 @@ class Spectro(simserial.SimSerial):
             time.sleep(1)
 
     def get_until_okay(self,cmd):
-        #import pdb;pdb.set_trace()
         self.flushInput()
         self.write(cmd + ' ' + self.EOL )
         result = []
@@ -224,3 +223,14 @@ class Spectro(simserial.SimSerial):
  
     def _QMNM(self,string):
         self.sim_output('  '+str(self.nm)+'  ')
+
+    def _SIDEminusENTminusSLIT(self):
+        print "set Entrance Slit"
+
+    def _SIDEminusEXITminusSLIT(self):
+        print "set to Exit Slit"
+
+    def _MICRONS(self,string):
+        temp = re.search(self.PARMS,string).group(0)
+        print "new value: %3d microns" % temp
+
