@@ -156,8 +156,11 @@ class SpectroGUI(HasTraits):
 
 
     def _current_grating_changed(self):
-       if not self.refresh_active: # ueberprueft ob der Wert wegen einer aktualisierung geaendert worden ist, dann kein Befehl senden
-         self.icSpectro.grating_change(self.current_grating[1])
+        if not self.refresh_active: # ueberprueft ob der Wert wegen einer aktualisierung geaendert worden ist, dann kein Befehl senden
+        # das hier ist schlecht gemacht, die [1] bedeutet das erste Zeichen von
+        # dem String current_grating das dann übergeben wird an die func
+        # sollte geaendert werden 
+        self.icSpectro.grating_change(self.current_grating[1])
 
     def _exit_mirror_changed(self):
         if not self.refresh_active:
