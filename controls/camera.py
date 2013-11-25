@@ -14,7 +14,6 @@ CAM_OKAY = 20002
 #it lies, check with pdb.set_trace() what args are needed in the setfunctions,
 #way it is in the SetVSSpeeds is the right way, trial and error and a lot of
 #pain
-#TODO thomas meinte andor haette nur 128 px in der hoehe?!
 
 class Camera(object):
     totalCameras=c_long()
@@ -32,8 +31,8 @@ class Camera(object):
     Vshiftspeed_value = str()
     Hshiftspeed_index = int(0)
     Hshiftspeed_value = str()
-    Hshiftspeed_data = [[0,0],[1,1],[2,2]]
-    Vshiftspeed_data = [[0,0],[1,1],[2,2],[3,3]]
+    Hshiftspeed_dict = [[0,16],[1,12],[2,8]]
+    Vshiftspeed_dict = [[0,6],[1,4],[2,2],[3,1]]
     exposuretime=0.1 #hier darf kein c_float stehen, siehe comment am anfang
     simulation=True
 
@@ -201,8 +200,8 @@ class Camera(object):
     def setVshiftspeed(self,value=None):
         if value: #falls ein Wert uebergeben wird
             value = int(value) #conversion to int as list[][] takes only int 
-            self.Vshiftspeed_index = self.Vshiftspeed_data[value][0]
-        self.Vshiftspeed_value = self.Vshiftspeed_data[self.Vshiftspeed_index][1]
+            self.Vshiftspeed_index = self.Vshiftspeed_dict[value][0]
+        self.Vshiftspeed_value = self.Vshiftspeed_dict[self.Vshiftspeed_index][1]
         if self.simulation:
             print "simulation Vshiftspeed set to %2f" % self.Vshiftspeed_value
         else:
@@ -212,8 +211,8 @@ class Camera(object):
     def setHshiftspeed(self,value=None):
         if value:
             value = int(value) #conversion to int as list[][] takes only int 
-            self.Hshiftspeed_index = self.Hshiftspeed_data[value][0]
-        self.Hshiftspeed_value = self.Hshiftspeed_data[self.Hshiftspeed_index][1]
+            self.Hshiftspeed_index = self.Hshiftspeed_dict[value][0]
+        self.Hshiftspeed_value = self.Hshiftspeed_dict[self.Hshiftspeed_index][1]
         if self.simulation:
             print "simulation Hshiftspeed set to %2f" % self.Hshiftspeed_value
         else:
