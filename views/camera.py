@@ -49,9 +49,9 @@ class CameraGUI(HasTraits):
     Vshiftspeed_value = List(["0","1","2","3"])
     Hshiftspeed_value = List(["0","1","2"])
     Vshiftspeed = Str("0")
-    Vshiftspeed_Output = Str("lala")
+    Vshiftspeed_Output = Str("0")
     Hshiftspeed = Str("0")
-    Hshiftspeed_Output = Str("blalba")
+    Hshiftspeed_Output = Str("0")
     readmode_name = List(['Full Vertical Binning','Image'])
     readmode = Str("Full Vertical Binning")
 
