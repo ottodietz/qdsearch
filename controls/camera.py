@@ -199,7 +199,7 @@ class Camera(object):
         self.atm.SetVSSpeed(c_int(0)) #Fastest speed
 
     def setVshiftspeed(self,value=None):
-        if value:
+        if value: #falls ein Wert uebergeben wird
             value = int(value) #conversion to int as list[][] takes only int 
             self.Vshiftspeed_index = self.Vshiftspeed_data[value][0]
         self.Vshiftspeed_value = self.Vshiftspeed_data[self.Vshiftspeed_index][1]
