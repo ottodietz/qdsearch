@@ -4,11 +4,13 @@ from traits.api import*
 from traitsui.api import*
 from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
-from chaco.api import Plot, ArrayPlotData
+from chaco.api import Plot, ArrayPlotData, PlotGraphicsContext
 from chaco.tools.api import PanTool, ZoomTool
+from pyface.api import DirectoryDialog,OK
 from enable.component_editor import ComponentEditor
 import thread
 import time
+import numpy as np
 from ctypes import *
 
 import controls.camera
@@ -32,6 +34,7 @@ class CameraGUI(HasTraits):
     continous=Button()
     autofocus=Button(label="AF X/Y")
     zautofocus=Button(label="AF Z")
+    export=Button(label="Export")
     settemperature=Range(low=-70,high=20,value=20)
 
     x_step = Float(0.001)
@@ -98,7 +101,9 @@ class CameraGUI(HasTraits):
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value
 = 'continous_label')),
                                     Item('autofocus',show_label=False),
-                                    Item('zautofocus',show_label=False)),
+                                    Item('zautofocus',show_label=False),
+                                    Item('export',show_label=False)
+                                    ),
                             HGroup(
                                 Item('exposuretime'),Item('simulation',label='simulate camera')),
                             Item('readmodes',editor=EnumEditor(name='readmodes_value')),
@@ -227,9 +232,31 @@ class CameraGUI(HasTraits):
         #plot.range2d.x_range.high=self.x2
         #plot.range2d.y_range.low=self.y1
         #plot.range2d.y_range.high=self.y2
-        plot.x_axis.title="x-Position on sample [mm]"
-        plot.y_axis.title="y-Position on sample [mm]"
+        plot.x_axis.title="Pixel"
+        plot.y_axis.title="Intensity [a.u]"
         self.plot=plot
+
+    def _export_fired(self):
+        #import pdb; pdb.set_trace()
+        dialog = DirectoryDialog(action="Select Directory", wildcard='*')
+        dialog.open()
+        if dialog.return_code == OK:
+            # prepare plot for saving
+            width = 800
+            height = 600
+            self.plot.outer_bounds = [width, height]
+            self.plot.do_layout(force=True)
+            gc = PlotGraphicsContext((width, height), dpi=72)
+            gc.render_component(self.plot)
+     
+            #save data,image,description
+            target = dialog.path
+            print "target directory: " + target
+            gc.save(target+".png")
+            self.wvl = self.line # dummy for = calculate_wavelength()
+            np.savetxt(target+'.dat',np.transpose([self.wvl,self.line]))
+            # pickle(target+'.pkl',info_structure)
+
 
     def ensure_init(self):
         if self.icCamera.init_active:
