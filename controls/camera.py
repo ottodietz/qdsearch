@@ -28,8 +28,12 @@ class Camera(object):
     NumOfVSpeeds = c_int()
     ValueOfHSpeed = c_float()
     ValueOfVSpeed = c_float()
-    Vshiftspeed_value = int(0) # zero is fastest speed
-    Hshiftspeed_value = int(0)
+    Vshiftspeed_index = int(0) # zero is fastest speed
+    Vshiftspeed_value = str()
+    Hshiftspeed_index = int(0)
+    Hshiftspeed_value = str()
+    Hshiftspeed_data = [[0,0],[1,1],[2,2]]
+    Vshiftspeed_data = [[0,0],[1,1],[2,2],[3,3]]
     exposuretime=0.1 #hier darf kein c_float stehen, siehe comment am anfang
     simulation=True
 
@@ -76,7 +80,7 @@ class Camera(object):
             return line
 
         if self.simulation and self.readmode_name == "Image":
-            image = [[random.randint(1,100) for e in range(256)] for e in range(1024)]
+            image = [[random.randint(1,100) for e in range(128)] for e in range(1024)]
             return image
 
         action = []
@@ -196,21 +200,25 @@ class Camera(object):
 
     def setVshiftspeed(self,value=None):
         if value:
-            self.Vshiftspeed_value = int(value)
+            value = int(value) #conversion to int as list[][] takes only int 
+            self.Vshiftspeed_index = self.Vshiftspeed_data[value][0]
+        self.Vshiftspeed_value = self.Vshiftspeed_data[self.Vshiftspeed_index][1]
         if self.simulation:
-            print "simulation Vshiftspeed set to",str(self.Vshiftspeed_value)
+            print "simulation Vshiftspeed set to %2f" % self.Vshiftspeed_value
         else:
-            self.atm.SetVSSpeed(c_int(self.Vshiftspeed_value)) #first parameter is for conventional mode electron multiplication, second parameter is for speed index (0-(getHSSpeed-1)
-            print "Vshiftspeed set to", self.Vshiftspeed_value
+            self.atm.SetVSSpeed(c_int(self.Vshiftspeed_index)) #first parameter is for conventional mode electron multiplication, second parameter is for speed index (0-(getHSSpeed-1)
+            print "Vshiftspeed set to %2f" % self.Vshiftspeed_value
             
     def setHshiftspeed(self,value=None):
         if value:
-            self.Hshiftspeed_value = int(value)
+            value = int(value) #conversion to int as list[][] takes only int 
+            self.Hshiftspeed_index = self.Hshiftspeed_data[value][0]
+        self.Hshiftspeed_value = self.Hshiftspeed_data[self.Hshiftspeed_index][1]
         if self.simulation:
-            print "simulation Hshiftspeed set to",self.Hshiftspeed_value
+            print "simulation Hshiftspeed set to %2f" % self.Hshiftspeed_value
         else:
-            self.atm.SetHSSpeed(c_int(0),c_int(0))
-            print "Hshiftspeed set to %1d" % self.Hshiftspeed_value
+            self.atm.SetHSSpeed(c_int(0),c_int(self.Hshiftspeed_index))
+            print "Hshiftspeed set to %2f" % self.Hshiftspeed_value
 
     def setreadmode(self,name=None):
         if name:
