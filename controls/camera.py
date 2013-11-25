@@ -69,7 +69,7 @@ class Camera(object):
 
     def acquisition(self, sim_pos=(0,0),sim_volt=(0),exptme=(0)):#,sim_posx=None,sim_posy=None):
         hpixel=1024
-        vpixel=256
+        vpixel=128
 
         if self.simulation and self.readmode_name == "Full Vertical Binning":
             line = [ 10*exptme*2*sin(2.*pi/12.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(hpixel) ]
