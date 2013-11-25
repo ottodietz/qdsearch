@@ -20,19 +20,31 @@ class Camera(object):
     init_active=False
     camera_active=False
     low_temperature=False
-    readmode_name=str('Full Vertical Binning') #hier der default fuer den start
-    readmode_value=int()
+
+    #section for readmodesi
+    readmodes_dict = {'Full Vertical Binning',0 : 'Image', 4}
+    readmode_keys = readmode_dict.viewkeys()
+    readmode_values = readmode_dict.viewvalues()
+    readmode_default=str('Full Vertical Binning') #hier der default fuer den start
+
     acquisitionmode=int(1) #single shot as default
+    
+    #section for containers for testbutton
     NumOfHSpeeds = c_int()
     NumOfVSpeeds = c_int()
     ValueOfHSpeed = c_float()
     ValueOfVSpeed = c_float()
-    Vshiftspeed_index = int(0) # zero is fastest speed
-    Vshiftspeed_value = str()
-    Hshiftspeed_index = int(0)
-    Hshiftspeed_value = str()
-    Hshiftspeed_dict = [[0,16],[1,12],[2,8]]
-    Vshiftspeed_dict = [[0,6],[1,4],[2,2],[3,1]]
+    
+    #section for shiftspeeds
+    Vshiftspeed_default = int(0) # zero is fastest speed, for initialising
+    Hshiftspeed_default = int(0)
+    Hshiftspeed_dict = {'16 MHz': 0, '8 MHz' : 1, '4 MHz' : 2}
+    Vshiftspeed_dict = {'16 us': 0, '8 us' : 1, '4 us' : 2, '2 us' : 3}
+    Hshiftspeed_keys = Hshiftspeed_dict.viewkeys()
+    Hshiftspeed_values = Hshiftspeed_dict.viewvalues()
+    Vshiftspeed_keys = Vshiftspeed_dict.viewkeys()
+    Vshiftspeed_values = Vshiftspeed_dict.viewvalues()
+    
     exposuretime=0.1 #hier darf kein c_float stehen, siehe comment am anfang
     simulation=True
 
