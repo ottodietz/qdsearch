@@ -197,6 +197,8 @@ class MainWindow(HasTraits):
         Item('ivSpectro',   label="Spectrometer", show_label=True),
         Item('ivCamera',    label="Camera", show_label=True),
         Item('ivVoltage',   label="Voltmeter", show_label=True),
+#        Item('ivVoltage',style='simple',label="Simulation",editor=InstanceEditor(view=sim_view,show_label=False),springy=False,show_label=True),
+#        just a try to get awaw with the labels on the buttons
         label='Instruments'
         )
 
