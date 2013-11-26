@@ -53,7 +53,7 @@ class Camera(object):
     Vshiftspeed_current = Vshiftspeed_default
     Hshiftspeed_current = Hshiftspeed_default
     
-    exposuretime_default = 0.1 #hier darf kein c_float stehen, siehe comment am anfang
+    exposuretime_default = 0.1 # hekrkajsjdjfk hier darf kein c_float stehen, siehe comment am anfang
     exposuretime_current = exposuretime_default
 
     temperature_default = -70
@@ -68,11 +68,11 @@ class Camera(object):
                 self.atm = WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
                 print "Init:", self.atm.Initialize(None)
                 print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
-                print "SetReadMode:",self.setreadmode(self.readmode_default)
-                print "SetHShiftspeed:",self.setHshiftspeed(self.Hshiftspeed_default) #highest speed as default
-                print "SetVShiftspeed:",self.setVshiftspeed(self.Vshiftspeed_default) #highest speed as default
-                print "SetAcqMode:",self.setacquisitionmode(self.acquisitionmode_default)
-                print "SetExpTime:",self.setexposuretime(self.exposuretime_default) #Belichtungsdauer
+                print"SetReadMode:", self.setreadmode(self.readmode_default) 
+                print"SetHShiftspeed:",self.setHshiftspeed(self.Hshiftspeed_default)
+                print"SetVShiftspeed:",self.setVshiftspeed(self.Vshiftspeed_default) 
+                print"SetAcqMode:",self.setacquisitionmode(self.acquisitionmode_default)
+                print"SetExpTime:",self.setexposuretime(self.exposuretime_default)
                 print "Cooler ON",self.cooler_on()
                 print "SetTemo to -70", self.settemperature(self.temperature_default)
                 self.camera_active=True
@@ -97,7 +97,7 @@ class Camera(object):
         hpixel=1024
         vpixel=128
 
-        if self.simulation and self.readmode_name == "Full Vertical Binning":
+        if self.simulation and self.readmode_current == "Full Vertical Binning":
             line = [ 10*exptme*2*sin(2.*pi/12.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(hpixel) ]
             return line
 
