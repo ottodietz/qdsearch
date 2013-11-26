@@ -232,5 +232,6 @@ class Spectro(simserial.SimSerial):
 
     def _MICRONS(self,string):
         temp = re.search(self.PARMS,string).group(0)
-        print "new value: %3d microns" % temp
+        print "new value: %3d microns" % int(temp)
+
 

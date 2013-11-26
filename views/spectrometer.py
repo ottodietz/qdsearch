@@ -51,6 +51,7 @@ class SpectroGUI(HasTraits):
 
     slit_width_in=Range(low=10,high=3000,value=50)
     slit_width_out=Range(low=10,high=3000,value=50)
+    set_slit_width = Button(label="Set")
     measured_values=[]
     wavelength=[]
 
@@ -95,6 +96,7 @@ class SpectroGUI(HasTraits):
               Item("exit_mirror",editor=EnumEditor(name='exit_mirror_value'),**hide),
               HGroup(Item('slit_width_in', label='Slot width in/out',enabled_when='True'),
                      Item('slit_width_out', show_label=False, enabled_when='True'),
+                     Item('set_slit_width', show_label=False, enabled_when='True'),
                      **hide
                     ),
               Item('simulation',label="Simulation Spectrometer",show_label=True,**hide)
@@ -168,11 +170,16 @@ class SpectroGUI(HasTraits):
             else:
                 self.icSpectro.exit_mirror_change('side')
 
-    def _slit_width_in_changed(self):
+    def _set_slit_width_fired(self):
         self.icSpectro.set_ent_slit_width(self.slit_width_in)
+        time.sleep(3)
+        self.icSpectro.set_exit_slit_width(self.slit_width_out) 
 
-    def _slit_width_out_changed(self):
-        self.icSpectro.set_exit_slit_width(self.slit_width_out)
+#    def _slit_width_in_changed(self):
+#        self.icSpectro.set_ent_slit_width(self.slit_width_in)
+
+#    def _slit_width_out_changed(self):
+#        self.icSpectro.set_exit_slit_width(self.slit_width_out)
 
     def _search_maximum_fired(self):
             if self.measurement_process:
