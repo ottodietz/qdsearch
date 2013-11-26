@@ -46,11 +46,11 @@ class CameraGUI(HasTraits):
     """menu"""
     acquisitionmode=Int(1)
     exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
-    Vshiftspeed_keys = list(icCamera.Vshiftspeed_keys)
-    Hshiftspeed_keys = list(icCamera.Hshiftspeed_keys)
+    Vshiftspeed_keys = List(list(icCamera.Vshiftspeed_keys)) #List(list()),first make from dict_list an list then convert to a Traits List
+    Hshiftspeed_keys = List(list(icCamera.Hshiftspeed_keys))
     Vshiftspeed = Str()
     Hshiftspeed = Str()
-    readmode_name = list([icCamera.readmode_keys])
+    readmode_name = List(list(icCamera.readmode_keys))
     readmode = Str()
 
     output=Str()
