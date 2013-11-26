@@ -198,11 +198,11 @@ class CameraGUI(HasTraits):
 
     def plot_data(self):
 #        import pdb; pdb.set_trace()
-        if self.icCamera.readmode_name == 'Full Vertical Binning':
+        if self.icCamera.readmode_current == 'Full Vertical Binning':
             plotdata = ArrayPlotData(x=self.line[:])
             plot = Plot(plotdata)
             plot.plot(("x"),  color="blue")
-        if self.icCamera.readmode_name == 'Image':
+        if self.icCamera.readmode_current == 'Image':
             plotdata = ArrayPlotData(imagedata = self.line) #self.line now has an image stored! since an image comes from acquisition           
             plot = Plot(plotdata)
             plot.img_plot("imagedata", colormap = jet)

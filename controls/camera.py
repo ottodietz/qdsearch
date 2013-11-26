@@ -25,15 +25,19 @@ class Camera(object):
     readmode_dict = {'Full Vertical Binning':0 , 'Image': 4}
     readmode_keys = readmode_dict.viewkeys()
     readmode_values = readmode_dict.viewvalues()
-    readmode_default = readmode_dict[list(readmode_keys)[0]]  #hier der default fuer den start
-    readmode_current = readmode_default # container for current status
+    #init set start value for readmode
+    readmode_init = list(readmode_keys)[0]
+    readmode_default = readmode_dict[readmode_init]  #hier der default fuer den start
+    readmode_current = readmode_init # container for current status
 
     #section for acquisitionmode
     acquisitionmode_dict = {'One Shot' : 1}
     acquisitionmode_keys = acquisitionmode_dict.viewkeys()
     acquisitionmode_values = acquisitionmode_dict.viewvalues()
-    acquisitionmode_default = [list(acquisitionmode_keys)[0]] #dict_list does not support indexing, for that list()
-    acquisitionmode_current = acquisitionmode_default
+    #dict_list does not support indexing, for that list
+    acquisitionmode_init = list(acquisitionmode_keys)[0]
+    acquisitionmode_default = acquisitionmode_dict[acquisitionmode_init]
+    acquisitionmode_current = acquisitionmode_init
     
     #section for containers for testbutton in speedinit
     NumOfHSpeeds = c_int()
@@ -48,11 +52,13 @@ class Camera(object):
     Hshiftspeed_values = Hshiftspeed_dict.viewvalues()
     Vshiftspeed_keys = Vshiftspeed_dict.viewkeys()
     Vshiftspeed_values = Vshiftspeed_dict.viewvalues()
-    Vshiftspeed_default = Vshiftspeed_dict[list(Vshiftspeed_keys)[0]]
-    Hshiftspeed_default = Hshiftspeed_dict[list(Hshiftspeed_keys)[0]]
-    Vshiftspeed_current = Vshiftspeed_default
-    Hshiftspeed_current = Hshiftspeed_default
-    
+    Vshiftspeed_init = list(Vshiftspeed_keys)[0]
+    Hshiftspeed_init = list(Hshiftspeed_keys)[0]
+    Vshiftspeed_default = Vshiftspeed_dict[Vshiftspeed_init]
+    Hshiftspeed_default = Hshiftspeed_dict[Hshiftspeed_init]
+    Vshiftspeed_current = Vshiftspeed_init
+    Hshiftspeed_current = Hshiftspeed_init
+   
     exposuretime_default = 0.1 # hekrkajsjdjfk hier darf kein c_float stehen, siehe comment am anfang
     exposuretime_current = exposuretime_default
 
@@ -96,7 +102,7 @@ class Camera(object):
     def acquisition(self, sim_pos=(0,0),sim_volt=(0),exptme=(0)):#,sim_posx=None,sim_posy=None):
         hpixel=1024
         vpixel=128
-
+        import pdb; pdb.set_trace()
         if self.simulation and self.readmode_current == "Full Vertical Binning":
             line = [ 10*exptme*2*sin(2.*pi/12.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(hpixel) ]
             return line
