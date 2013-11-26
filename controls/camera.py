@@ -55,7 +55,7 @@ class Camera(object):
     Vshiftspeed_current = Vshiftspeed_init
     Hshiftspeed_current = Hshiftspeed_init
    
-    exposuretime_default = 0.1 # hekrkajsjdjfk hier darf kein c_float stehen, siehe comment am anfang
+    exposuretime_init = 0.1 # hekrkajsjdjfk hier darf kein c_float stehen, siehe comment am anfang
     exposuretime_current = exposuretime_init
 
     temperature_default = -70
