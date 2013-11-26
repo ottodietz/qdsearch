@@ -44,15 +44,16 @@ class CameraGUI(HasTraits):
     icVoltage = Instance(controls.voltage.Voltage)
 
     """menu"""
-    acquisitionmode=Int(1)
-    exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
-    Vshiftspeed_keys = List(list(icCamera.Vshiftspeed_keys)) #List(list()),first make from dict_list an list then convert to a Traits List
+    exposuretime=Range(low=0.0001,high=10,value=icCamera.exposuretime_default,editor=TextEditor(evaluate=float,auto_set=False))
+#List(list()),first make from dict_list an list then convert to a Traits List
+    Vshiftspeed_keys = List(list(icCamera.Vshiftspeed_keys))
     Hshiftspeed_keys = List(list(icCamera.Hshiftspeed_keys))
+    readmode_keys = List(list(icCamera.readmode_keys))
+    acquisitionmode_keys = List(list(icCamera.acquisitionmode_keys))
+    readmode = Str()
     Vshiftspeed = Str()
     Hshiftspeed = Str()
-    readmode_name = List(list(icCamera.readmode_keys))
-    readmode = Str()
-
+    acquisitionmode = Str()
     output=Str()
     plot = Instance(Plot,())
     
@@ -79,7 +80,8 @@ class CameraGUI(HasTraits):
                                     Item('zautofocus',show_label=False)),
                             HGroup(
                                 Item('exposuretime'),Item('simulation',label='simulate camera')),
-                            Item('readmode',editor=EnumEditor(name='readmode_name')),
+                            Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys')),
+                            Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
 ),
@@ -271,8 +273,7 @@ class CameraGUI(HasTraits):
         self.icCamera.setVshiftspeed(self.Vshiftspeed)
     
     def _acquisitionmode_changed(self):
-        self.icCamera.setacquistionmode(self.acquisitionmode)
-        print "acq mode changed"
+        self.icCamera.setacquisitionmode(self.acquisitionmode)
 
     def _exposuretime_changed(self):
         self.icCamera.setexposuretime(self.exposuretime)
