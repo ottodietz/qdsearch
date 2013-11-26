@@ -44,17 +44,16 @@ class CameraGUI(HasTraits):
     icVoltage = Instance(controls.voltage.Voltage)
 
     """menu"""
-    acquisitionmode=Int(1)
-    exposuretime=Range(low=0.0001,high=10,value=0.1,editor=TextEditor(evaluate=float,auto_set=False))
-    Vshiftspeed_value = List(["0","1","2","3"])
-    Hshiftspeed_value = List(["0","1","2"])
-    Vshiftspeed = Str("0")
-    Vshiftspeed_Output = Str("0")
-    Hshiftspeed = Str("0")
-    Hshiftspeed_Output = Str("0")
-    readmode_name = List(['Full Vertical Binning','Image'])
-    readmode = Str("Full Vertical Binning")
-
+    exposuretime=Range(low=0.0001,high=10,value=icCamera.exposuretime_default,editor=TextEditor(evaluate=float,auto_set=False))
+#List(list()),first make from dict_list an list then convert to a Traits List
+    Vshiftspeed_keys = List(list(icCamera.Vshiftspeed_keys))
+    Hshiftspeed_keys = List(list(icCamera.Hshiftspeed_keys))
+    readmode_keys = List(list(icCamera.readmode_keys))
+    acquisitionmode_keys = List(list(icCamera.acquisitionmode_keys))
+    readmode = Str()
+    Vshiftspeed = Str()
+    Hshiftspeed = Str()
+    acquisitionmode = Str()
     output=Str()
     plot = Instance(Plot,())
     
@@ -81,11 +80,10 @@ class CameraGUI(HasTraits):
                                     Item('zautofocus',show_label=False)),
                             HGroup(
                                 Item('exposuretime'),Item('simulation',label='simulate camera')),
-                            Item('readmode',editor=EnumEditor(name='readmode_name')),
-                            Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_value')),
-                            Item('Vshiftspeed_Output',label="Vertical Speed in uS",style='readonly'),
-                            Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_value')),
-                            Item('Hshiftspeed_Output',label="Vertical Speed in MHZ",style='readonly')
+                            Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys')),
+                            Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
+                            Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
+                            Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
 ),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
@@ -266,19 +264,16 @@ class CameraGUI(HasTraits):
             self.icCamera.cooler_off()
 
     def _readmode_changed(self):
-        self.icCamera.setreadmode(self.readmode) #=c_long(self.readmode)
+        self.icCamera.setreadmode(self.readmode)
 
     def _Hshiftspeed_changed(self):
         self.icCamera.setHshiftspeed(self.Hshiftspeed)
-        self.Hshiftspeed_Output = str(self.icCamera.Hshiftspeed_value)
-
+    
     def _Vshiftspeed_changed(self):
         self.icCamera.setVshiftspeed(self.Vshiftspeed)
-        self.Vshiftspeed_Output = str(self.icCamera.Vshiftspeed_value)
-
+    
     def _acquisitionmode_changed(self):
-        self.icCamera.setacquistionmode(self.acquisitionmode)
-        print "acq mode changed"
+        self.icCamera.setacquisitionmode(self.acquisitionmode)
 
     def _exposuretime_changed(self):
         self.icCamera.setexposuretime(self.exposuretime)
