@@ -46,7 +46,7 @@ class SpectroGUI(HasTraits):
     # 0.002 nm ist kleinster Schritt
     jogup = Button()
     jogdown = Button()
-    centerwvll = Range(low=0.0,high=1000.0,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
+    centerwvl = Range(low=0.0,high=1000.0,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
     scan_bereich=CFloat(3)
 
     slit_width_in=Range(low=10,high=3000,value=50)
@@ -78,7 +78,7 @@ class SpectroGUI(HasTraits):
     traits_view=View(
             HGroup(
              VGroup(
-              HGroup(Item("centerwvll",show_label=False),Item("goto",label='goto',show_label=False),
+              HGroup(Item("centerwvl",show_label=False),Item("goto",label='goto',show_label=False),
                      VGroup(Item('jogup',label='up',show_label=False),Item('jogdown',label='down',show_label=False))
                      ,**hide),
               VGrid(Item('sweep',label='sweep',show_label=False,**hide),
