@@ -44,7 +44,7 @@ class CameraGUI(HasTraits):
     icVoltage = Instance(controls.voltage.Voltage)
 
     """menu"""
-    exposuretime=Range(low=0.0001,high=10,value=icCamera.exposuretime_default,editor=TextEditor(evaluate=float,auto_set=False))
+    exposuretime=Range(low=0.0001,high=10,value=icCamera.exposuretime_init,editor=TextEditor(evaluate=float,auto_set=False))
 #List(list()),first make from dict_list an list then convert to a Traits List
     Vshiftspeed_keys = List(list(icCamera.Vshiftspeed_keys))
     Hshiftspeed_keys = List(list(icCamera.Hshiftspeed_keys))

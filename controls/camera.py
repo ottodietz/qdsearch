@@ -27,7 +27,6 @@ class Camera(object):
     readmode_values = readmode_dict.viewvalues()
     #init set start value for readmode
     readmode_init = list(readmode_keys)[1] #order not as expected in dict
-    readmode_default = readmode_dict[readmode_init]  # default for togglesim
     readmode_current = readmode_init # container for current status
 
     #section for acquisitionmode
@@ -36,7 +35,6 @@ class Camera(object):
     acquisitionmode_values = acquisitionmode_dict.viewvalues()
     #dict_list does not support indexing, for that list
     acquisitionmode_init = list(acquisitionmode_keys)[0]
-    acquisitionmode_default = acquisitionmode_dict[acquisitionmode_init]
     acquisitionmode_current = acquisitionmode_init
     
     #section for containers for testbutton in speedinit
@@ -54,16 +52,14 @@ class Camera(object):
     Vshiftspeed_values = Vshiftspeed_dict.viewvalues()
     Vshiftspeed_init = list(Vshiftspeed_keys)[0]
     Hshiftspeed_init = list(Hshiftspeed_keys)[0]
-    Vshiftspeed_default = Vshiftspeed_dict[Vshiftspeed_init]
-    Hshiftspeed_default = Hshiftspeed_dict[Hshiftspeed_init]
     Vshiftspeed_current = Vshiftspeed_init
     Hshiftspeed_current = Hshiftspeed_init
    
     exposuretime_default = 0.1 # hekrkajsjdjfk hier darf kein c_float stehen, siehe comment am anfang
-    exposuretime_current = exposuretime_default
+    exposuretime_current = exposuretime_init
 
     temperature_default = -70
-    temperature_current = temperature_default
+    temperature_current = temperature_init
     simulation=True
 
     def toggle_simulation(self):
@@ -74,13 +70,13 @@ class Camera(object):
                 self.atm = WinDLL("C:\Program Files\Andor SOLIS\ATMCD32D.DLL")
                 print "Init:", self.atm.Initialize(None)
                 print "GetAvailableCameras:",self.atm.GetAvailableCameras(byref(self.totalCameras))
-                print"SetReadMode:", self.setreadmode(self.readmode_default) 
-                print"SetHShiftspeed:",self.setHshiftspeed(self.Hshiftspeed_default)
-                print"SetVShiftspeed:",self.setVshiftspeed(self.Vshiftspeed_default) 
-                print"SetAcqMode:",self.setacquisitionmode(self.acquisitionmode_default)
-                print"SetExpTime:",self.setexposuretime(self.exposuretime_default)
+                print"SetReadMode:", self.setreadmode(self.readmode_init) 
+                print"SetHShiftspeed:",self.setHshiftspeed(self.Hshiftspeed_init)
+                print"SetVShiftspeed:",self.setVshiftspeed(self.Vshiftspeed_init) 
+                print"SetAcqMode:",self.setacquisitionmode(self.acquisitionmode_init)
+                print"SetExpTime:",self.setexposuretime(self.exposuretime_init)
                 print "Cooler ON",self.cooler_on()
-                print "SetTemo to -70", self.settemperature(self.temperature_default)
+                print "SetTemo to -70", self.settemperature(self.temperature_init)
                 self.camera_active=True
             except (NameError,) as e:
                 print "Camera init failed: ",e
@@ -90,7 +86,7 @@ class Camera(object):
                 self.init_active=False
         return self.simulation
 
-    def setexposuretime(self, exp=None):
+    def setexposuretime(self, exp):
         self.exposuretime_current = exp #set status,if needed elsewhere
         if not self.simulation:
             print "set exposure time to ",float(exp)
@@ -226,7 +222,7 @@ class Camera(object):
             print self.ValueOfVSpeed
         self.atm.SetVSSpeed(c_int(0)) #Fastest speed
 
-    def setVshiftspeed(self,name=None):
+    def setVshiftspeed(self,name):
         self.Vshiftspeed_current = name
         if self.simulation:
             print "simulation Vshiftspeed set to", name
@@ -234,7 +230,7 @@ class Camera(object):
             self.atm.SetVSSpeed(c_int(self.Vshiftspeed_dict[name]))
             print "Vshiftspeed set to ",name
             
-    def setHshiftspeed(self,name=None):
+    def setHshiftspeed(self,name):
         self.Vshiftspeed_current = name
         if self.simulation:
             print "simulation Hshiftspeed set to", name
@@ -242,7 +238,7 @@ class Camera(object):
             self.atm.SetHSSpeed(c_int(0),c_int(self.Hshiftspeed_dict[name]))
             print "Hshiftspeed set to", name
 
-    def setreadmode(self,name=None):
+    def setreadmode(self,name):
         self.readmode_current = name
         if self.simulation:
             print "simulation readmode set to", name
@@ -252,7 +248,7 @@ class Camera(object):
                 self.atm.SetImage(c_int(1),c_int(1),c_int(1),c_int(1024),c_int(1),c_int(128))
             print "readmode set to", name
 
-    def setacquisitionmode(self,name=None):
+    def setacquisitionmode(self,name):
         self.acquisitionmode_current = name
         if self.simulation:
             print "simulation Acquisitionmode to", name
