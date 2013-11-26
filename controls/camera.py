@@ -26,8 +26,8 @@ class Camera(object):
     readmode_keys = readmode_dict.viewkeys()
     readmode_values = readmode_dict.viewvalues()
     #init set start value for readmode
-    readmode_init = list(readmode_keys)[0]
-    readmode_default = readmode_dict[readmode_init]  #hier der default fuer den start
+    readmode_init = list(readmode_keys)[1] #order not as expected in dict
+    readmode_default = readmode_dict[readmode_init]  # default for togglesim
     readmode_current = readmode_init # container for current status
 
     #section for acquisitionmode
@@ -102,7 +102,6 @@ class Camera(object):
     def acquisition(self, sim_pos=(0,0),sim_volt=(0),exptme=(0)):#,sim_posx=None,sim_posy=None):
         hpixel=1024
         vpixel=128
-        import pdb; pdb.set_trace()
         if self.simulation and self.readmode_current == "Full Vertical Binning":
             line = [ 10*exptme*2*sin(2.*pi/12.*sim_volt)*100*((cos(2.*pi/4.*sim_pos[0]))**2)*((cos(2.*pi/4.*sim_pos[1]))**2)*jn(0,i-512+1*sim_pos[0]//1+1*sim_pos[1]//1) for i in np.arange(hpixel) ]
             return line
