@@ -44,8 +44,8 @@ class Camera(object):
     ValueOfVSpeed = c_float()
     
     #section for shiftspeeds
-    Hshiftspeed_dict = {'100 kHz': 0, '8 MHz' : 1, '4 MHz' : 2}
-    Vshiftspeed_dict = {'8 us': 0, '16 us' : 1, '32 us' : 2, '64 us' : 3}
+    Hshiftspeed_dict = {'100 kHz': 0, '50 kHz' : 1, '32 kHz' : 2}
+    Vshiftspeed_dict = {'8.25 us': 0, '16.25 us' : 1, '32.25 us' : 2, '64.25 us' : 3}
     Hshiftspeed_keys = Hshiftspeed_dict.viewkeys()
     Hshiftspeed_values = Hshiftspeed_dict.viewvalues()
     Vshiftspeed_keys = Vshiftspeed_dict.viewkeys()
@@ -58,7 +58,7 @@ class Camera(object):
     exposuretime_init = 0.1 # hekrkajsjdjfk hier darf kein c_float stehen, siehe comment am anfang
     exposuretime_current = exposuretime_init
 
-    temperature_default = -70
+    temperature_init = -70
     temperature_current = temperature_init
     simulation=True
 
