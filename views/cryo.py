@@ -78,7 +78,7 @@ class CryoGUI(HasTraits):
        HGroup(Item("simulation"),Spring(width=150)),
        buttons = [OKButton, CancelButton,],
        menubar=MenuBar(menu),
-       resizable = True, width = 360, height = 400)
+       resizable = False, width = 360, height = 400)
 
     view_menu=View(
         VGroup(

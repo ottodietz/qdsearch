@@ -197,8 +197,6 @@ class MainWindow(HasTraits):
         Item('ivSpectro',   label="Spectrometer", show_label=True),
         Item('ivCamera',    label="Camera", show_label=True),
         Item('ivVoltage',   label="Voltmeter", show_label=True),
-#        Item('ivVoltage',style='simple',label="Simulation",editor=InstanceEditor(view=sim_view,show_label=False),springy=False,show_label=True),
-#        just a try to get awaw with the labels on the buttons
         label='Instruments'
         )
 
@@ -213,8 +211,7 @@ class MainWindow(HasTraits):
         menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,scan_sample_menu),
         title   = 'qdsearch',
         buttons = [ 'OK' ],
-        resizable = True,
-        width=900
+        resizable = True
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
