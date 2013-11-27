@@ -107,9 +107,9 @@ class SpectroGUI(HasTraits):
                     ),
               Item('simulation',label="Simulation Spectrometer",show_label=True,**hide)
               ),
-             Item("plot",editor=ComponentEditor(),show_label=False)
+             Item("plot",editor=ComponentEditor(),show_label=False,width=100,height=100)
             ),
-            width=750,height=600,buttons = [OKButton,], resizable = True)
+            width=830,height=400,buttons = [OKButton,], resizable = True)
 
     def __init__(self, *args, **kwargs):
         self.Spectrometer_gui_refresh()
