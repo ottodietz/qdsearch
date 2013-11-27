@@ -49,9 +49,11 @@ class SpectroGUI(HasTraits):
     centerwvl = Range(low=0.0,high=1000.0,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
     scan_bereich=CFloat(3)
 
-    slit_width_in=Range(low=10,high=3000,value=50)
-    slit_width_out=Range(low=10,high=3000,value=50)
-    set_slit_width = Button(label="Set")
+    slit_width_in=Range(low=10,high=3000,value=50,editor=TextEditor(evaluate=int,auto_set=False))
+    slit_width_out=Range(low=10,high=3000,value=50,editor=TextEditor(evaluate=int,auto_set=False))
+    slit_width_in_measured = str()
+    slit_width_out_measured = str()
+    measure_width = Button(label="measure")
     measured_values=[]
     wavelength=[]
 
@@ -96,7 +98,11 @@ class SpectroGUI(HasTraits):
               Item("exit_mirror",editor=EnumEditor(name='exit_mirror_value'),**hide),
               HGroup(Item('slit_width_in', label='Slot width in/out',enabled_when='True'),
                      Item('slit_width_out', show_label=False, enabled_when='True'),
-                     Item('set_slit_width', show_label=False, enabled_when='True'),
+                     **hide
+                    ),
+              HGroup(Item('slit_width_in_measured', label='Measured width in/out'),
+                     Item('slit_width_out_measured', show_label=False),
+                     Item('measure_width', show_label=False, enabled_when='True'),
                      **hide
                     ),
               Item('simulation',label="Simulation Spectrometer",show_label=True,**hide)
@@ -170,16 +176,16 @@ class SpectroGUI(HasTraits):
             else:
                 self.icSpectro.exit_mirror_change('side')
 
-    def _set_slit_width_fired(self):
+    def _slit_width_in_changed(self):
         self.icSpectro.set_ent_slit_width(self.slit_width_in)
-        time.sleep(3)
-        self.icSpectro.set_exit_slit_width(self.slit_width_out) 
 
-#    def _slit_width_in_changed(self):
-#        self.icSpectro.set_ent_slit_width(self.slit_width_in)
+    def _slit_width_out_changed(self):
+        self.icSpectro.set_exit_slit_width(self.slit_width_out)
 
-#    def _slit_width_out_changed(self):
-#        self.icSpectro.set_exit_slit_width(self.slit_width_out)
+    def _measure_width_fired(self):
+        self.slit_width_in_measured = self.icSpectro.get_ent_slit_width()
+        time.sleep(1)
+        self.slit_width_out_measured = self.icSpectro.get_exit_slit_width()
 
     def _search_maximum_fired(self):
             if self.measurement_process:

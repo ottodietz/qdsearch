@@ -84,6 +84,20 @@ class Spectro(simserial.SimSerial):
         self.write(grat+" GRATING \r")
         ## HIER NOCH EIN READLINE?
 
+    def get_ent_slit_width(self):
+        self.flushInput()
+        self.write("SIDE-ENT-SLIT \r")
+        self.write("?MICRONS \r")
+        temp = self.readline()
+        return temp
+
+    def get_exit_slit_width(self):
+        self.flushInput()
+        self.write("SIDE-EXIT-SLIT \r")
+        self.write("?MICRONS \r")
+        temp = self.readline()
+        return temp
+
     def set_ent_slit_width(self,width):
         self.write("SIDE-ENT-SLIT \r")
         self.write(str(width)+" MICRONS \r")
@@ -229,9 +243,12 @@ class Spectro(simserial.SimSerial):
 
     def _SIDEminusEXITminusSLIT(self):
         print "set to Exit Slit"
+    
+    def _QMMICRONS(self):
+        print "reading simulated slit width"
 
     def _MICRONS(self,string):
         temp = re.search(self.PARMS,string).group(0)
-        print "new value: %3d microns" % int(temp)
+        print "new value simulated: %3d microns" % int(temp)
 
 
