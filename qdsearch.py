@@ -106,6 +106,7 @@ class MainWindow(HasTraits):
     y_koords=[]
     used_grating   = []
     used_centerwvl = []
+    apd_counts = []
     spectra=[]
     wavelength=CFloat(0)
     plot=Instance(Plot,())
@@ -261,6 +262,7 @@ class MainWindow(HasTraits):
         self.spectra=[]
         self.used_centerwvl=[]
         self.used_grating=[]
+        self.apd_counts=[]
 
         if self.x1>self.x2:
             self.x2,self.x1 = self.x1,self.x2
@@ -321,6 +323,7 @@ class MainWindow(HasTraits):
         self.spectra.append(spectrum)
         self.used_centerwvl.append(self.ivSpectro.centerwvl)
         self.used_grating.append(self.ivSpectro.current_grating)
+        self.apd_counts.append(self.icVoltage.measure()*500)
 
         self.file_name = self.autosave_filename
         self.save_file()
@@ -401,7 +404,7 @@ class MainWindow(HasTraits):
                 plot.plot(("x", "y"), type="line", color="blue")
                 plot.x_axis.title="Wavelength [nm]"
                 plot.y_axis.title="Counts"
-                plot.title = 'spectrum of QD ' +str(self.x_koords[i])+' '+str(self.y_koords[i])
+                plot.title = 'spectrum of QD ' +str(self.x_koords[i])+' '+str(self.y_koords[i])+' with APD at '+str(self.apd_counts[i])
                 plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
                 plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
                 if field=='current':
@@ -495,6 +498,7 @@ class MainWindow(HasTraits):
                     'y':self.y_koords,
                     'spectra': self.spectra,
                     'grating': self.used_grating,
+                    'apd-count': self.apd_counts,
                     'centerwvl': self.used_centerwvl
                 }
             }
