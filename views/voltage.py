@@ -39,10 +39,13 @@ class VoltageGUI(HasTraits):
                 HGroup(
                     Item('output',show_label=True, style='readonly')),
                 HGroup(
-                    Item('test',show_label=True),
+                    Item('test',show_label=True)),
+                HGroup(
                     Item('test2',show_label=True)),
                 Item('simulation', show_label=True),
-                resizable = True)
+                resizable = False,
+                width = 195,
+                height = 285)
 
     sim_view = View(Item('simulation', show_label=True, label='Simulate Voltmeter'))
 
