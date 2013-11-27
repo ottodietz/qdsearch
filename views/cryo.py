@@ -70,15 +70,15 @@ class CryoGUI(HasTraits):
        HGroup(Item('southwest',show_label=False,resizable = True,),Item("down", show_label=False, resizable = True,),Item('southeast',show_label=False,resizable = True,)),
        HGroup(Item("downdown", show_label=False, resizable = True,)),
 
-       HGroup(Item("x_step",label="Step size x:"),Item("y_step",label="y:"),Item('factor1',label='big step factor:')),
+       HGroup(Item("x_step",label="Step size x:"),Item("y_step",label="y:")),
+       HGroup(Item('factor1',label='big step factor:')),
        HGroup(Item('stop',show_label=False,resizable=True),Item('status',show_label=False,resizable=True))),
 
-       HGroup(Spring(height=20)),
        Item("output",style="readonly"),
-       HGroup(Item("simulation"),Spring(width=350)),
+       HGroup(Item("simulation"),Spring(width=150)),
        buttons = [OKButton, CancelButton,],
        menubar=MenuBar(menu),
-       resizable = True, width = 400, height = 400)
+       resizable = True, width = 360, height = 400)
 
     view_menu=View(
         VGroup(
@@ -86,7 +86,8 @@ class CryoGUI(HasTraits):
          
          HGroup(Item("identity", show_label=False,resizable = True))
          ),
-        buttons = [OKButton, CancelButton,], resizable = True, width = 400, height = 200, kind='livemodal'
+        buttons = [OKButton, CancelButton,], resizable = True, width = 300,
+height = 300, kind='livemodal'
        )
 
     def __init__(self):

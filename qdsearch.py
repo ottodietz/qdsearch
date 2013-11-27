@@ -214,7 +214,7 @@ class MainWindow(HasTraits):
         title   = 'qdsearch',
         buttons = [ 'OK' ],
         resizable = True,
-        width=300
+        width=900
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
