@@ -43,7 +43,7 @@ class VoltageGUI(HasTraits):
                 HGroup(
                     Item('test2',show_label=True)),
                 Item('simulation', show_label=True),
-                resizable = False,
+                resizable = True,
                 width = 195,
                 height = 285)
 
