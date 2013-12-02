@@ -225,7 +225,7 @@ class CameraGUI(HasTraits):
         y1px = 0
         y2px = 127
         x1nm = scaleinnm[0]
-        x2nm = scaleinnm[1024] #because create_wavelength returns len(scaleinm)=1025 .. mistake ..need to fix?
+        x2nm = scaleinnm[1023]
         y1nm = 0
         y2nm = 127
 
@@ -243,6 +243,8 @@ class CameraGUI(HasTraits):
         else:
             xtitle = titlepxx
             ytitle = titlepxy
+            if self.icCamera.readmode_current == "Image":
+                ytitle = titlepxx
             scale = scaleinpx
             x1 = x1px
             x2 = x2px
@@ -291,12 +293,13 @@ class CameraGUI(HasTraits):
         pixel=1024
         grooves=self.ivSpectro.current_grating.split(' ')
         grooves=int([x for x in grooves if x][1])
-        for i in range(pixel+1):
+        for i in range(pixel):
             wavelength.append(i)
         width=26*10**-3
-        wavelength[pixel/2]=self.ivSpectro.centerwvl
+        wavelength[pixel/2]=self.ivSpectro.centerwvl #be careful wavelength is even, so has no center for precise centerwvl
         for i in range(pixel/2):
             wavelength[pixel/2-i-1]=wavelength[pixel/2-i]-width*self.calculate_dispersion(wavelength[pixel/2-i],grooves)
+        for i in range(pixel/2-1): #because 1024 is even, it has no center, so indexshift is needed
             wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
         return wavelength
 
@@ -374,7 +377,7 @@ class CameraGUI(HasTraits):
                 time.sleep(0.1)
 
 if __name__=="__main__":
-    main=CameraGUI(ivCryo = views.cryo.CryoGUI(), ivVoltage = views.voltage.VoltageGUI(), ivSpectro = views.spectrometer.SpectroGUI)
+    main=CameraGUI(ivCryo = views.cryo.CryoGUI(), ivVoltage = views.voltage.VoltageGUI(), ivSpectro = views.spectrometer.SpectroGUI())
     main.configure_traits()
     if not main.icCamera.simulation:
         print "CAMERA CLOSE"
