@@ -8,8 +8,10 @@ from chaco.api import Plot, ArrayPlotData, jet
 from chaco.tools.api import PanTool, ZoomTool
 from enable.component_editor import ComponentEditor
 import thread
+import random
 from time import sleep
 from ctypes import *
+
 
 import controls.camera
 #refresh (controls.camera)
@@ -203,7 +205,7 @@ class CameraGUI(HasTraits):
             plot = Plot(plotdata)
             plot.plot(("x"),  color="blue")
         if self.icCamera.readmode_current == 'Image':
-            dataarray = [[self.line[i][j] for i in range(128)] for j in range(1024)]
+            dataarray = [[self.line[i][j] for j in range(1024)] for i in range(128)]
             plotdata = ArrayPlotData(imagedata = dataarray) #self.line now has an image stored! since an image comes from acquisition           
             plot = Plot(plotdata)
             plot.img_plot("imagedata", colormap = jet)
