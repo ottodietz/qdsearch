@@ -205,7 +205,7 @@ class CameraGUI(HasTraits):
 
 
     def plot_data(self):
-#        import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         if self.icCamera.readmode_current == 'Full Vertical Binning':
             plotdata = ArrayPlotData(x=self.line[:])
             plot = Plot(plotdata)
