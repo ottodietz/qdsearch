@@ -375,6 +375,7 @@ class MainWindow(HasTraits):
             if x_gap <self.toleranz and y_gap<self.toleranz:
                 spectrum=self.spectra[i]
                 wavelength=self.ivCamera.create_wavelength_for_plotting()
+                import pdb; pdb.set_trace()
                 xm = [self.plotrangemarker,self.plotrangemarker] #for red line in plot
                 ym = [0,16000] #self.plotrangey
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum,xm=xm,ym=ym)

@@ -8,11 +8,8 @@ from chaco.api import Plot, ArrayPlotData, jet
 from chaco.tools.api import PanTool, ZoomTool
 from enable.component_editor import ComponentEditor
 import thread
-<<<<<<< HEAD
 import math
-=======
-import random
->>>>>>> master
+import numpy as np
 from time import sleep
 from ctypes import *
 
@@ -35,6 +32,7 @@ class CameraGUI(HasTraits):
     toggle_active = False
 
     simulation=Bool(True)
+    nmscale = Bool(True)
     cooler=Bool(False)
     test = Button()
     single=Button()
@@ -97,6 +95,7 @@ class CameraGUI(HasTraits):
                             Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
+                            Item('nmscale',label="Plot in nm"),
 ),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
@@ -210,16 +209,57 @@ class CameraGUI(HasTraits):
 
 
     def plot_data(self):
-        import pdb; pdb.set_trace()
+#        import pdb; pdb.set_trace()
+        
+        scaleinnm=self.create_wavelength_for_plotting()
+        scaleinpx=np.linspace(0,1023,1024)
+
+        titlepxx = "Pixel [px]"
+        titlepxy = "Counts [arb. unit]"
+        titlenmx = "Wavelength [nm]"
+        titlenmy = "Counts [arb. unit]"
+
+        #range for img_plot
+        x1px = 0
+        x2px = 1023
+        y1px = 0
+        y2px = 127
+        x1nm = scaleinnm[0]
+        x2nm = scaleinnm[1024] #because create_wavelength returns len(scaleinm)=1025 .. mistake ..need to fix?
+        y1nm = 0
+        y2nm = 127
+
+        if self.nmscale:
+            xtitle = titlenmx
+            ytitle = titlenmy
+            scale = scaleinnm
+            if self.icCamera.readmode_current == "Image":
+                ytitle = titlepxx #because in image mode y is in px!
+            x1 = x1nm
+            x2 = x2nm
+            y1 = y1nm
+            y2 = y2nm
+ 
+        else:
+            xtitle = titlepxx
+            ytitle = titlepxy
+            scale = scaleinpx
+            x1 = x1px
+            x2 = x2px
+            y1 = y1px
+            y2 = y2px
+        
+        
         if self.icCamera.readmode_current == 'Full Vertical Binning':
-            plotdata = ArrayPlotData(x=self.line[:])
+            plotdata = ArrayPlotData(x = scale , y=self.line[:])
             plot = Plot(plotdata)
-            plot.plot(("x"),  color="blue")
+            plot.plot(("x","y"),type="line",  color="blue")
         if self.icCamera.readmode_current == 'Image':
             dataarray = [[self.line[i][j] for j in range(1024)] for i in range(128)]
-            plotdata = ArrayPlotData(imagedata = dataarray) #self.line now has an image stored! since an image comes from acquisition           
+#            import pdb; pdb.set_trace()
+            plotdata = ArrayPlotData(imagedata = dataarray) #self.line now has an image stored! since an image comes from acquisition
             plot = Plot(plotdata)
-            plot.img_plot("imagedata", colormap = jet)
+            plot.img_plot("imagedata",xbounds=(x1,x2),ybounds=(y1,y2), colormap = jet)
  
         plot.title = ""
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
@@ -229,8 +269,8 @@ class CameraGUI(HasTraits):
         #plot.range2d.x_range.high=self.x2
         #plot.range2d.y_range.low=self.y1
         #plot.range2d.y_range.high=self.y2
-        plot.x_axis.title="x-Position on sample [mm]"
-        plot.y_axis.title="y-Position on sample [mm]"
+        plot.x_axis.title=xtitle
+        plot.y_axis.title=ytitle
         self.plot=plot
 
 
