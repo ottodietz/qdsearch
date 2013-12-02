@@ -209,7 +209,6 @@ class CameraGUI(HasTraits):
 
 
     def plot_data(self):
-#        import pdb; pdb.set_trace()
         
         scaleinnm=self.create_wavelength_for_plotting()
         scaleinpx=np.linspace(0,1023,1024)
@@ -258,7 +257,6 @@ class CameraGUI(HasTraits):
             plot.plot(("x","y"),type="line",  color="blue")
         if self.icCamera.readmode_current == 'Image':
             dataarray = [[self.line[i][j] for j in range(1024)] for i in range(128)]
-#            import pdb; pdb.set_trace()
             plotdata = ArrayPlotData(imagedata = dataarray) #self.line now has an image stored! since an image comes from acquisition
             plot = Plot(plotdata)
             plot.img_plot("imagedata",xbounds=(x1,x2),ybounds=(y1,y2), colormap = jet)
