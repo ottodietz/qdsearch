@@ -103,8 +103,7 @@ class Camera(object):
             return line
 
         if self.simulation and self.readmode_current == "Image":
-            image = [[random.randint(1,100) for e in range(128)] for e in range(1024)]
-            print "das ist die laenge",len(image)
+            image = [[random.randint(1,100) for e in range(1024)] for e in range(128)]
             return image
 
         action = []
