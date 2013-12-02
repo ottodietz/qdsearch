@@ -8,6 +8,7 @@ from chaco.api import Plot, ArrayPlotData, jet
 from chaco.tools.api import PanTool, ZoomTool
 from enable.component_editor import ComponentEditor
 import thread
+import math
 from time import sleep
 from ctypes import *
 
