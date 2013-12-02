@@ -8,7 +8,6 @@ from traitsui.menu import OKButton, CancelButton
 import thread
 from pyface.api import information
 import time
-import math
 #from ctypes import *
 import pickle as pickle
 import numpy as np
@@ -125,7 +124,7 @@ class MainWindow(HasTraits):
 
     def _ivCamera_default(self):
         print "CAMERA INIT"
-        return views.camera.CameraGUI(ivCryo=self.ivCryo, ivVoltage=self.ivVoltage)
+        return views.camera.CameraGUI(ivCryo=self.ivCryo, ivVoltage=self.ivVoltage, ivSpectro=self.ivSpectro )
 
     def _ivCryo_default(self):
         print "CRYO INIT"
@@ -348,28 +347,7 @@ class MainWindow(HasTraits):
         plot.y_axis.title="y-Position on sample [mm]"
         self.plot=plot
 
-    def calculate_dispersion(self,wavelength,grooves):
-        m=1 #grating order
-        x=8.548 #spectro value: half angle
-        f=486 # focal length
-        phi=math.degrees(math.asin((m*wavelength*grooves/(2*10**6*math.cos(math.radians(x))))))
-        dispersion=math.cos(math.radians(x+phi))*10**6/(grooves*f*m)
-        return dispersion
-
-    def create_wavelength_for_plotting(self):
-        wavelength=[]
-        pixel=1024
-        grooves=self.ivSpectro.current_grating.split(' ')
-        grooves=int([x for x in grooves if x][1])
-        for i in range(pixel+1):
-            wavelength.append(i)
-        width=26*10**-3
-        wavelength[pixel/2]=self.ivSpectro.centerwvl
-        for i in range(pixel/2):
-            wavelength[pixel/2-i-1]=wavelength[pixel/2-i]-width*self.calculate_dispersion(wavelength[pixel/2-i],grooves)
-            wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
-        return wavelength
-
+    
     def _plotrangeset_fired(self):
         if self.plotrangestart > self.plotrangeend:
             self.plotrangestart, self.plotrangeend = self.plotrangeend, self.plotrangestart#swap val
@@ -396,7 +374,7 @@ class MainWindow(HasTraits):
             y_gap=abs(y-self.y_koords[i])
             if x_gap <self.toleranz and y_gap<self.toleranz:
                 spectrum=self.spectra[i]
-                wavelength=self.create_wavelength_for_plotting()
+                wavelength=self.ivCamera.create_wavelength_for_plotting()
                 xm = [self.plotrangemarker,self.plotrangemarker] #for red line in plot
                 ym = [0,16000] #self.plotrangey
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum,xm=xm,ym=ym)

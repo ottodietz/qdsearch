@@ -17,6 +17,8 @@ import views.cryo
 #refresh (views.cryo)
 import views.voltage
 #refresh (views.voltage)
+import views.spectrometer
+#refresh (views.spectrometer)
 
 from pyface.api import error,warning,information
 
@@ -42,6 +44,8 @@ class CameraGUI(HasTraits):
     icCryo = Instance(controls.cryo.Cryo)
     ivVoltage = Instance(views.voltage.VoltageGUI)
     icVoltage = Instance(controls.voltage.Voltage)
+    ivSpectro = Instance(views.spectrometer.SpectroGUI)
+    icSpectro = Instance(controls.spectrometer.Spectro)
 
     """menu"""
     exposuretime=Range(low=0.0001,high=10,value=icCamera.exposuretime_init,editor=TextEditor(evaluate=float,auto_set=False))
@@ -62,6 +66,9 @@ class CameraGUI(HasTraits):
     
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
+
+    def _icSpectro_default(self):
+        return self.ivSpectro.icSpectro
 
     menu_action = Action(name='camera menu', accelerator='Ctrl+p', action='call_menu')
     mi_reload = Action(
@@ -220,6 +227,34 @@ class CameraGUI(HasTraits):
         plot.y_axis.title="y-Position on sample [mm]"
         self.plot=plot
 
+
+
+# dispersion of the gratings in theory  
+    def calculate_dispersion(self,wavelength,grooves):
+        m=1 #grating order
+        x=8.548 #spectro value: half angle
+        f=486 # focal length
+        phi=math.degrees(math.asin((m*wavelength*grooves/(2*10**6*math.cos(math.radians(x))))))
+        dispersion=math.cos(math.radians(x+phi))*10**6/(grooves*f*m)
+        return dispersion
+
+
+# for calculating the scale of plot in nm, if needed
+    def create_wavelength_for_plotting(self):
+        wavelength=[]
+        pixel=1024
+        grooves=self.ivSpectro.current_grating.split(' ')
+        grooves=int([x for x in grooves if x][1])
+        for i in range(pixel+1):
+            wavelength.append(i)
+        width=26*10**-3
+        wavelength[pixel/2]=self.ivSpectro.centerwvl
+        for i in range(pixel/2):
+            wavelength[pixel/2-i-1]=wavelength[pixel/2-i]-width*self.calculate_dispersion(wavelength[pixel/2-i],grooves)
+            wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
+        return wavelength
+
+
     def ensure_init(self):
         if self.icCamera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
@@ -293,7 +328,7 @@ class CameraGUI(HasTraits):
                 time.sleep(0.1)
 
 if __name__=="__main__":
-    main=CameraGUI(ivCryo = views.cryo.CryoGUI(), ivVoltage = views.voltage.VoltageGUI())
+    main=CameraGUI(ivCryo = views.cryo.CryoGUI(), ivVoltage = views.voltage.VoltageGUI(), ivSpectro = views.spectrometer.SpectroGUI)
     main.configure_traits()
     if not main.icCamera.simulation:
         print "CAMERA CLOSE"
@@ -304,4 +339,7 @@ if __name__=="__main__":
         main.icCryo.close()
     if not main.icVoltage.simulation:
         print "VOLTAGE CLOSE"
-        main.icVoltage.close() 
+        main.icVoltage.close()
+    if not main.icSpectro.simulation:
+        print "SPECTRO CLOSE"
+        main.icSpectro.close()
