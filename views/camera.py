@@ -28,6 +28,7 @@ class CameraGUI(HasTraits):
     acq_active = False
     toggle_active = False
 
+    acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
     cooler=Bool(False)
     single=Button()
@@ -118,6 +119,7 @@ class CameraGUI(HasTraits):
             self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
         except: 
             self.line=self.icCamera.acquisition()
+        self._update_acqtime()
         self.plot_data()
 
     def _zautofocus_fired(self):
@@ -134,6 +136,7 @@ class CameraGUI(HasTraits):
 
         self.ivVoltage.Voltage = maxid/255.*5.
         self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
+        self._update_acqtime()
         self.plot_data()
 
     def _autofocus_fired(self):
@@ -216,6 +219,7 @@ class CameraGUI(HasTraits):
                     self.line=self.icCamera.acquisition()
                 ytest = True
 
+        self._update_acqtime() # saving time of last picture
         self.plot_data()
         print "AF fertig!"
 
@@ -236,9 +240,12 @@ class CameraGUI(HasTraits):
         plot.y_axis.title="Intensity [a.u]"
         self.plot=plot
 
+    def _update_acqtime(self):
+        self.acqtime = time.localtime()
+
     def _export_fired(self):
         #import pdb; pdb.set_trace()
-        dialog = DirectoryDialog(action="Select Directory", wildcard='*')
+        dialog = FileDialog(action="Select Directory", wildcard='*')
         dialog.open()
         if dialog.return_code == OK:
             # prepare plot for saving
@@ -250,11 +257,18 @@ class CameraGUI(HasTraits):
             gc.render_component(self.plot)
      
             #save data,image,description
-            target = dialog.path
-            print "target directory: " + target
-            gc.save(target+".png")
+            directory = dialog.directory
+            t = time.localtime()
+            timelist = [t.tm_mon,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec]
+            for a in timelist:
+                if len(a) == 1:
+                    a = "0" + a
+            timetag.join(timelist)
+            filename = timetag + dialog.filename
+            print "target directory: " + directory
+            gc.save(filename+".png")
             self.wvl = self.line # dummy for = calculate_wavelength()
-            np.savetxt(target+'.dat',np.transpose([self.wvl,self.line]))
+            np.savetxt(filename+'.dat',np.transpose([self.wvl,self.line]))
             # pickle(target+'.pkl',info_structure)
 
 
