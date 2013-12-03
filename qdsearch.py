@@ -61,11 +61,12 @@ class counts_thread(Thread):
         while not self.wants_abort:
             self.caller.counts =  self.caller.icVoltage.measure()/self.VoltPerCount
             # we need a waitstate! If not, our gui is constantly updating
-            time.sleep(0.1)
+            sleep(0.1)
 
 class MainWindow(HasTraits):
     VoltPerCount = 0.002 # 2mv/Count
     autosave_filename = 'measurement/autosave.pkl'
+    untoggleall = Button(label='Deactivate all Sim') #For toggling all simulations of all devices
 
     """for creating the menu"""
     call_menu_scan_sample=Action(name='scansample',action='call_scan_sample_menu')
@@ -197,6 +198,7 @@ class MainWindow(HasTraits):
         Item('ivSpectro',   label="Spectrometer", show_label=True),
         Item('ivCamera',    label="Camera", show_label=True),
         Item('ivVoltage',   label="Voltmeter", show_label=True),
+        Item('untoggleall', label="Deactivation Simulation", show_label=True),
         label='Instruments'
         )
 
@@ -230,6 +232,14 @@ class MainWindow(HasTraits):
         self.counts_thread.VoltPerCount = self.VoltPerCount
         self.counts_thread.start()
 
+    def _untoggleall_fired(self):
+        self.ivVoltage.simulation = False
+        sleep(0.2)
+        self.ivCryo.simulation = False
+        sleep(0.2)
+        self.ivSpectro.simulation = False
+        sleep(1.5)
+        self.ivCamera.simulation = False
 
     def call_cryo_menu(self):
        self.ivCryo.configure_traits(view='view_menu')
@@ -303,7 +313,7 @@ class MainWindow(HasTraits):
     def take_spectrum(self,x,y):
         print "nehme spektrum, warte auf klappspiegel"
         self.ivSpectro.exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
-        time.sleep(1) # don't switch mirrors too fast!
+        sleep(1) # don't switch mirrors too fast!
         try:
             c_spectrum=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.ivCamera.exposuretime) # nimmt das spektrum auf
         except:
