@@ -4,13 +4,15 @@ from traits.api import*
 from traitsui.api import*
 from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
-from chaco.api import Plot, ArrayPlotData, jet
+from chaco.api import Plot, ArrayPlotData, PlotGraphicsContext, jet
 from chaco.tools.api import PanTool, ZoomTool
+from pyface.api import FileDialog,OK
 from enable.component_editor import ComponentEditor
 import thread
 import math
 import numpy as np
 from time import sleep
+import time
 from ctypes import *
 
 
@@ -31,6 +33,7 @@ class CameraGUI(HasTraits):
     acq_active = False
     toggle_active = False
 
+    acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
     nmscale = Bool(True)
     cooler=Bool(False)
@@ -40,6 +43,7 @@ class CameraGUI(HasTraits):
     continous=Button()
     autofocus=Button(label="AF X/Y")
     zautofocus=Button(label="AF Z")
+    export=Button(label="Export")
     settemperature=Range(low=-70,high=20,value=20)
 
     x_step = Float(0.001)
@@ -87,25 +91,37 @@ class CameraGUI(HasTraits):
                                     Item('single',label='Single',show_label=False),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
                                     Item('test',show_label=False),
+                                    Item('continous',show_label=False,editor=ButtonEditor(label_value= 'continous_label')),
                                     Item('autofocus',show_label=False),
-                                    Item('zautofocus',show_label=False)),
+                                    Item('zautofocus',show_label=False),
+                                    Item('export',show_label=False)
+                                    ),
                             HGroup(
-                                Item('exposuretime'),Item('simulation',label='simulate camera')),
+                            Item('exposuretime'),Item('simulation',label='simulate camera')),
                             Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys')),
                             Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
                             Item('nmscale',label="Plot in nm"),
 ),
+                                Item('exposuretime'),
+                                Item('simulation',label='simulate camera')),
+                            Item('readmodes',editor=EnumEditor(name='readmodes_value')),
+                            Item('Vshiftspeed',editor=EnumEditor(name='Vshiftspeed_value')),
+                            Item('Hshiftspeed',editor=EnumEditor(name='Hshiftspeed_value'))),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
-                       resizable = True, menubar=MenuBar(menu) )
+                        resizable = True,
+                        height=200, 
+                        width=800, 
+                        menubar=MenuBar(menu) )
 
     def _single_fired(self):
         try:
             self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
         except: 
             self.line=self.icCamera.acquisition()
+        self._update_acqtime()
         self.plot_data()
 
     def _zautofocus_fired(self):
@@ -122,6 +138,7 @@ class CameraGUI(HasTraits):
 
         self.ivVoltage.Voltage = maxid/255.*5.
         self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
+        self._update_acqtime()
         self.plot_data()
 
     def _autofocus_fired(self):
@@ -204,6 +221,7 @@ class CameraGUI(HasTraits):
                     self.line=self.icCamera.acquisition()
                 ytest = True
 
+        self._update_acqtime() # saving time of last picture
         self.plot_data()
         print "AF fertig!"
 
@@ -301,6 +319,38 @@ class CameraGUI(HasTraits):
             wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
         return wavelength
 
+    def _update_acqtime(self):
+        self.acqtime = time.localtime()
+
+    def _export_fired(self):
+        #import pdb; pdb.set_trace()
+        dialog = FileDialog(action="save as", wildcard='.dat')
+        dialog.open()
+        if dialog.return_code == OK:
+            # prepare plot for saving
+            width = 800
+            height = 600
+            self.plot.outer_bounds = [width, height]
+            self.plot.do_layout(force=True)
+            gc = PlotGraphicsContext((width, height), dpi=72)
+            gc.render_component(self.plot)
+     
+            #save data,image,description
+            timetag = "" #init empty str for later
+            directory = dialog.directory
+            t = self.acqtime #retrieve time from last aquisition
+            timelist = [t.tm_year,t.tm_mon,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec]
+            timelist = map(str,timelist) #convert every entry to str of timelist
+            for i in range(len(timelist)): #if sec is eg "5" change to "05"
+                if len(timelist[i]) == 1:
+                    timelist[i] = "0" + timelist[i]
+            timetag = timetag.join(timelist) #make single str of all entries
+            filename = timetag + dialog.filename # join timetag and inidivid. name
+            print "target directory: " + directory
+            gc.save(filename+".png")
+            self.wvl = self.line # dummy for = calculate_wavelength()
+            np.savetxt(filename+'.dat',np.transpose([self.wvl,self.line]))
+            # pickle(target+'.pkl',info_structure)
 
     def ensure_init(self):
         if self.icCamera.init_active:
