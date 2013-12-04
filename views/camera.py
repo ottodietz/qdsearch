@@ -317,7 +317,6 @@ class CameraGUI(HasTraits):
         self.acqtime = time.localtime()
 
     def _export_fired(self):
-        #import pdb; pdb.set_trace()
         dialog = FileDialog(action="save as", wildcard='.dat')
         dialog.open()
         if dialog.return_code == OK:
@@ -419,7 +418,11 @@ class CameraGUI(HasTraits):
                 time.sleep(0.1)
 
 if __name__=="__main__":
-    main=CameraGUI(ivCryo = views.cryo.CryoGUI(), ivVoltage = views.voltage.VoltageGUI(), ivSpectro = views.spectrometer.SpectroGUI())
+    main=CameraGUI(
+                    ivCryo = views.cryo.CryoGUI(), 
+                    ivVoltage = views.voltage.VoltageGUI(), 
+                    ivSpectro = views.spectrometer.SpectroGUI()
+                )
     main.configure_traits()
     if not main.icCamera.simulation:
         print "CAMERA CLOSE"
