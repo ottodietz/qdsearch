@@ -37,7 +37,7 @@ class Camera(object):
     acquisitionmode_init = list(acquisitionmode_keys)[0]
     acquisitionmode_current = acquisitionmode_init
     
-    #section for containers for testbutton in speedinit
+    #section for container in speeddata
     NumOfHSpeeds = c_int()
     NumOfVSpeeds = c_int()
     ValueOfHSpeed = c_float()
@@ -203,7 +203,7 @@ class Camera(object):
         print 'targettemp',
         print targettemp
 
-    def speedinit(self):
+    def speeddata(self):
         print "GetNumerHSSSpeeds"
         print self.atm.GetNumberHSSpeeds(c_int(0), c_int(0), byref(self.NumOfHSpeeds))
         print self.NumOfHSpeeds

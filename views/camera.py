@@ -37,7 +37,7 @@ class CameraGUI(HasTraits):
     simulation=Bool(True)
     nmscale = Bool(True)
     cooler=Bool(False)
-    test = Button()
+    speeddata = Button(label="Show HS/VS Data")
     single=Button()
     continous_label = Str('Continous')
     continous=Button()
@@ -90,7 +90,7 @@ class CameraGUI(HasTraits):
                             HGroup(
                                     Item('single',label='Single',show_label=False),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
-                                    Item('test',show_label=False),
+                                    Item('speeddata',show_label=False),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value= 'continous_label')),
                                     Item('autofocus',show_label=False),
                                     Item('zautofocus',show_label=False),
@@ -341,7 +341,7 @@ class CameraGUI(HasTraits):
             filename = timetag + dialog.filename # join timetag and inidivid. name
             print "target directory: " + directory
             gc.save(filename+".png")
-            self.wvl = self.line # dummy for = calculate_wavelength()
+            self.wvl = self.create_wavelength_for_plotting()
             np.savetxt(filename+'.dat',np.transpose([self.wvl,self.line]))
             # pickle(target+'.pkl',info_structure)
 
@@ -375,8 +375,8 @@ class CameraGUI(HasTraits):
             self._single_fired()
         self.continous_label = 'Continous'
 
-    def _test_fired(self):
-        self.icCamera.speedinit()
+    def _speeddata_fired(self):
+        self.icCamera.speeddata()
 
     def _continous_fired(self):
         self.acq_active = not self.acq_active
