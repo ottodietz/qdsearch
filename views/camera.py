@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#test = alice
+#test = master
 from traits.api import*
 from traitsui.api import*
 from traits.util import refresh
