@@ -102,19 +102,13 @@ class CameraGUI(HasTraits):
                             Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
-                            Item('nmscale',label="Plot in nm"),
-),
-                                Item('exposuretime'),
-                                Item('simulation',label='simulate camera')),
-                            Item('readmodes',editor=EnumEditor(name='readmodes_value')),
-                            Item('Vshiftspeed',editor=EnumEditor(name='Vshiftspeed_value')),
-                            Item('Hshiftspeed',editor=EnumEditor(name='Hshiftspeed_value'))),
+                            Item('nmscale',label="Plot in nm")),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                         resizable = True,
-                        height=200, 
-                        width=800, 
-                        menubar=MenuBar(menu) )
+                        height=250, 
+                        width=900, 
+                        menubar=MenuBar(menu))
 
     def _single_fired(self):
         try:
