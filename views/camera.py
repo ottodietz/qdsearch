@@ -342,7 +342,18 @@ class CameraGUI(HasTraits):
             print "target directory: " + directory
             gc.save(filename+".png")
             self.wvl = self.create_wavelength_for_plotting()
-            np.savetxt(filename+'.dat',np.transpose([self.wvl,self.line]))
+            x,y = self.icCryo.pos() #get cryo pos
+            pos = "Cryo was at pos "+ str(x) + " x " + str(y)+" y"
+            with open(filename+'.dat','wb') as f:
+                f.write('#'+
+                        str(pos)+
+                        '\n'+
+                        '#\n'+
+                        '#\n'+
+                        '#\n') #this is for the header
+                np.savetxt(f,
+                        np.transpose([self.wvl,self.line]),
+                        delimiter='\t')
             # pickle(target+'.pkl',info_structure)
 
     def ensure_init(self):
