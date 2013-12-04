@@ -6,7 +6,7 @@ from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
 from chaco.api import Plot, ArrayPlotData, PlotGraphicsContext
 from chaco.tools.api import PanTool, ZoomTool
-from pyface.api import DirectoryDialog,OK
+from pyface.api import FileDialog,OK
 from enable.component_editor import ComponentEditor
 import thread
 import time
@@ -99,20 +99,23 @@ class CameraGUI(HasTraits):
     traits_view=View(HGroup(VGroup(
                             HGroup(
                                     Item('single',label='Single',show_label=False),
-                                    Item('continous',show_label=False,editor=ButtonEditor(label_value
-= 'continous_label')),
+                                    Item('continous',show_label=False,editor=ButtonEditor(label_value= 'continous_label')),
                                     Item('autofocus',show_label=False),
                                     Item('zautofocus',show_label=False),
                                     Item('export',show_label=False)
                                     ),
                             HGroup(
-                                Item('exposuretime'),Item('simulation',label='simulate camera')),
+                                Item('exposuretime'),
+                                Item('simulation',label='simulate camera')),
                             Item('readmodes',editor=EnumEditor(name='readmodes_value')),
                             Item('Vshiftspeed',editor=EnumEditor(name='Vshiftspeed_value')),
                             Item('Hshiftspeed',editor=EnumEditor(name='Hshiftspeed_value'))),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
-                       resizable = True, menubar=MenuBar(menu) )
+                        resizable = True,
+                        height=200, 
+                        width=800, 
+                        menubar=MenuBar(menu) )
 
     def _single_fired(self):
         try:
@@ -245,7 +248,7 @@ class CameraGUI(HasTraits):
 
     def _export_fired(self):
         #import pdb; pdb.set_trace()
-        dialog = FileDialog(action="Select Directory", wildcard='*')
+        dialog = FileDialog(action="save as", wildcard='.dat')
         dialog.open()
         if dialog.return_code == OK:
             # prepare plot for saving
@@ -257,14 +260,16 @@ class CameraGUI(HasTraits):
             gc.render_component(self.plot)
      
             #save data,image,description
+            timetag = "" #init empty str for later
             directory = dialog.directory
-            t = time.localtime()
-            timelist = [t.tm_mon,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec]
-            for a in timelist:
-                if len(a) == 1:
-                    a = "0" + a
-            timetag.join(timelist)
-            filename = timetag + dialog.filename
+            t = self.acqtime #retrieve time from last aquisition
+            timelist = [t.tm_year,t.tm_mon,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec]
+            timelist = map(str,timelist) #convert every entry to str of timelist
+            for i in range(len(timelist)): #if sec is eg "5" change to "05"
+                if len(timelist[i]) == 1:
+                    timelist[i] = "0" + timelist[i]
+            timetag = timetag.join(timelist) #make single str of all entries
+            filename = timetag + dialog.filename # join timetag and inidivid. name
             print "target directory: " + directory
             gc.save(filename+".png")
             self.wvl = self.line # dummy for = calculate_wavelength()
