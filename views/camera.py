@@ -138,16 +138,15 @@ class CameraGUI(HasTraits):
         self.acquisition()
         self._update_acqtime()
         self.plot_data()
-
+    # Erkenntnis: geplottet wird erst, wenn die fired() zu ihrem ende gekommen
+    # ist, es bringt nichts zwischen drin einen plot zu veraendern, das
+    # plot_data() macht nur sinn wenn es EINMAL am ende steht
     def _zautofocus_fired(self):
         maxid = -1 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
         for i in range(256):
-            self.ivVoltage.Voltage = float((i/255.*5.))
+            self.ivVoltage.Voltage = float(i/255.*5.)
             self.acquisition()
-            if i%10 == 0:
-                self.plot_data()
-                sleep(3)
             if maxcount < max(self.line):
                 maxcount = max(self.line)
                 maxid = i
@@ -434,11 +433,8 @@ class CameraGUI(HasTraits):
     def acquisition(self):
         try:
             self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-            print "im try"
         except:
             self.line=self.icCamera.acquisition()
-            print "error"
-
 
     def stop_acq_thread(self):
         if self.acq_active:
