@@ -135,7 +135,6 @@ class CameraGUI(HasTraits):
                         menubar=MenuBar(menu))
 
     def _single_fired(self):
-#        import pdb; pdb.set_trace()
         self.acquisition()
         self._update_acqtime()
         self.plot_data()
@@ -146,6 +145,9 @@ class CameraGUI(HasTraits):
         for i in range(256):
             self.ivVoltage.Voltage = float((i/255.*5.))
             self.acquisition()
+            if i%10 == 0:
+                self.plot_data()
+                sleep(3)
             if maxcount < max(self.line):
                 maxcount = max(self.line)
                 maxid = i
@@ -153,7 +155,7 @@ class CameraGUI(HasTraits):
         print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
 
         self.ivVoltage.Voltage = maxid/255.*5.
-        self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
+        self.acquisition()
         self._update_acqtime()
         self.plot_data()
 
@@ -214,6 +216,7 @@ class CameraGUI(HasTraits):
 
 
     def plot_data(self):
+#        import pdb; pdb.set_trace()
         
         scaleinnm=self.create_wavelength_for_plotting()
         scaleinpx=np.linspace(0,1023,1024) # pixel are number from 0 to 1023
@@ -276,6 +279,7 @@ class CameraGUI(HasTraits):
         #plot.range2d.y_range.high=self.y2
         plot.x_axis.title=xtitle
         plot.y_axis.title=ytitle
+        print "jetzt sollte ich plotten"
         self.plot=plot
 
 
@@ -366,7 +370,7 @@ class CameraGUI(HasTraits):
         if self.icCamera.init_active:
             information(parent=None, title="please wait", message="The initialization of the camera is running. Please wait until the initialization is finished.")
             while self.icCamera.init_active:
-                time.sleep(.5)
+                sleep(.5)
 
 
     def _settemperature_changed(self):
@@ -430,15 +434,17 @@ class CameraGUI(HasTraits):
     def acquisition(self):
         try:
             self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
+            print "im try"
         except:
             self.line=self.icCamera.acquisition()
+            print "error"
 
 
     def stop_acq_thread(self):
         if self.acq_active:
             self.acq_active = False
             while self.continous_label == 'Stop':
-                time.sleep(0.1)
+                sleep(0.1)
 
 if __name__=="__main__":
     main=CameraGUI(
