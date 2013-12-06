@@ -58,8 +58,8 @@ class CameraGUI(HasTraits):
     autofocus=Button(label="AF X/Y")
     # Ints that come from a mouse-event on the cameraplot to define the
     # surrounding for the AF
-    AFX = Int()
-    AFY = Int()
+    AFX = Float()
+    AFY = Float()
     zautofocus=Button(label="AF Z")
     export=Button(label="Export")
     settemperature=Range(low=-70,high=20,value=20)
@@ -135,11 +135,8 @@ class CameraGUI(HasTraits):
                         menubar=MenuBar(menu))
 
     def _single_fired(self):
-        import pdb; pdb.set_trace()
-        try:
-            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-        except: 
-            self.line=self.icCamera.acquisition()
+#        import pdb; pdb.set_trace()
+        self.acquisition()
         self._update_acqtime()
         self.plot_data()
 
@@ -148,7 +145,7 @@ class CameraGUI(HasTraits):
         maxcount = 0 #Maximale Counts, setze auf 0
         for i in range(256):
             self.ivVoltage.Voltage = float((i/255.*5.))
-            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)   
+            self.acquisition()
             if maxcount < max(self.line):
                 maxcount = max(self.line)
                 maxid = i
@@ -163,81 +160,52 @@ class CameraGUI(HasTraits):
     def _autofocus_fired(self):
         xtest = False
         ytest = False
-        try:
-            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-        except:
-            self.line=self.icCamera.acquisition()
-
+        self.acquisition()
         while xtest == False: #Test in die x-Richtung, suchen bis Counts runter
             a = max(self.line)
             self.icCryo.rmove(self.x_step,0)
-            try:
-                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-            except:
-                self.line=self.icCamera.acquisition()
+            self.acquisition()
             self.plot_data()
             b = max(self.line)
             if b < a:
                 self.icCryo.rmove(-self.x_step,0)
-                try: #damit er wieder das aktuelle max hat
-                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-                except:
-                    self.line=self.icCamera.acquisition()
+                self.line=self.icCamera.acquisition() #damit er wieder das aktuelle max hat
                 xtest = True
-
         xtest=False
 
         while xtest == False: #Test in die -x-Richtung, suchen bis Counts runter
             a = max(self.line)
             self.icCryo.rmove(-self.x_step,0)
-            try:
-                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-            except:
-                self.line=self.icCamera.acquisition()
+            self.acquisition()
             self.plot_data()
             b = max(self.line)
             if b < a:
                 self.icCryo.rmove(self.x_step,0)
-                try:
-                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-                except:
-                    self.line=self.icCamera.acquisition()
+                self.acquisition()
                 xtest = True
 
         while ytest == False: #Test in die y-Richtung, suchen Counts runter
-           a = max(self.line)
-           self.icCryo.rmove(0,self.y_step)
-           try:
-                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-           except:
-                self.line=self.icCamera.acquisition()
-           self.plot_data()
-           b = max(self.line)
-           if b < a:
+            a = max(self.line)
+            self.icCryo.rmove(0,self.y_step)
+            self.acquisition()
+            self.plot_data()
+            b = max(self.line)
+            if b < a:
                 self.icCryo.rmove(0,-self.y_step)
-                try:
-                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-                except:
-                    self.line=self.icCamera.acquisition()
+                self.acquisition()
                 ytest = True
 
         ytest = False
 
         while ytest == False: #Test in die -y-Richtung, suchen Counts runter
-           a = max(self.line)
-           self.icCryo.rmove(0,-self.y_step)
-           try:
-                self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-           except:
-                self.line=self.icCamera.acquisition()
-           self.plot_data()
-           b = max(self.line)
-           if b < a:
+            a = max(self.line)
+            self.icCryo.rmove(0,-self.y_step)
+            self.acquisition()
+            self.plot_data()
+            b = max(self.line)
+            if b < a:
                 self.icCryo.rmove(0,self.y_step)
-                try:
-                    self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
-                except:
-                    self.line=self.icCamera.acquisition()
+                self.acquisition()
                 ytest = True
 
         self._update_acqtime() # saving time of last picture
@@ -458,6 +426,12 @@ class CameraGUI(HasTraits):
 
     def reload_camera(self):
         import pdb; pdb.set_trace()
+
+    def acquisition(self):
+        try:
+            self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
+        except:
+            self.line=self.icCamera.acquisition()
 
 
     def stop_acq_thread(self):
