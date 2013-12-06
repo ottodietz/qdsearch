@@ -193,10 +193,11 @@ class MainWindow(HasTraits):
             )
 
     device_tab = VGroup(
-        Item('ivCryo',      label="Cryostat", show_label=True, enabled_when='finished==True'),
-        Item('ivSpectro',   label="Spectrometer", show_label=True),
-        Item('ivCamera',    label="Camera", show_label=True),
-        Item('ivVoltage',   label="Voltmeter", show_label=True),
+        Item('ivCryo',    editor=InstanceEditor( label="Cryostat",kind='live'), \
+                show_label=False, enabled_when='finished==True'),
+        Item('ivSpectro', editor=InstanceEditor( label="Spectrometer",   kind='live'), show_label=False),
+        Item('ivCamera',  editor=InstanceEditor( label="Camera",        kind='live'), show_label=False),
+        Item('ivVoltage', editor=InstanceEditor( label="Voltmeter",     kind='live'), show_label=False),
         label='Instruments'
         )
 
@@ -210,7 +211,7 @@ class MainWindow(HasTraits):
         tabs,
         menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,scan_sample_menu),
         title   = 'qdsearch',
-        buttons = [ 'OK' ],
+#        buttons = [ 'OK' ],
         resizable = True,
         width=300
     )
@@ -564,6 +565,9 @@ if __name__ == '__main__':
         scroll = True
     else:
         scroll = False
+
+    # Warum?
+    scroll = False
 
     main.configure_traits(scrollable = scroll)
     main.icCryo.open=False
