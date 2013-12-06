@@ -115,7 +115,6 @@ class Camera(object):
         action.append("GetMostRecentImage")
         if self.readmode_current == "Full Vertical Binning":
             line  = (c_long * hpixel)()
-            print "oh no"
             error.append(self.atm.GetMostRecentImage(byref(line),c_ulong(hpixel)))
         if self.readmode_current == "Image":
             image = (c_long * hpixel * vpixel)()
