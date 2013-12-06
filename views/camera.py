@@ -318,7 +318,8 @@ class CameraGUI(HasTraits):
         for i in range(pixel):
             wavelength.append(i)
         width=26*10**-3
-       print "WARNING: create_wavelength_for_plotting() in ivCamera needs to be tested for accuracy, especially the own calibration method, befor relying on the output!" 
+        print 'WARNING: create_wavelength_for_plotting() in ivCamera needs testing dont rely on output!'
+        
         if not self.calib: #no own calibration so centerwvl from ivspectro is used for center pixel
             wavelength[pixel/2]=self.ivSpectro.centerwvl #be careful wavelength is even, so has no center for precise centerwvl
             for i in range(pixel/2):
