@@ -385,7 +385,6 @@ class MainWindow(HasTraits):
             if x_gap <self.toleranz and y_gap<self.toleranz:
                 spectrum=self.spectra[i]
                 wavelength=self.ivCamera.create_wavelength_for_plotting()
-                import pdb; pdb.set_trace()
                 xm = [self.plotrangemarker,self.plotrangemarker] #for red line in plot
                 ym = [0,16000] #self.plotrangey
                 plotdata = ArrayPlotData(x=wavelength, y=spectrum,xm=xm,ym=ym)
@@ -393,7 +392,14 @@ class MainWindow(HasTraits):
                 plot.plot(("x", "y"), type="line", color="blue")
                 plot.x_axis.title="Wavelength [nm]"
                 plot.y_axis.title="Counts"
-                plot.title = 'spectrum of QD ' +str(self.x_koords[i])+' '+str(self.y_koords[i])+' with APD at '+str(self.apd_counts[i])
+
+                #catch error if apd counts not loaded
+                try:
+                    apd_counts = str(self.apd_counts[i])
+                except:
+                    apd_counts = str("0")
+
+                plot.title = 'spectrum of QD ' +str(self.x_koords[i])+' '+str(self.y_koords[i])+' with APD at '+str(apd_counts)
                 plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False)) # damit man im Plot zoomen kann
                 plot.tools.append(PanTool(plot, constrain_key="shift")) # damit man mit der Maus den Plot verschieben kann
                 if field=='current':
