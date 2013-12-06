@@ -36,6 +36,11 @@ class CameraGUI(HasTraits):
     acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
     nmscale = Bool(True)
+    #variables for own calibration
+    calib = Bool(False)
+    calibwvl = Float()
+    calibpxl = Int()
+
     cooler=Bool(False)
     speeddata = Button(label="Show HS/VS Data")
     single=Button()
@@ -102,11 +107,17 @@ class CameraGUI(HasTraits):
                             Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
-                            Item('nmscale',label="Plot in nm")),
+                            Item('nmscale',label="Plot in nm"),
+                            HGroup(
+                                Item('calib',label="Own Calibration"),
+                                Item('calibwvl',label="Wavelength",editor=TextEditor(evaluate=float,auto_set=False)),
+                                Item('calibpxl',label="Pixel",editor=TextEditor(evaluate=int,auto_set=False))
+                                )
+                            ),
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                         resizable = True,
-                        height=250, 
+                        height=300, 
                         width=900, 
                         menubar=MenuBar(menu))
 
@@ -299,6 +310,7 @@ class CameraGUI(HasTraits):
 
 # for calculating the scale of plot in nm, if needed
     def create_wavelength_for_plotting(self):
+        #Pixel are numerated from 0 to 1023 as default! useful thing for for-loops
         wavelength=[]
         pixel=1024
         grooves=self.ivSpectro.current_grating.split(' ')
@@ -306,12 +318,23 @@ class CameraGUI(HasTraits):
         for i in range(pixel):
             wavelength.append(i)
         width=26*10**-3
-        wavelength[pixel/2]=self.ivSpectro.centerwvl #be careful wavelength is even, so has no center for precise centerwvl
-        for i in range(pixel/2):
-            wavelength[pixel/2-i-1]=wavelength[pixel/2-i]-width*self.calculate_dispersion(wavelength[pixel/2-i],grooves)
-        for i in range(pixel/2-1): #because 1024 is even, it has no center, so indexshift is needed
-            wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
-        return wavelength
+        
+        if not self.calib: #no own calibration so centerwvl from ivspectro is used for center pixel
+            wavelength[pixel/2]=self.ivSpectro.centerwvl #be careful wavelength is even, so has no center for precise centerwvl
+            for i in range(pixel/2):
+                wavelength[pixel/2-i-1]=wavelength[pixel/2-i]-width*self.calculate_dispersion(wavelength[pixel/2-i],grooves)
+            for i in range(pixel/2-1): #because 1024 is even, it has no center, so indexshift is needed
+                wavelength[pixel/2+i+1]=wavelength[pixel/2+i]+width*self.calculate_dispersion(wavelength[pixel/2+i],grooves)
+            return wavelength
+
+        else: #if self.calib == True use this own calibration method for wavelength[]
+            wavelength[int(self.calibpxl)]=self.calibwvl #be careful wavelength is even, so has no center for precise centerwvl
+            for i in range(self.calibpxl):
+                wavelength[self.calibpxl-i-1]=wavelength[self.calibpxl-i]-width*self.calculate_dispersion(wavelength[self.calibpxl-i],grooves)
+            for i in range(pixel-self.calibpxl-1): #rest of the pixel which are missing in the first for loop
+                wavelength[self.calibpxl+i+1]=wavelength[self.calibpxl+i]+width*self.calculate_dispersion(wavelength[self.calibpxl+i],grooves)
+            return wavelength
+            
 
     def _update_acqtime(self):
         self.acqtime = time.localtime()
