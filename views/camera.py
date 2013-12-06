@@ -4,6 +4,7 @@ from traits.api import*
 from traitsui.api import*
 from traits.util import refresh
 from traitsui.menu import OKButton, CancelButton
+from enable.api import BaseTool
 from chaco.api import Plot, ArrayPlotData, PlotGraphicsContext, jet
 from chaco.tools.api import PanTool, ZoomTool
 from pyface.api import FileDialog,OK
@@ -27,6 +28,14 @@ import views.spectrometer
 
 from pyface.api import error,warning,information
 
+
+class PlotTool(BaseTool):
+
+    def normal_left_down(self, event):
+        [x,y]=self.component.map_data((event.x,event.y))
+        main.AFX = float(x)
+        main.AFY = float(y)
+
 class CameraGUI(HasTraits):
     icCamera = controls.camera.Camera()
 
@@ -47,6 +56,10 @@ class CameraGUI(HasTraits):
     continous_label = Str('Continous')
     continous=Button()
     autofocus=Button(label="AF X/Y")
+    # Ints that come from a mouse-event on the cameraplot to define the
+    # surrounding for the AF
+    AFX = Int()
+    AFY = Int()
     zautofocus=Button(label="AF Z")
     export=Button(label="Export")
     settemperature=Range(low=-70,high=20,value=20)
@@ -122,6 +135,7 @@ class CameraGUI(HasTraits):
                         menubar=MenuBar(menu))
 
     def _single_fired(self):
+        import pdb; pdb.set_trace()
         try:
             self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
         except: 
@@ -234,7 +248,7 @@ class CameraGUI(HasTraits):
     def plot_data(self):
         
         scaleinnm=self.create_wavelength_for_plotting()
-        scaleinpx=np.linspace(0,1023,1024)
+        scaleinpx=np.linspace(0,1023,1024) # pixel are number from 0 to 1023
 
         titlepxx = "Pixel [px]"
         titlepxy = "Counts [arb. unit]"
@@ -287,7 +301,7 @@ class CameraGUI(HasTraits):
         plot.title = ""
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
         plot.tools.append(PanTool(plot, constrain_key="shift"))
-        #plot.tools.append(PlotTool(component=plot))
+        plot.tools.append(PlotTool(component=plot))
         #plot.range2d.x_range.low=self.x1
         #plot.range2d.x_range.high=self.x2
         #plot.range2d.y_range.low=self.y1
@@ -318,7 +332,7 @@ class CameraGUI(HasTraits):
         for i in range(pixel):
             wavelength.append(i)
         width=26*10**-3
-       print "WARNING: create_wavelength_for_plotting() in ivCamera needs to be tested for accuracy, especially the own calibration method, befor relying on the output!" 
+        print "WARNING: create_wavelength_for_plotting() in ivCamera needs to be tested for accuracy, especially the own calibration method, befor relying on the output!"
         if not self.calib: #no own calibration so centerwvl from ivspectro is used for center pixel
             wavelength[pixel/2]=self.ivSpectro.centerwvl #be careful wavelength is even, so has no center for precise centerwvl
             for i in range(pixel/2):
