@@ -278,7 +278,6 @@ class CameraGUI(HasTraits):
         #plot.range2d.y_range.high=self.y2
         plot.x_axis.title=xtitle
         plot.y_axis.title=ytitle
-        print "jetzt sollte ich plotten"
         self.plot=plot
 
 
