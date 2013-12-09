@@ -33,19 +33,19 @@ class PlotTool(BaseTool):
 
     def normal_left_down(self, event):
         [x,y]=self.component.map_data((event.x,event.y))
-        main.AFX = float(x)
-        main.AFY = float(y)
-        print main.AFX
-        print main.AFY
+        x = float(x)
+        
         if not main.nmscale:
-            main.AFX = round(main.AFX) #closest pixel representation
+            x = round(x) #closest pixel representation
+            main.AFX = int(x) # int conversion for listing
+        
         if main.nmscale:
             a = main.scaleinnm
             #returns index of closest represenation of AFX in the list of
             #scaleinnm
-            main.AFX = min(range(len(a)), key=lambda i: abs(a[i]-main.AFX))
-
-        print "x-index ",main.AFX
+            x = min(range(len(a)), key=lambda i: abs(a[i]-x))
+            main.AFX = int(x) # int conversion for listing
+        print "be careful, you just created a new center for the AF: ",main.AFX
 
 class CameraGUI(HasTraits):
     icCamera = controls.camera.Camera()
@@ -55,9 +55,11 @@ class CameraGUI(HasTraits):
 
     acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
+    cooler=Bool(False)
+
+    #variables for the scale of the plot
     scaleinnm = [] #global, empty array for create_wavelenth_for_plotting()
     scaleinpx=np.linspace(0,1023,1024) # pixel are number from 0 to 1023
-    scaletype = Button()
     scaletype_label = Str('Scale in NM')
     nmscale = Bool(False) # False: scale in pxl
     
@@ -67,22 +69,25 @@ class CameraGUI(HasTraits):
     calibpxl = Range(low=0,high=1023,value=512,editor=TextEditor(evaluate=int,auto_set=False))
 
 
-    cooler=Bool(False)
+    scaletype = Button()
     speeddata = Button(label="Show HS/VS Data")
     single=Button()
     continous_label = Str('Continous')
     continous=Button()
     autofocus=Button(label="AF X/Y")
-    # Ints that come from a mouse-event on the cameraplot to define the
-    # surrounding for the AF
-    AFX = Float()
-    AFY = Float()
     zautofocus=Button(label="AF Z")
     export=Button(label="Export")
-    settemperature=Range(low=-70,high=20,value=20)
 
+    # Ints that come from a mouse-event on the cameraplot to define the
+    # center for the AF
+    AFX = Int()
+    #defines the radius around the center
+    AFRange = int(15)
+    #step size for the AF
     x_step = Float(0.001)
     y_step = Float(0.001)
+
+    #creating all the necessary Instances
     ivCryo = Instance(views.cryo.CryoGUI)
     icCryo = Instance(controls.cryo.Cryo)
     ivVoltage = Instance(views.voltage.VoltageGUI)
@@ -92,6 +97,7 @@ class CameraGUI(HasTraits):
 
     """menu"""
     exposuretime=Range(low=0.0001,high=10,value=icCamera.exposuretime_init,editor=TextEditor(evaluate=float,auto_set=False))
+    settemperature=Range(low=-70,high=20,value=20)
 #List(list()),first make from dict_list an list then convert to a Traits List
     Vshiftspeed_keys = List(list(icCamera.Vshiftspeed_keys))
     Hshiftspeed_keys = List(list(icCamera.Hshiftspeed_keys))
@@ -153,61 +159,77 @@ class CameraGUI(HasTraits):
 
     def _single_fired(self):
         self.acquisition()
-        self._update_acqtime()
         self.plot_data()
     # Erkenntnis: geplottet wird erst, wenn die fired() zu ihrem ende gekommen
     # ist, es bringt nichts zwischen drin einen plot zu veraendern, das
     # plot_data() macht nur sinn wenn es EINMAL am ende steht
+
+
+    #returns range for the AFs
+    #we have to define in advance which
+    #part of the spectrum we want to maximize
+    #because QDs have small peaks in a potentially
+    #big ocean of other signals
+    def afrange(self):
+        if self.AFX: #if mouse event has happend
+            start = self.AFX - self.AFRange #center minus the radius
+            end = self.AFX + self.AFRange #center plus the radius
+        else: #if no center has been chosen, take whole spectrum
+            start = 0
+            ende = 1023
+        return start,end
+
     def _zautofocus_fired(self):
+        _from, _to = self.afrange()
         maxid = -1 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
         for i in range(256):
             self.ivVoltage.Voltage = float(i/255.*5.)
             self.acquisition()
-            if maxcount < max(self.line):
-                maxcount = max(self.line)
+            if maxcount < max(self.line[_from:_to]):
+                maxcount = max(self.line[_from:_to)
                 maxid = i
             print "Z-Scan bei %03d Prozent!" % int(i/255.*100.)
         print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
 
         self.ivVoltage.Voltage = maxid/255.*5.
         self.acquisition()
-        self._update_acqtime()
         self.plot_data()
 
     def _autofocus_fired(self):
+        _from, _to = self.afrange()
         xtest = False
         ytest = False
         self.acquisition()
-        while xtest == False: #Test in die x-Richtung, suchen bis Counts runter
-            a = max(self.line)
+        while not xtest: #Test in die x-Richtung, suchen bis Counts runter
+            a = max(self.line[_from:_to])
             self.icCryo.rmove(self.x_step,0)
             self.acquisition()
             self.plot_data()
-            b = max(self.line)
+            b = max(self.line[_from:_to])
             if b < a:
                 self.icCryo.rmove(-self.x_step,0)
-                self.line=self.icCamera.acquisition() #damit er wieder das aktuelle max hat
+                self.acquisition() #damit er wieder das aktuelle max hat
                 xtest = True
         xtest=False
 
-        while xtest == False: #Test in die -x-Richtung, suchen bis Counts runter
-            a = max(self.line)
+        while not xtest: #Test in die -x-Richtung, suchen bis Counts runter
+            a = max(self.line[_from:_to])
             self.icCryo.rmove(-self.x_step,0)
             self.acquisition()
             self.plot_data()
-            b = max(self.line)
+            b = max(self.line[_from:_to])
             if b < a:
                 self.icCryo.rmove(self.x_step,0)
                 self.acquisition()
                 xtest = True
 
-        while ytest == False: #Test in die y-Richtung, suchen Counts runter
-            a = max(self.line)
+        while not ytest: #Test in die y-Richtung, suchen Counts runter
+            a = max(self.line[_from:_to])
             self.icCryo.rmove(0,self.y_step)
             self.acquisition()
             self.plot_data()
-            b = max(self.line)
+            b = max(self.line[_from:_to])
             if b < a:
                 self.icCryo.rmove(0,-self.y_step)
                 self.acquisition()
@@ -215,18 +237,17 @@ class CameraGUI(HasTraits):
 
         ytest = False
 
-        while ytest == False: #Test in die -y-Richtung, suchen Counts runter
-            a = max(self.line)
+        while not ytest: #Test in die -y-Richtung, suchen Counts runter
+            a = max(self.line[_from:_to])
             self.icCryo.rmove(0,-self.y_step)
             self.acquisition()
             self.plot_data()
-            b = max(self.line)
+            b = max(self.line[_from:_to])
             if b < a:
                 self.icCryo.rmove(0,self.y_step)
                 self.acquisition()
                 ytest = True
 
-        self._update_acqtime() # saving time of last picture
         self.plot_data()
         print "AF fertig!"
 
@@ -454,11 +475,13 @@ class CameraGUI(HasTraits):
     def reload_camera(self):
         import pdb; pdb.set_trace()
 
+    #fills the data into self.line
     def acquisition(self):
         try:
             self.line=self.icCamera.acquisition(sim_pos=self.icCryo.pos(),sim_volt=self.ivVoltage.Voltage,exptme=self.exposuretime)
         except:
             self.line=self.icCamera.acquisition()
+        self._update_acqtime() # saving time of acquisition
 
     def stop_acq_thread(self):
         if self.acq_active:
