@@ -56,6 +56,9 @@ class CameraGUI(HasTraits):
     acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
     nmscale = Bool(True)
+    scaleinnm = [] #global, empty array for create_wavelenth_for_plotting()
+    scaleinpx=np.linspace(0,1023,1024) # pixel are number from 0 to 1023
+
     #variables for own calibration
     calib = Bool(False)
     calibwvl = Float()
@@ -228,8 +231,7 @@ class CameraGUI(HasTraits):
     def plot_data(self):
 #        import pdb; pdb.set_trace()
         
-        scaleinnm=self.create_wavelength_for_plotting()
-        scaleinpx=np.linspace(0,1023,1024) # pixel are number from 0 to 1023
+        self.scaleinnm=self.create_wavelength_for_plotting()
 
         titlepxx = "Pixel [px]"
         titlepxy = "Counts [arb. unit]"
@@ -241,15 +243,15 @@ class CameraGUI(HasTraits):
         x2px = 1023
         y1px = 0
         y2px = 127
-        x1nm = scaleinnm[0]
-        x2nm = scaleinnm[1023]
+        x1nm = self.scaleinnm[0]
+        x2nm = self.scaleinnm[1023]
         y1nm = 0
         y2nm = 127
 
         if self.nmscale:
             xtitle = titlenmx
             ytitle = titlenmy
-            scale = scaleinnm
+            scale = self.scaleinnm
             if self.icCamera.readmode_current == "Image":
                 ytitle = titlepxx #because in image mode y is in px!
             x1 = x1nm
@@ -262,7 +264,7 @@ class CameraGUI(HasTraits):
             ytitle = titlepxy
             if self.icCamera.readmode_current == "Image":
                 ytitle = titlepxx
-            scale = scaleinpx
+            scale = self.scaleinpx
             x1 = x1px
             x2 = x2px
             y1 = y1px
@@ -293,7 +295,7 @@ class CameraGUI(HasTraits):
 
 
 
-# dispersion of the gratings in theory  
+    # dispersion of the gratings in theory  
     def calculate_dispersion(self,wavelength,grooves):
         m=1 #grating order
         x=8.548 #spectro value: half angle
@@ -303,7 +305,7 @@ class CameraGUI(HasTraits):
         return dispersion
 
 
-# for calculating the scale of plot in nm, if needed
+    # for calculating the scale of plot in nm, if needed
     def create_wavelength_for_plotting(self):
         #Pixel are numerated from 0 to 1023 as default! useful thing for for-loops
         wavelength=[]
