@@ -171,16 +171,35 @@ class MainWindow(HasTraits):
                    Item('abort',show_label=False,**hide_no_scan),
                   ))
 
-    scan_plotctrl=HGroup(
-                Item('plotrangestart', style = 'simple',label="Start",show_label=True),
-                Item('plotrangemarker', style = 'text', label="Marker",show_label=True),
-                Item('plotrangeend', style = 'simple', label="End",show_label=True),
-                Item('plotrangey', style = 'text', label="Count-Range",show_label=True),
-                Item('plotsetalways', style = 'simple', label="Always",show_label=True),
-                Item('plotrangeset', style ='simple',label="Set",show_label=False),    
+
+    scan_plotctrl=VGrid(
+
+                Label('Start'),
+                Label('Marker'),
+                Label('End'),
+                Label('Count Range'),
+                '0','0',
+                Item('plotrangestart', style = 'simple',show_label=False),
+                Item('plotrangemarker', style = 'text', show_label=False),
+                Item('plotrangeend', style = 'simple', show_label=False),
+                Item('plotrangey', style = 'text', show_label=False),
+                Item('plotsetalways', style = 'simple',label='keep', show_label=True),
+                Item('plotrangeset', style ='simple',show_label=False),
+
+                columns=6
                 )
 
-    scan_sample_group=HGroup(
+    device_tab = HSplit(
+        Item('ivCryo',    editor=InstanceEditor( label="Cryostat",kind='live'), \
+                show_label=False, enabled_when='finished==True'),
+        Item('ivSpectro', editor=InstanceEditor( label="Spectrometer",   kind='live'), show_label=False),
+        Item('ivCamera',  editor=InstanceEditor( label="Camera",        kind='live'), show_label=False),
+        Item('ivVoltage', editor=InstanceEditor( label="Voltmeter",     kind='live'), show_label=False),
+        Item('untoggleall', show_label=True),
+        )
+
+
+    scan_sample_group=VGroup(HGroup(
             VGroup(
                 Item('plot',editor=ComponentEditor(size=(200,200)),show_label=False),
                 scan_ctrl
@@ -190,30 +209,16 @@ class MainWindow(HasTraits):
                 scan_plotctrl,
                 Item('plot_compare',editor=ComponentEditor(size=(100,200)),show_label=False)
                 ),
-            label='Scan Sample'
-            )
 
-    device_tab = VGroup(
-        Item('ivCryo',      label="Cryostat", show_label=True, enabled_when='finished==True'),
-        Item('ivSpectro',   label="Spectrometer", show_label=True),
-        Item('ivCamera',    label="Camera", show_label=True),
-        Item('ivVoltage',   label="Voltmeter", show_label=True),
-        Item('untoggleall', label="Deactivation Simulation", show_label=True),
-        label='Instruments'
-        )
-
-    tabs = Group(
-        device_tab,
-        scan_sample_group,
-        layout='tabbed'
-        )
+            show_border=True),device_tab)
 
     traits_view = View(
-        tabs,
+        scan_sample_group,
         menubar=MenuBar(file_menu,views.cryo.CryoGUI.menu,scan_sample_menu),
         title   = 'qdsearch',
-        buttons = [ 'OK' ],
-        resizable = True
+#        buttons = [ 'OK' ],
+        resizable = True,
+        width=300
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
@@ -226,12 +231,6 @@ class MainWindow(HasTraits):
         super(MainWindow,self).__init__(*self.initargs,**self.initkwargs)
         self.run_counts_thread()
 
-    def run_counts_thread(self):
-        self.counts_thread.wants_abort = False
-        self.counts_thread.caller = self
-        self.counts_thread.VoltPerCount = self.VoltPerCount
-        self.counts_thread.start()
-
     def _untoggleall_fired(self):
         self.ivVoltage.simulation = False
         sleep(0.2)
@@ -241,11 +240,11 @@ class MainWindow(HasTraits):
         sleep(1.5)
         self.ivCamera.simulation = False
 
-    def call_cryo_menu(self):
-       self.ivCryo.configure_traits(view='view_menu')
-
-    def call_spectrometer_menu(self):
-       self.ivSpectro.configure_traits(view='view_menu')
+#    def call_cryo_menu(self):
+#       self.ivCryo.configure_traits(view='view_menu')
+#
+#    def call_spectrometer_menu(self):
+#       self.ivSpectro.configure_traits(view='view_menu')
 
     def call_scan_sample_menu(self):
         self.configure_traits(view='setting_view')
@@ -255,6 +254,20 @@ class MainWindow(HasTraits):
             information(parent=None,title='please wait', message='Measurement at the spectrometer is running please finish this first.')
         else:
             thread.start_new_thread(self.scanning_step,())
+
+
+    def _abort_fired(self):
+        self.finished=True
+        self.icCryo.stop() #stopt cryo
+        print 'abort'
+
+    def run_counts_thread(self):
+        self.counts_thread.wants_abort = False
+        self.counts_thread.caller = self
+        self.counts_thread.VoltPerCount = self.VoltPerCount
+        self.counts_thread.start()
+
+
 
     def scanning_step(self):
 
@@ -304,12 +317,6 @@ class MainWindow(HasTraits):
         self.finished = True
         print 'searching finish'
 
-
-    def _abort_fired(self):
-        self.finished=True
-        self.icCryo.stop() #stopt cryo
-        print 'abort'
-
     def take_spectrum(self,x,y):
         print "nehme spektrum, warte auf klappspiegel"
         self.ivSpectro.exit_mirror='front (CCD)' # klappt spiegel vom spectro auf kamera um
@@ -338,6 +345,7 @@ class MainWindow(HasTraits):
         self.save_file()
 
     def reload_all(self):
+        refresh()
         import pdb;pdb.set_trace()
 
     def plot_map(self,x,y):
@@ -558,10 +566,12 @@ class MainWindow(HasTraits):
 main = MainWindow()
 if __name__ == '__main__':
 
-    if sys.platform[0]=="l" or sys.platform[0]=="w": #Fuer das reskalieren in windows
+    if sys.platform[0]=="w": #Fuer das reskalieren in windows
         scroll = True
     else:
         scroll = False
+
+    scroll = False
 
     main.configure_traits(scrollable = scroll)
     main.icCryo.open=False

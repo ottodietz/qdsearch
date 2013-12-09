@@ -89,14 +89,20 @@ class Spectro(simserial.SimSerial):
         self.write("SIDE-ENT-SLIT \r")
         self.write("?MICRONS \r")
         temp = self.readline()
-        return temp
+        if temp:
+            return str(temp)
+        else: #if simulating we need a other that nonetype return
+            return "sim"
 
     def get_exit_slit_width(self):
         self.flushInput()
         self.write("SIDE-EXIT-SLIT \r")
         self.write("?MICRONS \r")
         temp = self.readline()
-        return temp
+        if temp:
+            return str(temp)
+        else:
+            return "sim"
 
     def set_ent_slit_width(self,width):
         self.write("SIDE-ENT-SLIT \r")
@@ -162,8 +168,6 @@ class Spectro(simserial.SimSerial):
 
     def output_exit_mirror(self):
         """liest das current stellung des Exit_mirrors aus und gibt sie zur?ck"""
-
-       #import pdb;pdb.set_trace()
         self.write("EXIT-MIRROR \r")
         time.sleep(0.1)
         self.readline()
@@ -233,7 +237,6 @@ class Spectro(simserial.SimSerial):
 
     def _QMNMslashMIN(self,string):
         self.sim_output('  '+str(self.nm_je_min)+'  ')
-
  
     def _QMNM(self,string):
         self.sim_output('  '+str(self.nm)+'  ')

@@ -55,14 +55,17 @@ class CameraGUI(HasTraits):
 
     acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
-    nmscale = Bool(True)
     scaleinnm = [] #global, empty array for create_wavelenth_for_plotting()
     scaleinpx=np.linspace(0,1023,1024) # pixel are number from 0 to 1023
-
+    scaletype = Button()
+    scaletype_label = Str('Scale in NM')
+    nmscale = Bool(False) # False: scale in pxl
+    
     #variables for own calibration
     calib = Bool(False)
-    calibwvl = Float()
-    calibpxl = Int()
+    calibwvl = Range(low=0,high=5000,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
+    calibpxl = Range(low=0,high=1023,value=512,editor=TextEditor(evaluate=int,auto_set=False))
+
 
     cooler=Bool(False)
     speeddata = Button(label="Show HS/VS Data")
@@ -134,11 +137,11 @@ class CameraGUI(HasTraits):
                             Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
-                            Item('nmscale',label="Plot in nm"),
                             HGroup(
-                                Item('calib',label="Own Calibration"),
-                                Item('calibwvl',label="Wavelength",editor=TextEditor(evaluate=float,auto_set=False)),
-                                Item('calibpxl',label="Pixel",editor=TextEditor(evaluate=int,auto_set=False))
+                                Item('scaletype',show_label=True,editor=ButtonEditor(label_value='scaletype_label')),
+                                Item('calib',label="Calibrate"),
+                                Item('calibwvl',label="Wavelength",enabled_when='calib==True'),
+                                Item('calibpxl',label="Pixel",enabled_when='calib==True')
                                 )
                             ),
                             VGroup(
@@ -409,6 +412,15 @@ class CameraGUI(HasTraits):
 
     def _speeddata_fired(self):
         self.icCamera.speeddata()
+
+    def _scaletype_fired(self):
+        if self.nmscale:
+            self.scaletype_label = "Scale in NM"
+            self.nmscale = False
+        else:
+            self.scaletype_label = "Scale in Pxl"
+            self.nmscale = True  
+        self._single_fired() #update the plot 
 
     def _continous_fired(self):
         self.acq_active = not self.acq_active
