@@ -51,8 +51,8 @@ class SpectroGUI(HasTraits):
 
     slit_width_in=Range(low=10,high=3000,value=50,editor=TextEditor(evaluate=int,auto_set=False))
     slit_width_out=Range(low=10,high=3000,value=50,editor=TextEditor(evaluate=int,auto_set=False))
-    slit_width_in_measured = str()
-    slit_width_out_measured = str()
+    slit_width_in_measured = Str('\t-\t') # '' not posible because editor needs not nonetype
+    slit_width_out_measured = Str('\t-\t')
     measure_width = Button(label="measure")
     measured_values=[]
     wavelength=[]
@@ -100,8 +100,8 @@ class SpectroGUI(HasTraits):
                      Item('slit_width_out', show_label=False, enabled_when='True'),
                      **hide
                     ),
-              HGroup(Item('slit_width_in_measured', label='Measured width in/out'),
-                     Item('slit_width_out_measured', show_label=False),
+              HGroup(Item('slit_width_in_measured', label='Measured width in/out',style='readonly'),
+                     Item('slit_width_out_measured',show_label=False,style='readonly'),
                      Item('measure_width', show_label=False, enabled_when='True'),
                      **hide
                     ),
@@ -183,6 +183,7 @@ class SpectroGUI(HasTraits):
         self.icSpectro.set_exit_slit_width(self.slit_width_out)
 
     def _measure_width_fired(self):
+        import pdb; pdb.set_trace()
         self.slit_width_in_measured = self.icSpectro.get_ent_slit_width()
         time.sleep(1)
         self.slit_width_out_measured = self.icSpectro.get_exit_slit_width()

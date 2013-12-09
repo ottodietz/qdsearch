@@ -38,8 +38,9 @@ class CameraGUI(HasTraits):
     nmscale = Bool(True)
     #variables for own calibration
     calib = Bool(False)
-    calibwvl = Float()
-    calibpxl = Int()
+    calibwvl = Range(low=0,high=5000,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
+    calibpxl = Range(low=0,high=1023,value=512,editor=TextEditor(evaluate=int,auto_set=False))
+
 
     cooler=Bool(False)
     speeddata = Button(label="Show HS/VS Data")
@@ -110,8 +111,8 @@ class CameraGUI(HasTraits):
                             Item('nmscale',label="Plot in nm"),
                             HGroup(
                                 Item('calib',label="Own Calibration"),
-                                Item('calibwvl',label="Wavelength",editor=TextEditor(evaluate=float,auto_set=False)),
-                                Item('calibpxl',label="Pixel",editor=TextEditor(evaluate=int,auto_set=False))
+                                Item('calibwvl',label="Wavelength"),
+                                Item('calibpxl',label="Pixel")
                                 )
                             ),
                             VGroup(
