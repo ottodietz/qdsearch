@@ -31,6 +31,8 @@ from pyface.api import error,warning,information
 
 class PlotTool(BaseTool):
 
+    #this def is for getting the center for the AF
+    #by a mouseclick on the plot
     def normal_left_down(self, event):
         [x,y]=self.component.map_data((event.x,event.y))
         x = float(x)
@@ -38,14 +40,17 @@ class PlotTool(BaseTool):
         if not main.nmscale:
             x = round(x) #closest pixel representation
             main.AFX = int(x) # int conversion for listing
+            temp = main.AFX
         
         if main.nmscale:
             a = main.scaleinnm
             #returns index of closest represenation of AFX in the list of
             #scaleinnm
             x = min(range(len(a)), key=lambda i: abs(a[i]-x))
+            temp = a[x]
             main.AFX = int(x) # int conversion for listing
-        print "be careful, you just created a new center for the AF: ",main.AFX
+
+        print "be careful, you just created a new center for the AF: ",temp
 
 class CameraGUI(HasTraits):
     icCamera = controls.camera.Camera()
@@ -176,7 +181,11 @@ class CameraGUI(HasTraits):
             end = self.AFX + self.AFRange #center plus the radius
         else: #if no center has been chosen, take whole spectrum
             start = 0
-            ende = 1023
+            end = 1023
+        if self.nmscale: #if scale in in nm show start and end in nm
+            print "AF will maximize signal  in the range from "+str(self.scaleinnm[start])+"nm to "+str(self.scaleinnm[end])+"nm"
+        else: # if scale is in pxl
+            print "AF will maximize signal  in the range from "+str(start)+"px to "+str(end)+"px"
         return start,end
 
     def _zautofocus_fired(self):
@@ -187,7 +196,7 @@ class CameraGUI(HasTraits):
             self.ivVoltage.Voltage = float(i/255.*5.)
             self.acquisition()
             if maxcount < max(self.line[_from:_to]):
-                maxcount = max(self.line[_from:_to)
+                maxcount = max(self.line[_from:_to])
                 maxid = i
             print "Z-Scan bei %03d Prozent!" % int(i/255.*100.)
         print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
