@@ -58,8 +58,8 @@ class CryoGUI(HasTraits):
     toggle_active = False
     simulation=Bool(True, label="Simulation")
 
-    x_step=Float(0.001)
-    y_step=Float(0.001)
+    x_step=Float(0.0001)
+    y_step=Float(0.0001)
 
     traits_view=View(
       VGroup(
