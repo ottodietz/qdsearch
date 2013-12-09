@@ -35,7 +35,9 @@ class CameraGUI(HasTraits):
 
     acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
-    nmscale = Bool(True)
+    scaletype = Button()
+    scaletype_label = Str('Scale in NM')
+    nmscale = Bool(False) # False: scale in pxl
     #variables for own calibration
     calib = Bool(False)
     calibwvl = Range(low=0,high=5000,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
@@ -108,11 +110,11 @@ class CameraGUI(HasTraits):
                             Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
-                            Item('nmscale',label="Plot in nm"),
                             HGroup(
-                                Item('calib',label="Own Calibration"),
-                                Item('calibwvl',label="Wavelength"),
-                                Item('calibpxl',label="Pixel")
+                                Item('scaletype',show_label=True,editor=ButtonEditor(label_value='scaletype_label')),
+                                Item('calib',label="Calibrate"),
+                                Item('calibwvl',label="Wavelength",enabled_when='calib==True'),
+                                Item('calibpxl',label="Pixel",enabled_when='calib==True')
                                 )
                             ),
                             VGroup(
@@ -413,6 +415,15 @@ class CameraGUI(HasTraits):
 
     def _speeddata_fired(self):
         self.icCamera.speeddata()
+
+    def _scaletype_fired(self):
+        if self.nmscale:
+            self.scaletype_label = "Scale in NM"
+            self.nmscale = False
+        else:
+            self.scaletype_label = "Scale in Pxl"
+            self.nmscale = True  
+        self._single_fired() #update the plot 
 
     def _continous_fired(self):
         self.acq_active = not self.acq_active
