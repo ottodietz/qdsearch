@@ -35,6 +35,17 @@ class PlotTool(BaseTool):
         [x,y]=self.component.map_data((event.x,event.y))
         main.AFX = float(x)
         main.AFY = float(y)
+        print main.AFX
+        print main.AFY
+        if not main.nmscale:
+            main.AFX = round(main.AFX) #closest pixel representation
+        if main.nmscale:
+            a = main.scaleinnm
+            #returns index of closest represenation of AFX in the list of
+            #scaleinnm
+            main.AFX = min(range(len(a)), key=lambda i: abs(a[i]-main.AFX))
+
+        print "x-index ",main.AFX
 
 class CameraGUI(HasTraits):
     icCamera = controls.camera.Camera()
