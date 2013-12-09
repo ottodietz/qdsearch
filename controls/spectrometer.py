@@ -168,8 +168,6 @@ class Spectro(simserial.SimSerial):
 
     def output_exit_mirror(self):
         """liest das current stellung des Exit_mirrors aus und gibt sie zur?ck"""
-
-       #import pdb;pdb.set_trace()
         self.write("EXIT-MIRROR \r")
         time.sleep(0.1)
         self.readline()
