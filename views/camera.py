@@ -61,6 +61,7 @@ class CameraGUI(HasTraits):
     acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
     cooler=Bool(False)
+    progress = Int(1000) #shows progress of what soever process
 
     #variables for the scale of the plot
     scaleinnm = [] #global, empty array for create_wavelenth_for_plotting()
@@ -80,7 +81,8 @@ class CameraGUI(HasTraits):
     continous_label = Str('Continous')
     continous=Button()
     autofocus=Button(label="AF X/Y")
-    zautofocus=Button(label="AF Z")
+    zautofocus=Button()
+    zautofocus_label = Str("AF Z")
     export=Button(label="Export")
 
     # Ints that come from a mouse-event on the cameraplot to define the
@@ -139,11 +141,11 @@ class CameraGUI(HasTraits):
                                     Item('speeddata',show_label=False),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value= 'continous_label')),
                                     Item('autofocus',show_label=False),
-                                    Item('zautofocus',show_label=False),
+                                    Item('zautofocus',show_label=False,editor=ButtonEditor(label_value='zautofocus_label')),
                                     Item('export',show_label=False)
                                     ),
                             HGroup(
-                            Item('exposuretime'),Item('simulation',label='simulate camera')),
+                            Item('exposuretime'),Item('simulation',label='simulate camera'),Item('progress',label='Progress',style='readonly')),
                             Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys')),
                             Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
@@ -192,18 +194,34 @@ class CameraGUI(HasTraits):
         _from, _to = self.afrange()
         maxid = -1 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
-        for i in range(256):
-            self.ivVoltage.Voltage = float(i/255.*5.)
-            self.acquisition()
-            if maxcount < max(self.line[_from:_to]):
-                maxcount = max(self.line[_from:_to])
-                maxid = i
-            print "Z-Scan bei %03d Prozent!" % int(i/255.*100.)
+#        for i in range(256):
+#            self.ivVoltage.Voltage = float(i/255.*5.)
+#            self.acquisition()
+#            if maxcount < max(self.line[_from:_to]):
+#                maxcount = max(self.line[_from:_to])
+#                maxid = i
+        thread.start_new_thread(self._zautofocus_rename,())
+        self.zautofocus_label = "AF Z"
         print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
 
         self.ivVoltage.Voltage = maxid/255.*5.
         self.acquisition()
         self.plot_data()
+
+    def _zautofocus_rename(self):
+        self.zautofocus_label = "hallo"# % int(i/255.*100.)
+        maxid = -1
+        maxcount = 0
+        _from, _to = self.afrange()
+        for i in range(256):
+            self.ivVoltage.Voltage = float(i/255.*5.)
+            self.acquisition()
+            self.zautofocus_label = str(i)# % int(i/255.*100.)
+            if maxcount < max(self.line[_from:_to]):
+                maxcount = max(self.line[_from:_to])
+                maxid = i
+        
+
 
     def _autofocus_fired(self):
         _from, _to = self.afrange()
