@@ -139,7 +139,6 @@ class CameraGUI(HasTraits):
                                     Item('single',label='Single',show_label=False),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
                                     Item('speeddata',show_label=False),
-                                    Item('continous',show_label=False,editor=ButtonEditor(label_value= 'continous_label')),
                                     Item('autofocus',show_label=False),
                                     Item('zautofocus',show_label=False,editor=ButtonEditor(label_value='zautofocus_label')),
                                     Item('export',show_label=False)
@@ -208,7 +207,7 @@ class CameraGUI(HasTraits):
         self.acquisition()
         self.plot_data()
 
-    def _zautofocus_rename(self):
+    def _zautofocus_scan(self):
         self.zautofocus_label = "hallo"# % int(i/255.*100.)
         maxid = -1
         maxcount = 0
