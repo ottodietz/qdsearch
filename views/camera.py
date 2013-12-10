@@ -10,6 +10,7 @@ from chaco.tools.api import PanTool, ZoomTool
 from pyface.api import FileDialog,OK
 from enable.component_editor import ComponentEditor
 import thread
+import threading
 import math
 import numpy as np
 from time import sleep
@@ -61,7 +62,7 @@ class CameraGUI(HasTraits):
     acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
     cooler=Bool(False)
-    progress = Int(1000) #shows progress of what soever process
+    progress = Str("") #shows progress of what soever process
 
     #variables for the scale of the plot
     scaleinnm = [] #global, empty array for create_wavelenth_for_plotting()
@@ -89,7 +90,7 @@ class CameraGUI(HasTraits):
     # center for the AF
     AFX = Int()
     #defines the radius around the center
-    AFRange = int(15)
+    AFRange = int(3)
     #step size for the AF
     x_step = Float(0.0005)
     y_step = Float(0.0005)
@@ -192,37 +193,29 @@ class CameraGUI(HasTraits):
         return start,end
 
     def _zautofocus_fired(self):
+        #needs to be a thread, so that gui can refresh within the thread
+        thread.start_new_thread(self.zautofocus_thread,())
+    
+
+    def zautofocus_thread(self):
         _from, _to = self.afrange()
         maxid = -1 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
-#        for i in range(256):
-#            self.ivVoltage.Voltage = float(i/255.*5.)
-#            self.acquisition()
-#            if maxcount < max(self.line[_from:_to]):
-#                maxcount = max(self.line[_from:_to])
-#                maxid = i
-        thread.start_new_thread(self._zautofocus_rename,())
-        self.zautofocus_label = "AF Z"
-        print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
-
-        self.ivVoltage.Voltage = maxid/255.*5.
-        self.acquisition()
-        self.plot_data()
-
-    def _zautofocus_scan(self):
-        self.zautofocus_label = "hallo"# % int(i/255.*100.)
-        maxid = -1
-        maxcount = 0
-        _from, _to = self.afrange()
         for i in range(256):
             self.ivVoltage.Voltage = float(i/255.*5.)
             self.acquisition()
-            self.zautofocus_label = str(i)# % int(i/255.*100.)
+            self.progress = str(int(i/255.*100.))
+            if i%15 == 0: #plot every 15th time
+                self.plot_data()
             if maxcount < max(self.line[_from:_to]):
                 maxcount = max(self.line[_from:_to])
                 maxid = i
         
-
+        print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
+        print "Highest measured count when focusing: %5d" % float(maxcount)
+        self.ivVoltage.Voltage = maxid/255.*5.
+        self.acquisition()
+        self.plot_data()
 
     def _autofocus_fired(self):
         _from, _to = self.afrange()
@@ -367,7 +360,6 @@ class CameraGUI(HasTraits):
         for i in range(pixel):
             wavelength.append(i)
         width=26*10**-3
-        print 'WARNING: create_wavelength_for_plotting() in ivCamera needs testing dont rely on output!'
         
         if not self.calib: #no own calibration so centerwvl from ivspectro is used for center pixel
             wavelength[pixel/2]=self.ivSpectro.centerwvl #be careful wavelength is even, so has no center for precise centerwvl
