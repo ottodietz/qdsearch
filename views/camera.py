@@ -91,8 +91,8 @@ class CameraGUI(HasTraits):
     #defines the radius around the center
     AFRange = int(15)
     #step size for the AF
-    x_step = Float(0.001)
-    y_step = Float(0.001)
+    x_step = Float(0.0005)
+    y_step = Float(0.0005)
 
     #creating all the necessary Instances
     ivCryo = Instance(views.cryo.CryoGUI)
@@ -134,19 +134,21 @@ class CameraGUI(HasTraits):
                         )
     menu=Menu(menu_action,mi_reload,name='Camera')
 
+
+    hide = {'enabled_when':'acq_active==False'} #if continous runs disable button
     traits_view=View(HGroup(VGroup(
                             HGroup(
-                                    Item('single',label='Single',show_label=False),
+                                    Item('single',label='Single',show_label=False,**hide),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
-                                    Item('speeddata',show_label=False),
-                                    Item('autofocus',show_label=False),
-                                    Item('zautofocus',show_label=False,editor=ButtonEditor(label_value='zautofocus_label')),
-                                    Item('export',show_label=False)
+                                    Item('speeddata',show_label=False,**hide),
+                                    Item('autofocus',show_label=False,**hide),
+                                    Item('zautofocus',show_label=False,editor=ButtonEditor(label_value='zautofocus_label'),**hide),
+                                    Item('export',show_label=False,**hide)
                                     ),
                             HGroup(
                             Item('exposuretime'),Item('simulation',label='simulate camera'),Item('progress',label='Progress',style='readonly')),
-                            Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys')),
-                            Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
+                            Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys'),**hide),
+                            Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys'),**hide),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
                             HGroup(
