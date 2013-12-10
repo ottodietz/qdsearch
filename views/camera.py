@@ -217,7 +217,13 @@ class CameraGUI(HasTraits):
         self.acquisition()
         self.plot_data()
 
+
     def _autofocus_fired(self):
+        #needs to be a thread, so that gui can refresh within the thread
+        thread.start_new_thread(self._autofocus_thread,())
+
+
+    def _autofocus_thread(self):
         _from, _to = self.afrange()
         xtest = False
         ytest = False
