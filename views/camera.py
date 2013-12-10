@@ -54,8 +54,8 @@ class CameraGUI(HasTraits):
     export=Button(label="Export")
     settemperature=Range(low=-70,high=20,value=20)
 
-    x_step = Float(0.001)
-    y_step = Float(0.001)
+    x_step = Float(0.0005)
+    y_step = Float(0.0005)
     ivCryo = Instance(views.cryo.CryoGUI)
     icCryo = Instance(controls.cryo.Cryo)
     ivVoltage = Instance(views.voltage.VoltageGUI)
