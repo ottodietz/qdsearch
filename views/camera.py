@@ -94,20 +94,21 @@ class CameraGUI(HasTraits):
                         )
     menu=Menu(menu_action,mi_reload,name='Camera')
 
+
+    hide = {'enabled_when':'acq_active==False'} #if continous runs disable button
     traits_view=View(HGroup(VGroup(
                             HGroup(
-                                    Item('single',label='Single',show_label=False),
+                                    Item('single',label='Single',show_label=False,**hide),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
-                                    Item('speeddata',show_label=False),
-                                    Item('continous',show_label=False,editor=ButtonEditor(label_value= 'continous_label')),
-                                    Item('autofocus',show_label=False),
-                                    Item('zautofocus',show_label=False),
-                                    Item('export',show_label=False)
+                                    Item('speeddata',show_label=False,**hide),
+                                    Item('autofocus',show_label=False,**hide),
+                                    Item('zautofocus',show_label=False,**hide),
+                                    Item('export',show_label=False,**hide)
                                     ),
                             HGroup(
                             Item('exposuretime'),Item('simulation',label='simulate camera')),
-                            Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys')),
-                            Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys')),
+                            Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys'),**hide),
+                            Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys'),**hide),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
                             Item('Hshiftspeed',label="Horizontal Speed",editor=EnumEditor(name='Hshiftspeed_keys')),
                             HGroup(
