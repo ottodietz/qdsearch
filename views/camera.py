@@ -110,8 +110,7 @@ class CameraGUI(HasTraits):
     continous_label = Str('Continous')
     continous=Button()
     autofocus=Button(label="AF X/Y")
-    zautofocus=Button()
-    zautofocus_label = Str("AF Z")
+    zautofocus=Button(label="AF Z")
     export=Button(label="Export")
 
     # Ints that come from a mouse-event on the cameraplot to define the
@@ -171,7 +170,7 @@ class CameraGUI(HasTraits):
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
                                     Item('speeddata',show_label=False,**hide),
                                     Item('autofocus',show_label=False,**hide),
-                                    Item('zautofocus',show_label=False,editor=ButtonEditor(label_value='zautofocus_label'),**hide),
+                                    Item('zautofocus',show_label=False,**hide),
                                     Item('export',show_label=False,**hide)
                                     ),
                             HGroup(
