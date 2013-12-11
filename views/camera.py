@@ -32,6 +32,32 @@ from pyface.api import error,warning,information
 
 class PlotTool(BaseTool):
 
+    #for showing the current coordinates of the mouse on the plot
+    def normal_mouse_move(self,event):
+        [x,y]=self.component.map_data((event.x,event.y))
+        x = float(x)
+        y = float(y)
+
+        if not main.nmscale:
+            x = round(x) #closest pixel representation
+            y = round(y) #closest count representation
+            y = int(y) #no decimal places
+            main.mousex = str(x) # str conversion for view
+            main.mousey = str(y) # str conversion for view
+
+        if main.nmscale:
+            a = main.scaleinnm
+            #returns index of closest represenation of x in the list of
+            #scaleinnm
+            x = min(range(len(a)), key=lambda i: abs(a[i]-x))
+            y = round(y) #closest count representation
+            y = int(y) #no decimal places
+            x = a[x] #for getting the wvl of index x
+            x = str("%3.3f") % float(x)  
+            main.mousex = str(x) # str conversion for listing
+            main.mousey = str(y)
+
+
     #this def is for getting the center for the AF
     #by a mouseclick on the plot
     def normal_left_down(self, event):
@@ -62,7 +88,9 @@ class CameraGUI(HasTraits):
     acqtime = time.localtime #time of acq., will be updated for every acq.
     simulation=Bool(True)
     cooler=Bool(False)
-    progress = Str("") #shows progress of what soever process
+    progress = Str(" \t") #shows progress of what soever process
+    mousex = Str("\t\t")
+    mousey = Str("\t\t")
 
     #variables for the scale of the plot
     scaleinnm = [] #global, empty array for create_wavelenth_for_plotting()
@@ -147,7 +175,11 @@ class CameraGUI(HasTraits):
                                     Item('export',show_label=False,**hide)
                                     ),
                             HGroup(
-                            Item('exposuretime'),Item('simulation',label='simulate camera'),Item('progress',label='Progress',style='readonly')),
+                                Item('exposuretime'),
+                                Item('simulation',label='simulate'),
+                                Item('progress',label='Progress',style='readonly'),
+                                Item('mousex',label='X ',style='readonly'),
+                                Item('mousey',label='Y ',style='readonly')),
                             Item('readmode', label="Read Mode",editor=EnumEditor(name='readmode_keys'),**hide),
                             Item('acquisitionmode', label="Acquisition Mode",editor=EnumEditor(name='acquisitionmode_keys'),**hide),
                             Item('Vshiftspeed',label="Vertical Speed",editor=EnumEditor(name='Vshiftspeed_keys')),
