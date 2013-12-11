@@ -230,21 +230,29 @@ class CameraGUI(HasTraits):
 
     def zautofocus_thread(self):
         _from, _to = self.afrange()
-        maxid = -1 #Wert der Spannung bei Maximalen Counts, setze auf -1
+        maxid = 0 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
-        for i in range(256):
-            self.ivVoltage.Voltage = float(i/255.*5.)
-            self.acquisition()
-            self.progress = str(int(i/255.*100.))
-            if i%15 == 0: #plot every 15th time
-                self.plot_data()
-            if maxcount < max(self.line[_from:_to]):
-                maxcount = max(self.line[_from:_to])
-                maxid = i
+        maxvolt = float(0)
+        steps = float(10)
+        shift = float(0)
+        iterations = int(2)
+        for it in range(iterations):
+            shift = shift+maxid*(5./10**(it-1)/steps)
+            for i in range(int(steps)):
+                volt = float((i+0.5)*5./(10**it)/steps+shift)
+                self.ivVoltage.Voltage = volt
+                self.acquisition()
+                self.progress = str(int(((it+1)*(i+1))*100/(iterations*steps)))
+                if int(self.progress)%10 == 0: #plot 10 times
+                    self.plot_data()
+                if maxcount < max(self.line[_from:_to]):
+                    maxcount = max(self.line[_from:_to])
+                    maxvolt = volt
+                    maxid = i
         
-        print "Im Fokus bei der Spannung %1.1f" % float(maxid/255.*5.)
-        print "Highest measured count when focusing: %5d" % float(maxcount)
-        self.ivVoltage.Voltage = maxid/255.*5.
+        print "Im Fokus bei der Spannung %1.1f" % maxvolt
+        print "Highest measured count when focusing: %5d" % maxcount
+        self.ivVoltage.Voltage = volt
         self.acquisition()
         self.plot_data()
 
