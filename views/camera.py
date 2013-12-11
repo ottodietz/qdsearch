@@ -30,55 +30,6 @@ import views.spectrometer
 from pyface.api import error,warning,information
 
 
-class PlotTool(BaseTool):
-
-    #for showing the current coordinates of the mouse on the plot
-    def normal_mouse_move(self,event):
-        [x,y]=self.component.map_data((event.x,event.y))
-        x = float(x)
-        y = float(y)
-
-        if not main.nmscale:
-            x = round(x) #closest pixel representation
-            y = round(y) #closest count representation
-            y = int(y) #no decimal places
-            main.mousex = str(x) # str conversion for view
-            main.mousey = str(y) # str conversion for view
-
-        if main.nmscale:
-            a = main.scaleinnm
-            #returns index of closest represenation of x in the list of
-            #scaleinnm
-            x = min(range(len(a)), key=lambda i: abs(a[i]-x))
-            y = round(y) #closest count representation
-            y = int(y) #no decimal places
-            x = a[x] #for getting the wvl of index x
-            x = str("%3.3f") % float(x)  
-            main.mousex = str(x) # str conversion for listing
-            main.mousey = str(y)
-
-
-    #this def is for getting the center for the AF
-    #by a mouseclick on the plot
-    def normal_left_down(self, event):
-        [x,y]=self.component.map_data((event.x,event.y))
-        x = float(x)
-        
-        if not main.nmscale:
-            x = round(x) #closest pixel representation
-            main.AFX = int(x) # int conversion for listing
-            temp = main.AFX
-        
-        if main.nmscale:
-            a = main.scaleinnm
-            #returns index of closest represenation of AFX in the list of
-            #scaleinnm
-            x = min(range(len(a)), key=lambda i: abs(a[i]-x))
-            temp = a[x]
-            main.AFX = int(x) # int conversion for listing
-
-        print "be careful, you just created a new center for the AF: ",temp
-
 class CameraGUI(HasTraits):
     icCamera = controls.camera.Camera()
 
@@ -366,7 +317,8 @@ class CameraGUI(HasTraits):
         plot.title = ""
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
         plot.tools.append(PanTool(plot, constrain_key="shift"))
-        plot.tools.append(PlotTool(component=plot))
+        plot.tools.append(CameraGUI_PlotTool(component=plot,caller=self))
+#        import pdb; pdb.set_trace()
         #plot.range2d.x_range.low=self.x1
         #plot.range2d.x_range.high=self.x2
         #plot.range2d.y_range.low=self.y1
@@ -545,6 +497,65 @@ class CameraGUI(HasTraits):
             self.acq_active = False
             while self.continous_label == 'Stop':
                 sleep(0.1)
+
+    #### Events that handle clicks on plot ###
+
+    def normal_mouse_move(self,event):
+        x = float(event.x)
+        y = float(event.y)
+
+        if not self.nmscale:
+            x = round(x) #closest pixel representation
+            y = round(y) #closest count representation
+            y = int(y) #no decimal places
+            self.mousex = str(x) # str conversion for view
+            self.mousey = str(y) # str conversion for view 
+        else:  
+            a = self.scaleinnm
+            #returns index of closest represenation of x in the list of
+            #scaleinnm
+            x = min(range(len(a)), key=lambda i: abs(a[i]-x))
+            y = round(y) #closest count representation
+            y = int(y) #no decimal places
+            x = a[x] #for getting the wvl of index x
+            x = str("%3.3f") % float(x)  
+            self.mousex = str(x) # str conversion for listing
+            self.mousey = str(y)
+
+
+    #this def is for getting the center for the AF
+    #by a mouseclick on the plot
+    def normal_left_down(self, event):
+        x = float(event.x)
+        
+        if not self.nmscale:
+            x = round(x) #closest pixel representation
+            self.AFX = int(x) # int conversion for listing
+            temp = self.AFX
+        
+        else:
+            a = self.scaleinnm
+            #returns index of closest represenation of AFX in the list of
+            #scaleinnm
+            x = min(range(len(a)), key=lambda i: abs(a[i]-x))
+            temp = a[x]
+            self.AFX = int(x) # int conversion for listing
+
+        print "be careful, you just created a new center for the AF: ",temp
+
+class CameraGUI_PlotTool(BaseTool):
+
+    caller = Instance(CameraGUI)
+
+    def normal_mouse_move(self,event):
+        [event.x,event.y]=self.component.map_data((event.x,event.y))
+        self.caller.normal_mouse_move(event)
+
+    def normal_left_down(self, event):
+        [event.x,event.y]=self.component.map_data((event.x,event.y))
+        self.caller.normal_left_down(event)
+
+
 
 if __name__=="__main__":
     main=CameraGUI(
