@@ -195,7 +195,7 @@ class MainWindow(HasTraits):
         Item('ivSpectro', editor=InstanceEditor( label="Spectrometer",   kind='live'), show_label=False),
         Item('ivCamera',  editor=InstanceEditor( label="Camera",        kind='live'), show_label=False),
         Item('ivVoltage', editor=InstanceEditor( label="Voltmeter",     kind='live'), show_label=False),
-        Item('untoggleall', show_label=True),
+        Item('untoggleall', show_label=False),
         )
 
 
