@@ -259,14 +259,13 @@ class CameraGUI(HasTraits):
 
     #hysterese sensitiv hillclimbing + count awareness --> super intelligent  
     def _autofocus_AI(self):
-        sm = int(0.0001) #smalles step of cryo
-        self.ivSpectro.exit_mirror='side (APDs)' # changed mirrors to apd
+        sm = self.icCryo.sm #smalles step of cryo
         # standard deviation of noise from apdcounts
         for i in range(10):
             maxstat = []
             maxstat.append(self.icVoltage.measure())
-        std = np.std(maxstat) #standard deviation to see how much noise there is
-        print "there is a std in the noise of APDs of ",std
+        std = np.mean(maxstat) #mean max of QD
+        print "there is a mean signal ",mean
         maxlist = []
         
         ## in x-direction

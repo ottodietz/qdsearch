@@ -9,6 +9,7 @@ class Cryo(SimSerial):
     CMD = '[a-zA-Z+]+'  #das plus ist fuer hot_key_check in simserial
     PARMS = '[0-9\s]+'
     EOL='\r'# if they are two characters written together (without space) it is one EOL
+    sm = Float(0.0001) #smallest step of cryo
 
     def identify(self):
         self.flushInput()
