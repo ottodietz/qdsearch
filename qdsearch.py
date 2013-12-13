@@ -155,21 +155,31 @@ class MainWindow(HasTraits):
     hide_no_scan = { 'enabled_when': 'finished==False'}
     hide = { 'enabled_when': 'False'}
 
-    scan_ctrl=VGroup(
-            Item('textfield',label='Scan from / to / stepsize [mm]',style='readonly'),
-            HGroup(Item('x1',label='x'),
-                   Item('x2',show_label=False),
-                   Item('x_stepsize',show_label=False,label='width step (x) [mm]  '),
-                   Item('counts',label='counts',editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),
-                   Item('threshold_counts',label='threshold',editor=TextEditor(format_str='%5.0f', evaluate=float)),
-                   **hide_during_scan
-                  ),
-            HGroup(Item('y1',label='y',**hide_during_scan),
-                   Item('y2',show_label=False,label='y2 [mm]',**hide_during_scan),
-                   Item('y_stepsize',show_label=False,label='height step (y) [mm] ',**hide_during_scan),
-                   Item('scan_sample_step',label='Scan',show_label=False,**hide_during_scan),
-                   Item('abort',show_label=False,**hide_no_scan),
-                  ))
+    scan_ctrl=VGrid(
+
+                Label('Scan'),
+                Label('from'),
+                Label('to'),
+                Label('stepsize [mm]'),
+                Label('counts'),
+                Label('threshold'),
+                '0',
+                Label('x:'),
+                Item('x1',show_label=False,**hide_during_scan),
+                Item('x2',show_label=False,**hide_during_scan),
+                Item('x_stepsize',show_label=False,**hide_during_scan),
+                Item('counts',show_label=False,editor=TextEditor(format_str='%5.0f', evaluate=float),**hide),
+                Item('threshold_counts',show_label=False,editor=TextEditor(format_str='%5.0f',evaluate=float),**hide_during_scan),
+                '0',
+                Label('y:'),
+                Item('y1',show_label=False,**hide_during_scan),
+                Item('y2',show_label=False,**hide_during_scan),
+                Item('y_stepsize',show_label=False,**hide_during_scan),
+                Item('scan_sample_step',label='Scan',show_label=False,**hide_during_scan),
+                Item('abort',show_label=False,**hide_no_scan),
+
+                columns = 7
+                  )
 
 
     scan_plotctrl=VGrid(
