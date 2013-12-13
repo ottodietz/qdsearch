@@ -151,10 +151,6 @@ class CameraGUI(HasTraits):
     def _single_fired(self):
         self.acquisition()
         self.plot_data()
-    # Erkenntnis: geplottet wird erst, wenn die fired() zu ihrem ende gekommen
-    # ist, es bringt nichts zwischen drin einen plot zu veraendern, das
-    # plot_data() macht nur sinn wenn es EINMAL am ende steht
-
 
     #returns range for the AFs
     #we have to define in advance which
@@ -175,7 +171,7 @@ class CameraGUI(HasTraits):
         return start,end
 
     def _zautofocus_fired(self):
-        #needs to be a thread, so that gui can refresh within the thread
+        #needs to be a thread, so that gui can refresh within the thread!!
         thread.start_new_thread(self.zautofocus_thread,())
     
 
@@ -186,7 +182,7 @@ class CameraGUI(HasTraits):
         maxvolt = float(0)
         steps = float(10)
         shift = float(0)
-        iterations = int(2)
+        iterations = int(3) #speed linear in n,2 fast,3exact
         for it in range(iterations):
             shift = shift+maxid*(5./10**(it-1)/steps)
             for i in range(int(steps)):
@@ -210,10 +206,98 @@ class CameraGUI(HasTraits):
 
     def _autofocus_fired(self):
         #needs to be a thread, so that gui can refresh within the thread
-        thread.start_new_thread(self._autofocus_thread,())
+        thread.start_new_thread(self._autofocus_hillclimbing_thread,())
 
 
-    def _autofocus_thread(self):
+    #goes for a snake like scan, like algorithm in qdsearch
+    #for the maximum of counts in a square around the center
+    #of the starting point of the search, unit: self.x_step
+    def _autofocus_snake_thread(self):
+        _from, _to = self.afrange()
+        xstart,ystart = self.icCryo.pos() #get cryo pos at the start
+        sqlen = Int(6) #length of the square
+        maximum = [0,0,0] #stores x,y and counts of stronges signal measured in scan
+
+#        # standard deviation of noise from maxcount
+#        for i in range(10):
+#            maxstat = []
+#            self.acquisition()
+#            maxstat.append(max(self.line[_from:_to]))
+#        std = np.std(maxstat) #standard deviation to see how much noise there is
+#        print "there is a std in the noise of the camera of ",std
+
+        self.acquisition()
+        maximum[0] = xstart
+        maximum[1] = ystart
+        maximum[2] = max(self.line[_from:_to])
+
+
+        self.icCryo.rmove(-int(sqlen/2.)*self.x_step,-int(sqlen/2.)*self.y_step)
+        x,y = int(0) #coordinates of the grid in the square
+
+        for i in range(sqlen):
+            for j in range(sqlen):
+                self.acquisition()
+                current = max(self.line[_from:_to])
+                if maximum[2] < current:
+                    maximum[0]=i
+                    maximum[1]=j
+                    maximum[2]=current
+                #for i=0 go up, i=1 go down, i=2 go up..
+                #i%2 for parity change, go up and down in snake lines
+                self.icCryo.rmove(0,((-1)**(i%2))*y_step)
+            self.icCryo.rmove(self.x_step,0)
+
+        if maximum[0] == xstart: #no better spot found
+            print "no better point in scan, than where you started!"
+            self.icCryo.move(xstart,ystart)
+
+        else:
+            self.icCryo.move(xstart,ystart)
+            self.icCryo.rmove(-int(sqlen/2.)*self.x_step,-int(sqlen/2.)*self.y_step)
+            self.icCryo.rmove(maximum[0]*self.x_step,maximum[1]*self.y_step)
+
+    #hysterese sensitiv hillclimbing + count awareness --> super intelligent  
+    def _autofocus_AI(self):
+        sm = int(0.0001) #smalles step of cryo
+        self.ivSpectro.exit_mirror='side (APDs)' # changed mirrors to apd
+        # standard deviation of noise from apdcounts
+        for i in range(10):
+            maxstat = []
+            maxstat.append(self.icVoltage.measure())
+        std = np.std(maxstat) #standard deviation to see how much noise there is
+        print "there is a std in the noise of APDs of ",std
+        maxlist = []
+        
+        ## in x-direction
+        for i in range(5)
+            self.icCryo.rmove(sm,0)
+            maxlist.append(self.icVoltage.measure())
+        for i in range(12) #12 because of hysterese
+            self.icCryo.rmove(-sm,0)
+            maxlist.append(self.icVoltage.measure())
+        maxcount = max(maxlist) #need to refind this max-signal in the next step
+        
+        for i in range(12)
+            self.icCryo.rmove(sm,0)
+            if self.icVoltage.measure >= (maxcount-std)
+                break
+        ## in y-direction
+        for i in range(5)
+            self.icCryo.rmove(0,sm)
+            maxlist.append(self.icVoltage.measure())
+        for i in range(12) #12 because of hysterese
+            self.icCryo.rmove(0,-sm)
+            maxlist.append(self.icVoltage.measure())
+        maxcount = max(maxlist) #need to refind this max-signal in the next step
+
+        for i in range(12)
+            self.icCryo.rmove(0,sm)
+            if self.icVoltage.measure >= (maxcount-std)
+                break
+
+    #typical hillclimbing algorithm
+    def _autofocus_hillclimbing_thread(self):
         _from, _to = self.afrange()
         xtest = False
         ytest = False
