@@ -60,7 +60,7 @@ class CameraGUI(HasTraits):
     single=Button()
     continous_label = Str('Continous')
     continous=Button()
-    autofocus=Button(label="AF X/Y")
+    xyautofocus=Button(label="AF X/Y")
     zautofocus=Button(label="AF Z")
     export=Button(label="Export")
 
@@ -120,7 +120,7 @@ class CameraGUI(HasTraits):
                                     Item('single',label='Single',show_label=False,**hide),
                                     Item('continous',show_label=False,editor=ButtonEditor(label_value='continous_label')),
                                     Item('speeddata',show_label=False,**hide),
-                                    Item('autofocus',show_label=False,**hide),
+                                    Item('xyautofocus',show_label=False,**hide),
                                     Item('zautofocus',show_label=False,**hide),
                                     Item('export',show_label=False,**hide)
                                     ),
@@ -152,12 +152,8 @@ class CameraGUI(HasTraits):
         self.acquisition()
         self.plot_data()
 
-    #returns range for the AFs
-    #we have to define in advance which
-    #part of the spectrum we want to maximize
-    #because QDs have small peaks in a potentially
-    #big ocean of other signals
     def afrange(self):
+    """returns range for the AFs we have to define in advance which part of the spectrum we want to maximize because QDs have small peaks in a potentially big ocean of other signals""" 
         if self.AFX: #if mouse event has happend
             start = self.AFX - self.AFRange #center minus the radius
             end = self.AFX + self.AFRange #center plus the radius
@@ -180,8 +176,8 @@ class CameraGUI(HasTraits):
         maxid = 0 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
         maxvolt = float(0)
-        steps = float(10)
         shift = float(0)
+        steps = float(10)
         iterations = int(3) #speed linear in n,2 fast,3exact
         for it in range(iterations):
             shift = shift+maxid*(5./10**(it-1)/steps)
@@ -199,42 +195,35 @@ class CameraGUI(HasTraits):
         
         print "Im Fokus bei der Spannung %1.1f" % maxvolt
         print "Highest measured count when focusing: %5d" % maxcount
-        self.ivVoltage.Voltage = volt
+        self.ivVoltage.Voltage = maxvolt
         self.acquisition()
         self.plot_data()
 
 
-    def _autofocus_fired(self):
+    def _xyautofocus_fired(self):
         #needs to be a thread, so that gui can refresh within the thread
         thread.start_new_thread(self._autofocus_hillclimbing_thread,())
+#        thread.start_new_thread(self._autofocus_snake_thread,())
 
 
-    #goes for a snake like scan, like algorithm in qdsearch
-    #for the maximum of counts in a square around the center
-    #of the starting point of the search, unit: self.x_step
     def _autofocus_snake_thread(self):
+    """ goes for a snake like scan, like algorithm in qdsearch for the maximum
+of counts in a square around the center of the starting point of the search,
+unit: self.x_step """
+        
         _from, _to = self.afrange()
         xstart,ystart = self.icCryo.pos() #get cryo pos at the start
         sqlen = Int(6) #length of the square
         maximum = [0,0,0] #stores x,y and counts of stronges signal measured in scan
 
-#        # standard deviation of noise from maxcount
-#        for i in range(10):
-#            maxstat = []
-#            self.acquisition()
-#            maxstat.append(max(self.line[_from:_to]))
-#        std = np.std(maxstat) #standard deviation to see how much noise there is
-#        print "there is a std in the noise of the camera of ",std
-
-        self.acquisition()
+        self.acquisition() #fill self.line with data
         maximum[0] = xstart
         maximum[1] = ystart
         maximum[2] = max(self.line[_from:_to])
-
-
         self.icCryo.rmove(-int(sqlen/2.)*self.x_step,-int(sqlen/2.)*self.y_step)
         x,y = int(0) #coordinates of the grid in the square
 
+        #snake scanning
         for i in range(sqlen):
             for j in range(sqlen):
                 self.acquisition()
@@ -243,60 +232,94 @@ class CameraGUI(HasTraits):
                     maximum[0]=i
                     maximum[1]=j
                     maximum[2]=current
-                #for i=0 go up, i=1 go down, i=2 go up..
-                #i%2 for parity change, go up and down in snake lines
-                self.icCryo.rmove(0,((-1)**(i%2))*y_step)
+                self.icCryo.rmove(0,((-1)**(i%2))*y_step) #parity change for i 
             self.icCryo.rmove(self.x_step,0)
 
         if maximum[0] == xstart: #no better spot found
             print "no better point in scan, than where you started!"
             self.icCryo.move(xstart,ystart)
 
-        else:
-            self.icCryo.move(xstart,ystart)
-            self.icCryo.rmove(-int(sqlen/2.)*self.x_step,-int(sqlen/2.)*self.y_step)
-            self.icCryo.rmove(maximum[0]*self.x_step,maximum[1]*self.y_step)
+        else: #move to maximum position
+            xmax = xstart-int(sqlen/2.)*self.x_step+maximum[0]*self.x_step
+            ymax = ystart-int(sqlen/2.)*self.y_step+maximum[1]*self.y_step
+            self.icCryo.move(xmax,ymax) #one move() is better that 3 (hysterese)
 
-    #hysterese sensitiv hillclimbing + count awareness --> super intelligent  
-    def _autofocus_AI(self):
+    def _autofocus_high_res(self):
+    """ hysterese sensitiv hillclimbing + count awareness """
         sm = self.icCryo.sm #smalles step of cryo
-        # standard deviation of noise from apdcounts
-        for i in range(10):
-            maxstat = []
-            maxstat.append(self.icVoltage.measure())
-        std = np.mean(maxstat) #mean max of QD
-        print "there is a mean signal ",mean
-        maxlist = []
-        
-        ## in x-direction
-        for i in range(5)
-            self.icCryo.rmove(sm,0)
-            maxlist.append(self.icVoltage.measure())
-        for i in range(12) #12 because of hysterese
+        rd = 5 #radius of search, unit: sm
+        #first line: position, second line:mean data
+        xdata = [[0 for x in range(2*rd+1)] for x in range(2)] #array with zeros
+        ydata = [[0 for x in range(2*rd+1)] for x in range(2)] #array with zeros
+
+        # build datalist in positiv x-direction
+        for i in range(rd+1)
+            if i != 0:
+                self.icCryo.rmove(sm,0)
+            xdata[0][i] = rd+i
+            xdata[1][i] = self.qd_mean()
+        #now go back to start pos
+        while self.pos_check(xdata,rd)==False: #check if at origin
             self.icCryo.rmove(-sm,0)
-            maxlist.append(self.icVoltage.measure())
-        maxcount = max(maxlist) #need to refind this max-signal in the next step
-        
-        for i in range(12)
+        #build datalist in neg x-direction
+        for i in range(rd):
+            self.icCryo.rmove(-sm,0)
+            xdata[0][rd+i+1] = rd-1-i
+            xdata[1][rd+i+1] = self.qd_mean()
+        mindex = xdata.index(max(xdata[0])
+        mpos = xdata[0][mindex]
+        #now go to the maximum
+        while self.pos_check(xdata,mpos)==False:
             self.icCryo.rmove(sm,0)
-            if self.icVoltage.measure >= (maxcount-std)
-                break
-        ## in y-direction
-        for i in range(5)
-            self.icCryo.rmove(0,sm)
-            maxlist.append(self.icVoltage.measure())
-        for i in range(12) #12 because of hysterese
+        print "x-direction maximized"
+
+        # build datalist in positiv y-direction
+        for i in range(rd+1)
+            if i != 0:
+                self.icCryo.rmove(0,sm)
+            ydata[0][i] = rd+i
+            ydata[1][i] = self.qd_mean()
+        #now go back to start pos
+        while self.pos_check(ydata,rd)==False: #check if at origin
             self.icCryo.rmove(0,-sm)
-            maxlist.append(self.icVoltage.measure())
-        maxcount = max(maxlist) #need to refind this max-signal in the next step
-
-        for i in range(12)
+        #build datalist in neg y-direction
+        for i in range(rd):
+            self.icCryo.rmove(0,-sm)
+            ydata[0][rd+i+1] = rd-1-i
+            ydata[1][rd+i+1] = self.qd_mean()
+        mindex = ydata.index(max(ydata[0])
+        mpos = ydata[0][mindex]
+        #now go to the maximum
+        while self.pos_check(ydata,mpos)==False:
             self.icCryo.rmove(0,sm)
-            if self.icVoltage.measure >= (maxcount-std)
-                break
+        print "y-direction maximized"
 
-    #typical hillclimbing algorithm
+
+    def pos_check(self,data,pos):
+    """ statistically checks if cryo has actually moved to pos """
+        mean = self.qd_mean()
+        #realpos is index of THE value
+        #THE value is the clostest representation in data
+        index = min(range(len(data)), key=lambda i: abs(data[i]-mean)
+        realpos = int(data[0][index])
+        if realpos == pos:
+            return True
+        else:
+            return False
+
+    def qd_mean(self):
+        """ returns mean counts of n measurements of the QD """
+        for i in range(10):
+            accum = []
+            self.acquisition()
+            accum.append(max(self.line[_from:_to]))
+        mean = np.mean(accum)
+        return mean
+    
+
+
     def _autofocus_hillclimbing_thread(self):
+    """ typical hillclimbing algorithm """
         _from, _to = self.afrange()
         xtest = False
         ytest = False
