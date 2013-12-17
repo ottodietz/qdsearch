@@ -44,7 +44,7 @@ class CameraGUI(HasTraits):
     mousey = Str("\t\t")
 
     #variables for the scale of the plot
-    scaleinnm = [] #global, empty array for create_wavelenth_for_plotting()
+    scaleinnm = [] #empty array for create_wavelenth_for_plotting()
     scaleinpx=np.linspace(0,1023,1024) # pixel are number from 0 to 1023
     scaletype_label = Str('Scale in NM')
     nmscale = Bool(False) # False: scale in pxl
@@ -69,6 +69,9 @@ class CameraGUI(HasTraits):
     AFX = Int()
     #defines the radius around the center
     AFRange = int(3)
+    #range for the AFs, to be set by afrange()
+    _from = int(0)
+    _to = int(1023)
     #step size for the AF
     x_step = Float(0.0005)
     y_step = Float(0.0005)
@@ -149,11 +152,12 @@ class CameraGUI(HasTraits):
                         menubar=MenuBar(menu))
 
     def _single_fired(self):
+        import pdb; pdb.set_trace()
         self.acquisition()
         self.plot_data()
 
     def afrange(self):
-    """returns range for the AFs we have to define in advance which part of the spectrum we want to maximize because QDs have small peaks in a potentially big ocean of other signals""" 
+        """returns range for the AFs we have to define in advance which part of the spectrum we want to maximize because QDs have small peaks in a potentially big ocean of other signals""" 
         if self.AFX: #if mouse event has happend
             start = self.AFX - self.AFRange #center minus the radius
             end = self.AFX + self.AFRange #center plus the radius
@@ -172,7 +176,7 @@ class CameraGUI(HasTraits):
     
 
     def zautofocus_thread(self):
-        _from, _to = self.afrange()
+        self._from, self._to = self.afrange()
         maxid = 0 #Wert der Spannung bei Maximalen Counts, setze auf -1
         maxcount = 0 #Maximale Counts, setze auf 0
         maxvolt = float(0)
@@ -188,8 +192,8 @@ class CameraGUI(HasTraits):
                 self.progress = str(int(((it+1)*(i+1))*100/(iterations*steps)))
                 if int(self.progress)%10 == 0: #plot 10 times
                     self.plot_data()
-                if maxcount < max(self.line[_from:_to]):
-                    maxcount = max(self.line[_from:_to])
+                if maxcount < max(self.line[self._from:self._to]):
+                    maxcount = max(self.line[self._from:self._to])
                     maxvolt = volt
                     maxid = i
         
@@ -207,11 +211,11 @@ class CameraGUI(HasTraits):
 
 
     def _autofocus_snake_thread(self):
-    """ goes for a snake like scan, like algorithm in qdsearch for the maximum
+        """ goes for a snake like scan, like algorithm in qdsearch for the maximum
 of counts in a square around the center of the starting point of the search,
 unit: self.x_step """
         
-        _from, _to = self.afrange()
+        self._from, self._to = self.afrange()
         xstart,ystart = self.icCryo.pos() #get cryo pos at the start
         sqlen = Int(6) #length of the square
         maximum = [0,0,0] #stores x,y and counts of stronges signal measured in scan
@@ -219,7 +223,7 @@ unit: self.x_step """
         self.acquisition() #fill self.line with data
         maximum[0] = xstart
         maximum[1] = ystart
-        maximum[2] = max(self.line[_from:_to])
+        maximum[2] = max(self.line[self._from:self._to])
         self.icCryo.rmove(-int(sqlen/2.)*self.x_step,-int(sqlen/2.)*self.y_step)
         x,y = int(0) #coordinates of the grid in the square
 
@@ -227,7 +231,7 @@ unit: self.x_step """
         for i in range(sqlen):
             for j in range(sqlen):
                 self.acquisition()
-                current = max(self.line[_from:_to])
+                current = max(self.line[self._from:self._to])
                 if maximum[2] < current:
                     maximum[0]=i
                     maximum[1]=j
@@ -245,7 +249,8 @@ unit: self.x_step """
             self.icCryo.move(xmax,ymax) #one move() is better that 3 (hysterese)
 
     def _autofocus_high_res(self):
-    """ hysterese sensitiv hillclimbing + count awareness """
+        """ hysterese sensitiv hillclimbing + count awareness """
+        self._from, self._to = self.afrange()
         sm = self.icCryo.sm #smalles step of cryo
         rd = 5 #radius of search, unit: sm
         #first line: position, second line:mean data
@@ -253,7 +258,7 @@ unit: self.x_step """
         ydata = [[0 for x in range(2*rd+1)] for x in range(2)] #array with zeros
 
         # build datalist in positiv x-direction
-        for i in range(rd+1)
+        for i in range(rd+1):
             if i != 0:
                 self.icCryo.rmove(sm,0)
             xdata[0][i] = rd+i
@@ -266,7 +271,7 @@ unit: self.x_step """
             self.icCryo.rmove(-sm,0)
             xdata[0][rd+i+1] = rd-1-i
             xdata[1][rd+i+1] = self.qd_mean()
-        mindex = xdata.index(max(xdata[0])
+        mindex = xdata.index(max(xdata[0]))
         mpos = xdata[0][mindex]
         #now go to the maximum
         while self.pos_check(xdata,mpos)==False:
@@ -274,7 +279,7 @@ unit: self.x_step """
         print "x-direction maximized"
 
         # build datalist in positiv y-direction
-        for i in range(rd+1)
+        for i in range(rd+1):
             if i != 0:
                 self.icCryo.rmove(0,sm)
             ydata[0][i] = rd+i
@@ -287,7 +292,7 @@ unit: self.x_step """
             self.icCryo.rmove(0,-sm)
             ydata[0][rd+i+1] = rd-1-i
             ydata[1][rd+i+1] = self.qd_mean()
-        mindex = ydata.index(max(ydata[0])
+        mindex = ydata.index(max(ydata[0]))
         mpos = ydata[0][mindex]
         #now go to the maximum
         while self.pos_check(ydata,mpos)==False:
@@ -296,11 +301,11 @@ unit: self.x_step """
 
 
     def pos_check(self,data,pos):
-    """ statistically checks if cryo has actually moved to pos """
+        """ statistically checks if cryo has actually moved to pos """
         mean = self.qd_mean()
         #realpos is index of THE value
         #THE value is the clostest representation in data
-        index = min(range(len(data)), key=lambda i: abs(data[i]-mean)
+        index = min(range(len(data)), key=lambda i: abs(data[i]-mean))
         realpos = int(data[0][index])
         if realpos == pos:
             return True
@@ -312,24 +317,24 @@ unit: self.x_step """
         for i in range(10):
             accum = []
             self.acquisition()
-            accum.append(max(self.line[_from:_to]))
+            accum.append(max(self.line[self._from:self._to]))
         mean = np.mean(accum)
         return mean
     
 
 
     def _autofocus_hillclimbing_thread(self):
-    """ typical hillclimbing algorithm """
-        _from, _to = self.afrange()
+        """ typical hillclimbing algorithm """
+        self._from, self._to = self.afrange()
         xtest = False
         ytest = False
         self.acquisition()
         while not xtest: #Test in die x-Richtung, suchen bis Counts runter
-            a = max(self.line[_from:_to])
+            a = max(self.line[self._from:self._to])
             self.icCryo.rmove(self.x_step,0)
             self.acquisition()
             self.plot_data()
-            b = max(self.line[_from:_to])
+            b = max(self.line[self._from:self._to])
             if b < a:
                 self.icCryo.rmove(-self.x_step,0)
                 self.acquisition() #damit er wieder das aktuelle max hat
@@ -337,22 +342,22 @@ unit: self.x_step """
         xtest=False
 
         while not xtest: #Test in die -x-Richtung, suchen bis Counts runter
-            a = max(self.line[_from:_to])
+            a = max(self.line[self._from:self._to])
             self.icCryo.rmove(-self.x_step,0)
             self.acquisition()
             self.plot_data()
-            b = max(self.line[_from:_to])
+            b = max(self.line[self._from:self._to])
             if b < a:
                 self.icCryo.rmove(self.x_step,0)
                 self.acquisition()
                 xtest = True
 
         while not ytest: #Test in die y-Richtung, suchen Counts runter
-            a = max(self.line[_from:_to])
+            a = max(self.line[self._from:self._to])
             self.icCryo.rmove(0,self.y_step)
             self.acquisition()
             self.plot_data()
-            b = max(self.line[_from:_to])
+            b = max(self.line[self._from:self._to])
             if b < a:
                 self.icCryo.rmove(0,-self.y_step)
                 self.acquisition()
@@ -361,11 +366,11 @@ unit: self.x_step """
         ytest = False
 
         while not ytest: #Test in die -y-Richtung, suchen Counts runter
-            a = max(self.line[_from:_to])
+            a = max(self.line[self._from:self._to])
             self.icCryo.rmove(0,-self.y_step)
             self.acquisition()
             self.plot_data()
-            b = max(self.line[_from:_to])
+            b = max(self.line[self._from:self._to])
             if b < a:
                 self.icCryo.rmove(0,self.y_step)
                 self.acquisition()
