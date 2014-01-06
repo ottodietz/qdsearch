@@ -73,8 +73,8 @@ class CameraGUI(HasTraits):
     _from = int(0)
     _to = int(1023)
     #step size for the AF
-    x_step = Float(0.0005)
-    y_step = Float(0.0005)
+    x_step = float(0.0005)
+    y_step = float(0.0005)
 
     #creating all the necessary Instances
     ivCryo = Instance(views.cryo.CryoGUI)
@@ -206,9 +206,9 @@ class CameraGUI(HasTraits):
     def _xyautofocus_fired(self):
         #needs to be a thread, so that gui can refresh within the thread
 #        thread.start_new_thread(self._autofocus_hillclimbing_thread,())
-#        thread.start_new_thread(self._autofocus_snake_thread,())
+        thread.start_new_thread(self._autofocus_snake_thread,())
 #        thread.start_new_thread(self._autofocus_high_res_thread,())
-        thread.start_new_thread(self._autofocus_simple_thread,())
+#        thread.start_new_thread(self._autofocus_simple_thread,())
 
 
     def _autofocus_simple_thread(self):
@@ -261,7 +261,7 @@ unit: self.x_step """
         
         self._from, self._to = self.afrange()
         xstart,ystart = self.icCryo.pos() #get cryo pos at the start
-        sqlen = Int(6) #length of the square
+        sqlen = int(6) #length of the square
         maximum = [0,0,0] #stores x,y and counts of stronges signal measured in scan
 
         self.acquisition() #fill self.line with data
@@ -269,7 +269,8 @@ unit: self.x_step """
         maximum[1] = ystart
         maximum[2] = max(self.line[self._from:self._to])
         self.icCryo.rmove(-int(sqlen/2.)*self.x_step,-int(sqlen/2.)*self.y_step)
-        x,y = int(0) #coordinates of the grid in the square
+        x = int(0) #coordinates of the grid in the square
+        y = int(0)
 
         #snake scanning
         for i in range(sqlen):
@@ -280,7 +281,7 @@ unit: self.x_step """
                     maximum[0]=i
                     maximum[1]=j
                     maximum[2]=current
-                self.icCryo.rmove(0,((-1)**(i%2))*y_step) #parity change for i 
+                self.icCryo.rmove(0,((-1)**(i%2))*self.y_step) #parity change for i 
             self.icCryo.rmove(self.x_step,0)
 
         if maximum[0] == xstart: #no better spot found
@@ -291,6 +292,9 @@ unit: self.x_step """
             xmax = xstart-int(sqlen/2.)*self.x_step+maximum[0]*self.x_step
             ymax = ystart-int(sqlen/2.)*self.y_step+maximum[1]*self.y_step
             self.icCryo.move(xmax,ymax) #one move() is better that 3 (hysterese)
+        print "you found a new position"
+        self.acquisition()
+        self.plot_data()
 
     def _autofocus_high_res_thread(self):
         """ hysterese sensitiv hillclimbing + count awareness """
@@ -308,8 +312,11 @@ unit: self.x_step """
             xdata[0][i] = rd+i
             xdata[1][i] = self.qd_mean()
         #now go back to start pos
-        while self.pos_check(xdata,rd)==False: #check if at origin
+        while True: #check if at origin
             self.icCryo.rmove(-sm,0)
+            end = self.pos_check(xdata,rd)
+            if end == True:
+                break
         #build datalist in neg x-direction
         for i in range(rd):
             self.icCryo.rmove(-sm,0)
@@ -318,8 +325,11 @@ unit: self.x_step """
         mindex = xdata.index(max(xdata[0]))
         mpos = xdata[0][mindex]
         #now go to the maximum
-        while self.pos_check(xdata,mpos)==False:
+        while True:
             self.icCryo.rmove(sm,0)
+            end = self.pos_check(xdata,mpos)
+            if end == True:
+                break
         print "x-direction maximized"
 
         # build datalist in positiv y-direction
@@ -329,8 +339,12 @@ unit: self.x_step """
             ydata[0][i] = rd+i
             ydata[1][i] = self.qd_mean()
         #now go back to start pos
-        while self.pos_check(ydata,rd)==False: #check if at origin
+        while True: #check if at origin
             self.icCryo.rmove(0,-sm)
+            end = self.pos_check(ydata,rd) #returns True if at new pos
+            if end == True:
+                break
+
         #build datalist in neg y-direction
         for i in range(rd):
             self.icCryo.rmove(0,-sm)
@@ -339,8 +353,11 @@ unit: self.x_step """
         mindex = ydata.index(max(ydata[0]))
         mpos = ydata[0][mindex]
         #now go to the maximum
-        while self.pos_check(ydata,mpos)==False:
+        while True:
             self.icCryo.rmove(0,sm)
+            end = self.pos_check(ydata,mpos)
+            if end == True:
+                break
         print "y-direction maximized"
 
 
@@ -369,6 +386,7 @@ unit: self.x_step """
 
     def _autofocus_hillclimbing_thread(self):
         """ typical hillclimbing algorithm """
+        #be careful x_step is not smallest possible step of cryo
         self._from, self._to = self.afrange()
         xtest = False
         ytest = False
