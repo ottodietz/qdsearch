@@ -152,7 +152,6 @@ class CameraGUI(HasTraits):
                         menubar=MenuBar(menu))
 
     def _single_fired(self):
-        import pdb; pdb.set_trace()
         self.acquisition()
         self.plot_data()
 
@@ -425,8 +424,6 @@ unit: self.x_step """
 
 
     def plot_data(self):
-#        import pdb; pdb.set_trace()
-        
         self.scaleinnm=self.create_wavelength_for_plotting()
 
         titlepxx = "Pixel [px]"
@@ -481,7 +478,6 @@ unit: self.x_step """
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
         plot.tools.append(PanTool(plot, constrain_key="shift"))
         plot.tools.append(CameraGUI_PlotTool(component=plot,caller=self))
-#        import pdb; pdb.set_trace()
         #plot.range2d.x_range.low=self.x1
         #plot.range2d.x_range.high=self.x2
         #plot.range2d.y_range.low=self.y1
