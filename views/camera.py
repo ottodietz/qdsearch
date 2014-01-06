@@ -206,15 +206,53 @@ class CameraGUI(HasTraits):
 
     def _xyautofocus_fired(self):
         #needs to be a thread, so that gui can refresh within the thread
-        thread.start_new_thread(self._autofocus_hillclimbing_thread,())
+#        thread.start_new_thread(self._autofocus_hillclimbing_thread,())
 #        thread.start_new_thread(self._autofocus_snake_thread,())
 #        thread.start_new_thread(self._autofocus_high_res_thread,())
-#        thread.start_new_thread(self._autofocus_simple_thread,())
+        thread.start_new_thread(self._autofocus_simple_thread,())
 
 
-    def _autofocus_simple_thread():
+    def _autofocus_simple_thread(self):
         self._from,self._to = self.afrange()
+        sm = self.icCryo.sm #smalles step of cryo
+        self.scan_simple(sm,0)
+        self.progress = str(50)
+        self.scan_simple(0,sm)
+        self.progress = str(100)
+        print "x-y maximized"
+        
 
+    def scan_simple(self,x,y):
+        radius = 7 #in what range around the qd to scan
+        counts = Int(0)
+        current = Int(0)
+        diff = Int(0) #difference between highest counts and 2nd highest
+
+        for i in range(radius):
+            self.acquisition() #fill self.line with data
+            current = max(self.line[self._from:self._to])
+            if current >= counts:
+                diff = current-counts
+                counts = current
+            self.plot_data()
+            self.icCryo.rmove(x,y)
+
+        for i in range(2*radius):
+            self.acquisition() #fill self.line with data
+            current = max(self.line[self._from:self._to])
+            if current >= counts:
+                diff = current-counts
+                counts = current
+            self.plot_data()
+            self.icCryo.rmove(-x,-y)
+
+        for i in range(2*radius):
+            self.acquisition() #fill self.line with data
+            current = max(self.line[self._from:self._to])
+            if current >= counts-diff/2:
+                break
+            self.icCryo.rmove(x,y)
+            
 
     def _autofocus_snake_thread(self):
         """ goes for a snake like scan, like algorithm in qdsearch for the maximum
@@ -265,7 +303,7 @@ unit: self.x_step """
 
         # build datalist in positiv x-direction
         for i in range(rd+1):
-            if i != 0:
+            if i != 0:#make a step, just not for i=0
                 self.icCryo.rmove(sm,0)
             xdata[0][i] = rd+i
             xdata[1][i] = self.qd_mean()
