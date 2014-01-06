@@ -214,6 +214,7 @@ class CameraGUI(HasTraits):
     def _autofocus_simple_thread(self):
         self._from,self._to = self.afrange()
         sm = self.icCryo.sm #smalles step of cryo
+        self.progress = str(0)
         self.scan_simple(sm,0)
         self.progress = str(50)
         self.scan_simple(0,sm)
@@ -223,9 +224,9 @@ class CameraGUI(HasTraits):
 
     def scan_simple(self,x,y):
         radius = 7 #in what range around the qd to scan
-        counts = Int(0)
-        current = Int(0)
-        diff = Int(0) #difference between highest counts and 2nd highest
+        counts = int(0)
+        current = int(0)
+        diff = int(0) #difference between highest counts and 2nd highest
 
         for i in range(radius):
             self.acquisition() #fill self.line with data
