@@ -208,6 +208,12 @@ class CameraGUI(HasTraits):
         #needs to be a thread, so that gui can refresh within the thread
         thread.start_new_thread(self._autofocus_hillclimbing_thread,())
 #        thread.start_new_thread(self._autofocus_snake_thread,())
+#        thread.start_new_thread(self._autofocus_high_res_thread,())
+#        thread.start_new_thread(self._autofocus_simple_thread,())
+
+
+    def _autofocus_simple_thread():
+        self._from,self._to = self.afrange()
 
 
     def _autofocus_snake_thread(self):
@@ -248,7 +254,7 @@ unit: self.x_step """
             ymax = ystart-int(sqlen/2.)*self.y_step+maximum[1]*self.y_step
             self.icCryo.move(xmax,ymax) #one move() is better that 3 (hysterese)
 
-    def _autofocus_high_res(self):
+    def _autofocus_high_res_thread(self):
         """ hysterese sensitiv hillclimbing + count awareness """
         self._from, self._to = self.afrange()
         sm = self.icCryo.sm #smalles step of cryo
