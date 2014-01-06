@@ -206,9 +206,9 @@ class CameraGUI(HasTraits):
     def _xyautofocus_fired(self):
         #needs to be a thread, so that gui can refresh within the thread
 #        thread.start_new_thread(self._autofocus_hillclimbing_thread,())
-        thread.start_new_thread(self._autofocus_snake_thread,())
+#        thread.start_new_thread(self._autofocus_snake_thread,())
 #        thread.start_new_thread(self._autofocus_high_res_thread,())
-#        thread.start_new_thread(self._autofocus_simple_thread,())
+        thread.start_new_thread(self._autofocus_simple_thread,())
 
 
     def _autofocus_simple_thread(self):
