@@ -223,7 +223,7 @@ class CameraGUI(HasTraits):
         
 
     def scan_simple(self,x,y):
-        radius = 7 #in what range around the qd to scan
+        radius = 20 #in what range around the qd to scan
         counts = int(0)
         current = int(0)
         diff = int(0) #difference between highest counts and 2nd highest
@@ -249,6 +249,7 @@ class CameraGUI(HasTraits):
         for i in range(2*radius):
             self.acquisition() #fill self.line with data
             current = max(self.line[self._from:self._to])
+            self.plot_data()
             if current >= counts-diff/2:
                 break
             self.icCryo.rmove(x,y)
