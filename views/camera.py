@@ -48,7 +48,7 @@ class CameraGUI(HasTraits):
     scaleinpx=np.linspace(0,1023,1024) # pixel are number from 0 to 1023
     scaletype_label = Str('Scale in NM')
     nmscale = Bool(False) # False: scale in pxl
-    
+
     #variables for own calibration
     calib = Bool(False)
     calibwvl = Range(low=0,high=5000,value=894.35,editor=TextEditor(evaluate=float,auto_set=False))
@@ -98,10 +98,10 @@ class CameraGUI(HasTraits):
     acquisitionmode = Str(icCamera.acquisitionmode_init)
     output=Str()
     plot = Instance(Plot,())
-    
+
     def _icCryo_default(self):
         return self.ivCryo.icCryo
-    
+
     def _icVoltage_default(self):
         return self.ivVoltage.icVoltage
 
@@ -110,7 +110,7 @@ class CameraGUI(HasTraits):
 
     menu_action = Action(name='camera menu', accelerator='Ctrl+p', action='call_menu')
     mi_reload = Action(
-                        name='reload camera module', 
+                        name='reload camera module',
                         accelerator='Ctrl+r',
                         action='reload_camera'
                         )
@@ -147,8 +147,8 @@ class CameraGUI(HasTraits):
                             VGroup(
                                 Item('plot',editor=ComponentEditor(size=(50,50)),show_label=False))),
                         resizable = True,
-                        height=300, 
-                        width=900, 
+                        height=300,
+                        width=900,
                         menubar=MenuBar(menu))
 
     def _single_fired(self):
@@ -156,7 +156,7 @@ class CameraGUI(HasTraits):
         self.plot_data()
 
     def afrange(self):
-        """returns range for the AFs we have to define in advance which part of the spectrum we want to maximize because QDs have small peaks in a potentially big ocean of other signals""" 
+        """returns range for the AFs we have to define in advance which part of the spectrum we want to maximize because QDs have small peaks in a potentially big ocean of other signals"""
         if self.AFX: #if mouse event has happend
             start = self.AFX - self.AFRange #center minus the radius
             end = self.AFX + self.AFRange #center plus the radius
@@ -172,7 +172,7 @@ class CameraGUI(HasTraits):
     def _zautofocus_fired(self):
         #needs to be a thread, so that gui can refresh within the thread!!
         thread.start_new_thread(self.zautofocus_thread,())
-    
+
 
     def zautofocus_thread(self):
         self._from, self._to = self.afrange()
@@ -195,7 +195,7 @@ class CameraGUI(HasTraits):
                     maxcount = max(self.line[self._from:self._to])
                     maxvolt = volt
                     maxid = i
-        
+
         print "Im Fokus bei der Spannung %1.1f" % maxvolt
         print "Highest measured count when focusing: %5d" % maxcount
         self.ivVoltage.Voltage = maxvolt
@@ -220,15 +220,16 @@ class CameraGUI(HasTraits):
         self.scan_simple(0,sm)
         self.progress = str(100)
         print "x-y maximized"
-        
+
 
     def scan_simple(self,x,y):
-        radius = 7 #in what range around the qd to scan
+        radius = 20 #in what range around the qd to scan
         counts = int(0)
         current = int(0)
         diff = int(0) #difference between highest counts and 2nd highest
 
         for i in range(radius):
+            print "Weg 1"
             self.acquisition() #fill self.line with data
             current = max(self.line[self._from:self._to])
             if current >= counts:
@@ -238,6 +239,7 @@ class CameraGUI(HasTraits):
             self.icCryo.rmove(x,y)
 
         for i in range(2*radius):
+            print "Weg 2"
             self.acquisition() #fill self.line with data
             current = max(self.line[self._from:self._to])
             if current >= counts:
@@ -247,18 +249,22 @@ class CameraGUI(HasTraits):
             self.icCryo.rmove(-x,-y)
 
         for i in range(2*radius):
+            print "Weg 3"
             self.acquisition() #fill self.line with data
             current = max(self.line[self._from:self._to])
+            self.plot_data()
             if current >= counts-diff/2:
+                print "has come to an end with break"
                 break
             self.icCryo.rmove(x,y)
-            
+
+
 
     def _autofocus_snake_thread(self):
         """ goes for a snake like scan, like algorithm in qdsearch for the maximum
 of counts in a square around the center of the starting point of the search,
 unit: self.x_step """
-        
+
         self._from, self._to = self.afrange()
         xstart,ystart = self.icCryo.pos() #get cryo pos at the start
         sqlen = int(6) #length of the square
@@ -281,7 +287,7 @@ unit: self.x_step """
                     maximum[0]=i
                     maximum[1]=j
                     maximum[2]=current
-                self.icCryo.rmove(0,((-1)**(i%2))*self.y_step) #parity change for i 
+                self.icCryo.rmove(0,((-1)**(i%2))*self.y_step) #parity change for i
             self.icCryo.rmove(self.x_step,0)
 
         if maximum[0] == xstart: #no better spot found
@@ -381,7 +387,7 @@ unit: self.x_step """
             accum.append(max(self.line[self._from:self._to]))
         mean = np.mean(accum)
         return mean
-    
+
 
 
     def _autofocus_hillclimbing_thread(self):
@@ -470,7 +476,7 @@ unit: self.x_step """
             x2 = x2nm
             y1 = y1nm
             y2 = y2nm
- 
+
         else:
             xtitle = titlepxx
             ytitle = titlepxy
@@ -481,8 +487,8 @@ unit: self.x_step """
             x2 = x2px
             y1 = y1px
             y2 = y2px
-        
-        
+
+
         if self.icCamera.readmode_current == 'Full Vertical Binning':
             plotdata = ArrayPlotData(x = scale , y=self.line[:])
             plot = Plot(plotdata)
@@ -492,7 +498,7 @@ unit: self.x_step """
             plotdata = ArrayPlotData(imagedata = dataarray) #self.line now has an image stored! since an image comes from acquisition
             plot = Plot(plotdata)
             plot.img_plot("imagedata",xbounds=(x1,x2),ybounds=(y1,y2), colormap = jet)
- 
+
         plot.title = ""
         plot.overlays.append(ZoomTool(component=plot,tool_mode="box", always_on=False))
         plot.tools.append(PanTool(plot, constrain_key="shift"))
@@ -507,7 +513,7 @@ unit: self.x_step """
 
 
 
-    # dispersion of the gratings in theory  
+    # dispersion of the gratings in theory
     def calculate_dispersion(self,wavelength,grooves):
         m=1 #grating order
         x=8.548 #spectro value: half angle
@@ -527,7 +533,7 @@ unit: self.x_step """
         for i in range(pixel):
             wavelength.append(i)
         width=26*10**-3
-        
+
         if not self.calib: #no own calibration so centerwvl from ivspectro is used for center pixel
             wavelength[pixel/2]=self.ivSpectro.centerwvl #be careful wavelength is even, so has no center for precise centerwvl
             for i in range(pixel/2):
@@ -543,7 +549,7 @@ unit: self.x_step """
             for i in range(pixel-self.calibpxl-1): #rest of the pixel which are missing in the first for loop
                 wavelength[self.calibpxl+i+1]=wavelength[self.calibpxl+i]+width*self.calculate_dispersion(wavelength[self.calibpxl+i],grooves)
             return wavelength
-            
+
 
     def _update_acqtime(self):
         self.acqtime = time.localtime()
@@ -559,7 +565,7 @@ unit: self.x_step """
             self.plot.do_layout(force=True)
             gc = PlotGraphicsContext((width, height), dpi=72)
             gc.render_component(self.plot)
-     
+
             #save data,image,description
             timetag = "" #init empty str for later
             directory = dialog.directory
@@ -571,6 +577,44 @@ unit: self.x_step """
                     timelist[i] = "0" + timelist[i]
             timetag = timetag.join(timelist) #make single str of all entries
             filename = timetag + dialog.filename # join timetag and inidivid. name
+            print "target directory: " + directory
+            gc.save(filename+".png")
+            self.wvl = self.create_wavelength_for_plotting()
+            x,y = self.icCryo.pos() #get cryo pos
+            pos = "Cryo was at pos "+ str(x) + " x " + str(y)+" y"
+            with open(filename+'.dat','wb') as f:
+                f.write('#'+
+                        str(pos)+
+                        '\n'+
+                        '#\n'+
+                        '#\n'+
+                        '#\n') #this is for the header
+                np.savetxt(f,
+                        np.transpose([self.wvl,self.line]),
+                        delimiter='\t')
+            # pickle(target+'.pkl',info_structure)
+
+    def exportforfocus(self):
+
+            # prepare plot for saving
+            width = 800
+            height = 600
+            self.plot.outer_bounds = [width, height]
+            self.plot.do_layout(force=True)
+            gc = PlotGraphicsContext((width, height), dpi=72)
+            gc.render_component(self.plot)
+
+            #save data,image,description
+            timetag = "" #init empty str for later
+            directory = "C:\Users\Rapunzel II\Desktop\Bilder BA Moritz"
+            t = self.acqtime #retrieve time from last aquisition
+            timelist = [t.tm_year,t.tm_mon,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec]
+            timelist = map(str,timelist) #convert every entry to str of timelist
+            for i in range(len(timelist)): #if sec is eg "5" change to "05"
+                if len(timelist[i]) == 1:
+                    timelist[i] = "0" + timelist[i]
+            timetag = timetag.join(timelist) #make single str of all entries
+            filename = timetag  # join timetag and inidivid. name
             print "target directory: " + directory
             gc.save(filename+".png")
             self.wvl = self.create_wavelength_for_plotting()
@@ -627,8 +671,8 @@ unit: self.x_step """
             self.nmscale = False
         else:
             self.scaletype_label = "Scale in Pxl"
-            self.nmscale = True  
-        self._single_fired() #update the plot 
+            self.nmscale = True
+        self._single_fired() #update the plot
 
     def _continous_fired(self):
         self.acq_active = not self.acq_active
@@ -646,10 +690,10 @@ unit: self.x_step """
 
     def _Hshiftspeed_changed(self):
         self.icCamera.setHshiftspeed(self.Hshiftspeed)
-    
+
     def _Vshiftspeed_changed(self):
         self.icCamera.setVshiftspeed(self.Vshiftspeed)
-    
+
     def _acquisitionmode_changed(self):
         self.icCamera.setacquisitionmode(self.acquisitionmode)
 
@@ -669,6 +713,7 @@ unit: self.x_step """
         except:
             self.line=self.icCamera.acquisition()
         self._update_acqtime() # saving time of acquisition
+        self.exportforfocus()
 
     def stop_acq_thread(self):
         if self.acq_active:
@@ -687,8 +732,8 @@ unit: self.x_step """
             y = round(y) #closest count representation
             y = int(y) #no decimal places
             self.mousex = str(x) # str conversion for view
-            self.mousey = str(y) # str conversion for view 
-        else:  
+            self.mousey = str(y) # str conversion for view
+        else:
             a = self.scaleinnm
             #returns index of closest represenation of x in the list of
             #scaleinnm
@@ -696,7 +741,7 @@ unit: self.x_step """
             y = round(y) #closest count representation
             y = int(y) #no decimal places
             x = a[x] #for getting the wvl of index x
-            x = str("%3.3f") % float(x)  
+            x = str("%3.3f") % float(x)
             self.mousex = str(x) # str conversion for listing
             self.mousey = str(y)
 
@@ -705,12 +750,12 @@ unit: self.x_step """
     #by a mouseclick on the plot
     def normal_left_down(self, event):
         x = float(event.x)
-        
+
         if not self.nmscale:
             x = round(x) #closest pixel representation
             self.AFX = int(x) # int conversion for listing
             temp = self.AFX
-        
+
         else:
             a = self.scaleinnm
             #returns index of closest represenation of AFX in the list of
@@ -737,8 +782,8 @@ class CameraGUI_PlotTool(BaseTool):
 
 if __name__=="__main__":
     main=CameraGUI(
-                    ivCryo = views.cryo.CryoGUI(), 
-                    ivVoltage = views.voltage.VoltageGUI(), 
+                    ivCryo = views.cryo.CryoGUI(),
+                    ivVoltage = views.voltage.VoltageGUI(),
                     ivSpectro = views.spectrometer.SpectroGUI()
                 )
     main.configure_traits()

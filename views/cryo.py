@@ -11,7 +11,7 @@ import controls.cryo
 class CryoGUI(HasTraits):
     mi_cryo = Action(name='cryo menu', accelerator='Ctrl+p', action='call_cryo_menu')
     menu =    Menu(mi_cryo,name='Cryo')
-    icCryo = controls.cryo.Cryo('COM3', 9600, timeout=1)
+    icCryo = controls.cryo.Cryo('COM14', 9600, timeout=1)
     cryo_refresh=True
 
     output=Str()
@@ -83,7 +83,7 @@ class CryoGUI(HasTraits):
     view_menu=View(
         VGroup(
          HGroup(Item("cal", show_label=False,resizable = True), Item("rm", show_label=False,resizable = True),Item("setzero", show_label=False,resizable = True)),
-         
+
          HGroup(Item("identity", show_label=False,resizable = True))
          ),
         buttons = [OKButton, CancelButton,], resizable = True, width = 300,
