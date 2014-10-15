@@ -21,7 +21,7 @@ import views.voltage
 
 class SpectroGUI(HasTraits):
 
-    icSpectro = controls.spectrometer.Spectro('COM4', 9600, timeout=1)
+    icSpectro = controls.spectrometer.Spectro('COM5', 9600, timeout=1)
 
     ivVoltage = Instance(views.voltage.VoltageGUI)
     icVoltage = Instance(controls.voltage.Voltage)
@@ -63,9 +63,9 @@ class SpectroGUI(HasTraits):
     exit_mirror=Str()
 
     speed=CFloat(50.0)
-    
+
     simulation = Bool(True, label="Simulation Spectrometer")
-    toggle_active = False   
+    toggle_active = False
 
     str_nmmin = Str('nm/min')
     str_at = Str('@')
@@ -140,14 +140,14 @@ class SpectroGUI(HasTraits):
             self.centerwvl += 0.002
             self._goto_fired()
         except:
-            print "Hint: Center wavelength out of bound" 
+            print "Hint: Center wavelength out of bound"
 
     def _jogdown_fired(self):
         try:
             self.centerwvl -= 0.002
             self._goto_fired()
         except:
-            print "Hint: Center wavelength out of bound" 
+            print "Hint: Center wavelength out of bound"
 
 
     def _position_fired(self):
@@ -166,7 +166,7 @@ class SpectroGUI(HasTraits):
         if not self.refresh_active: # ueberprueft ob der Wert wegen einer aktualisierung geaendert worden ist, dann kein Befehl senden
             # das hier ist schlecht gemacht, die [1] bedeutet das erste Zeichen von
             # dem String current_grating das dann übergeben wird an die func
-            # sollte geaendert werden 
+            # sollte geaendert werden
             self.icSpectro.grating_change(self.current_grating[1])
 
     def _exit_mirror_changed(self):
@@ -254,7 +254,7 @@ class SpectroGUI(HasTraits):
         self.simulation = self.icSpectro.toggle_simulation()
         self.toggle_active = False
         self.Spectrometer_gui_refresh()
-        
+
     def Spectrometer_gui_refresh(self):
         self.refresh_active=True
         position=self.icSpectro.output_position()

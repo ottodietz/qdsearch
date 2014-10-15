@@ -1,58 +1,49 @@
-from simserial import SimSerial
+
 import time
 import random
-import math
+from ctypes import *
 from thread import allocate_lock
-import re
 
-class Voltage(SimSerial):
-    EOL=''
-    CMD='^[A-Z+]' #das plus ist fuer hot_key_check in simserial
-    PARMS='[^a-zA-Z]+'
-    simulation = True
+class Voltage():
+    #constants from LabJackUD.h
+    LJ_dtU3=3
+    LJ_ctUSB=1
+
+    LJ_ioGET_AIN = 10
+    LJ_ioGET_AIN_DIFF=15
+    LJ_ioPUT_ANALOG_ENABLE_BIT = 2013;
+    LJ_ioGET_ANALOG_ENABLE_BIT = 2014;
+    LJ_ioPUT_DAC = 20
+    lngHandle=c_long(2)
+
+    simulation=True
     busy=False
-
     lock = allocate_lock()
-    
-    def blink(self):
-        self.write("B")
 
-    def _B(self):
-        print 'blinken'
+    def toggle_simulation(self):
+        if self.simulation:
+            self.simulation=False
+            self.u3=WinDLL('C:\Windows\System32\LabjackUD.dll')
+            self.u3.OpenLabJack(self.LJ_dtU3,self.LJ_ctUSB,"1",True,byref(self.lngHandle))
+        else:
+            self.simulation=True
+            self.u3.Close()
+        return self.simulation
 
     def read_voltage(self):
-        #start = time.clock()
-        temp=''
-        self.flushInput()
-        while (temp.find("Voltage")==-1):
-            self.write("V")
-            temp=self.readline()
-        voltage=temp[9:14]
-        #ende = time.clock()
-        #print "the function read runs %1.2f s" % (ende - start)
-        return(float(voltage))
+        if self.simulation:
+            return(random.randint(1,20))
+        else:
+            voltage=c_double()
+            self.u3.eGet(self.lngHandle,self.LJ_ioGET_AIN,2,byref(voltage),0)
+            return(voltage.value)
 
-    def read_voltage_new(self):
-        #start = time.clock()
-        temp=''
-        self.flushInput()
-        self.write('V')
-        time.sleep(0.2)
-        number=self.inWaiting()
-        voltage=self.read(number)
-#        a=temp.find('Voltage')
-#        if a!=-1:
-#            voltage=temp[a+9:a+14]
-#        else:
-#            voltage=0
-#            print 'can not read voltage correctly'
-        #ende = time.clock()
-        #print "the function read 2 runs %1.2f s" % (ende - start)
-        return(float(voltage))
+    def setvoltage(self,voltage):
+        self.u3.ePut(self.lngHandle,self.LJ_ioPUT_DAC,1,c_double(voltage),0)
 
-
-    def _V(self):
-        self.buffer='Voltage'+'  '+str(random.randint(1,20))
+    def close(self):
+        if self.simulation==False:
+            self.u3.Close()
 
     def measure(self):
         i = 0
@@ -70,14 +61,3 @@ class Voltage(SimSerial):
         measurement=self.read_voltage()
         self.busy=False
         return(measurement)
-
-    def setvoltage(self,voltage):
-        Sxxxd = "S%03dd"% int(voltage*255/5.)
-        self.write(Sxxxd,inter_char_delay=0.001);
-        print "setting voltage to %1.2f V" % voltage
-        return voltage
-
-    def _S(self,string):
-        temp = re.search(self.PARMS,string).group(0)
-        voltprint = float(int(temp)*5./255.)
-        print "simulated:"

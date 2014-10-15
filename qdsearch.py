@@ -114,14 +114,14 @@ class MainWindow(HasTraits):
     plot_compare=Instance(Plot,())
     counts_thread = counts_thread()
 
-    ivSpectro      = Instance(views.spectrometer.SpectroGUI) 
+    ivSpectro      = Instance(views.spectrometer.SpectroGUI)
     icSpectro      = Instance(controls.spectrometer.Spectro)
     ivCryo         = Instance(views.cryo.CryoGUI)
     icCryo         = Instance(controls.cryo.Cryo)
     ivVoltage      = Instance(views.voltage.VoltageGUI)
-    icVoltage      = Instance(controls.voltage.Voltage) 
+    icVoltage      = Instance(controls.voltage.Voltage)
     ivCamera       = Instance(views.camera.CameraGUI)# No ",()" as below, Instance is created in _default
-    icCamera       = Instance(controls.camera.Camera) 
+    icCamera       = Instance(controls.camera.Camera)
 
     def _ivCamera_default(self):
         print "CAMERA INIT"
@@ -228,7 +228,7 @@ class MainWindow(HasTraits):
         title   = 'qdsearch',
 #        buttons = [ 'OK' ],
         resizable = True,
-        width=300
+#        width=300
     )
 
     setting_view=View(Item('toleranz'),Item('offset'),
@@ -375,7 +375,7 @@ class MainWindow(HasTraits):
         plot.y_axis.title="y-Position on sample [mm]"
         self.plot=plot
 
-    
+
     def _plotrangeset_fired(self):
         if self.plotrangestart > self.plotrangeend:
             self.plotrangestart, self.plotrangeend = self.plotrangeend, self.plotrangestart#swap val
@@ -393,9 +393,9 @@ class MainWindow(HasTraits):
         self.plot_current.range2d.y_range.high = self.plotrangey
         self.plot_compare.range2d.y_range.high = self.plotrangey
         self.plot_current.range2d.y_range.low = 0
-        self.plot_compare.range2d.y_range.low = 0 
-                
-        
+        self.plot_compare.range2d.y_range.low = 0
+
+
     def plot_spectrum(self,x,y,field):
         for i in range(len(self.x_koords)):
             x_gap=abs(x-self.x_koords[i])
